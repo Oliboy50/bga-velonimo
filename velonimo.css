@@ -15,54 +15,209 @@
 
 /*
     This is the CSS stylesheet of your game User Interface.
-    
+
     Styles defined on this file will be applied to the HTML elements you define in your
     HTML template (velonimo_velonimo.tpl), and to HTML elements you create dynamically
     (in velonimo.js).
-    
+
     Usually, you are using CSS to:
-    
+
     1°) define the overall layout of your game
         (ex: place the board on the top left, place player's hand beside, place the deck on the right, ...).
 
     2°) create your CSS-sprites:
         All images of your games should be gathered into a small number of image files. Then, using
-        background-image and background-position CSS properties, you create HTML blocks that can 
+        background-image and background-position CSS properties, you create HTML blocks that can
         display these images correctly (see example below).
-    
+
     3°) ... anything else:
         It is really easy to add and remove CSS classes dynamically from your Javascript with
         dojo.addClass and dojo.removeClass. It is also easy to check if an element has a class
         (dojo.hasClass) or to get all elements with a specific class (dojo.query). This is why,
         very often, using CSS classes for the logic of your user interface allow you to do complex
         thing easily.
-        
-        
+
+
      Note: on the production platform, this file will be compressed and comments will be removed.
            Consequently, don't hesitate to put as many comments as necessary.
 */
 
-
 /* Note: you must not use any @import directive */
 
-
-/********* You can start writing your CSS below this line: **********/
-
-
-/*
-    Example of CSS sprites (a black token and a white token, 20x20px each, embedded in the same "tokens.png" 40x20px image):
-
-    .white_token {
-        background-image: url('img/tokens.png');
-        background-position: 0px 0px;
-    }
-    .black_token {
-        background-image: url('img/tokens.png');
-        background-position: -20px 0px;
-    }
-    .token {
-        width: 20px;
-        height: 20px;
-        background-repeat: none;
-    }
-*/
+.card {
+    width: 300px;
+    height: 500px;
+    background-image: url('img/velonimo_cards.png');
+    background-repeat: no-repeat;
+}
+.card-adventurer-25 {
+    background-position: 0 0;
+}
+.card-adventurer-30 {
+    background-position: -300px 0;
+}
+.card-adventurer-35 {
+    background-position: -600px 0;
+}
+.card-adventurer-40 {
+    background-position: -900px 0;
+}
+.card-adventurer-45 {
+    background-position: -1200px 0;
+}
+.card-adventurer-50 {
+    background-position: -1500px 0;
+}
+.card-blue-1 {
+    background-position: -1800px 0;
+}
+.card-blue-2 {
+    background-position: -2100px 0;
+}
+.card-blue-3 {
+    background-position: -2400px 0;
+}
+.card-blue-4 {
+    background-position: 0 -500px;
+}
+.card-blue-5 {
+    background-position: -300px -500px;
+}
+.card-blue-6 {
+    background-position: -600px -500px;
+}
+.card-blue-7 {
+    background-position: -900px -500px;
+}
+.card-brown-1 {
+    background-position: -1200px -500px;
+}
+.card-brown-2 {
+    background-position: -1500px -500px;
+}
+.card-brown-3 {
+    background-position: -1800px -500px;
+}
+.card-brown-4 {
+    background-position: -2100px -500px;
+}
+.card-brown-5 {
+    background-position: -2400px -500px;
+}
+.card-brown-6 {
+    background-position: 0 -1000px;
+}
+.card-brown-7 {
+    background-position: -300px -1000px;
+}
+.card-gray-1 {
+    background-position: -600px -1000px;
+}
+.card-gray-2 {
+    background-position: -900px -1000px;
+}
+.card-gray-3 {
+    background-position: -1200px -1000px;
+}
+.card-gray-4 {
+    background-position: -1500px -1000px;
+}
+.card-gray-5 {
+    background-position: -1800px -1000px;
+}
+.card-gray-6 {
+    background-position: -2100px -1000px;
+}
+.card-gray-7 {
+    background-position: -2400px -1000px;
+}
+.card-green-1 {
+    background-position: 0 -1500px;
+}
+.card-green-2 {
+    background-position: -300px -1500px;
+}
+.card-green-3 {
+    background-position: -600px -1500px;
+}
+.card-green-4 {
+    background-position: -900px -1500px;
+}
+.card-green-5 {
+    background-position: -1200px -1500px;
+}
+.card-green-6 {
+    background-position: -1500px -1500px;
+}
+.card-green-7 {
+    background-position: -1800px -1500px;
+}
+.card-jersey {
+    background-position: -2100px -1500px;
+}
+.card-pink-1 {
+    background-position: -2400px -1500px;
+}
+.card-pink-2 {
+    background-position: 0 -2000px;
+}
+.card-pink-3 {
+    background-position: -300px -2000px;
+}
+.card-pink-4 {
+    background-position: -600px -2000px;
+}
+.card-pink-5 {
+    background-position: -900px -2000px;
+}
+.card-pink-6 {
+    background-position: -1200px -2000px;
+}
+.card-pink-7 {
+    background-position: -1500px -2000px;
+}
+.card-red-1 {
+    background-position: -1800px -2000px;
+}
+.card-red-2 {
+    background-position: -2100px -2000px;
+}
+.card-red-3 {
+    background-position: -2400px -2000px;
+}
+.card-red-4 {
+    background-position: -2700px 0;
+}
+.card-red-5 {
+    background-position: -2700px -500px;
+}
+.card-red-6 {
+    background-position: -2700px -1000px;
+}
+.card-red-7 {
+    background-position: -2700px -1500px;
+}
+.card-unknown {
+    background-position: -2700px -2000px;
+}
+.card-yellow-1 {
+    background-position: 0 -2500px;
+}
+.card-yellow-2 {
+    background-position: -300px -2500px;
+}
+.card-yellow-3 {
+    background-position: -600px -2500px;
+}
+.card-yellow-4 {
+    background-position: -900px -2500px;
+}
+.card-yellow-5 {
+    background-position: -1200px -2500px;
+}
+.card-yellow-6 {
+    background-position: -1500px -2500px;
+}
+.card-yellow-7 {
+    background-position: -1800px -2500px;
+}

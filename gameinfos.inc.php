@@ -30,6 +30,13 @@ $gameinfos = array(
 // Url of game publisher website
 'publisher_website' => 'https://www.studiostratospheres.com/',
 
+// Custom "buy this game" button
+// By default, the "buy this game" button is a link to an Amazon search with the name of the game.
+'custom_buy_button' => array(
+   'url' => 'https://www.studiostratospheres.com/produit/velonimo/',
+   'label' => 'Stratosphères'
+),
+
 // Board Game Geek ID of the publisher
 'publisher_bgg_id' => 46981,
 
