@@ -16,6 +16,7 @@
   *
   */
 
+declare(strict_types=1);
 
 require_once(APP_GAMEMODULE_PATH.'module/table/table.game.php');
 require_once('modules/constants.inc.php');
@@ -436,6 +437,8 @@ class Velonimo extends Table
         // if there is a loser, he plays first during this round
         if ($currentLoser = $this->getCurrentLoser($players)) {
             $this->gamestate->changeActivePlayer($currentLoser->getId());
+        } else {
+            self::activeNextPlayer();
         }
 
         $this->gamestate->nextState('firstPlayerTurn');
@@ -604,9 +607,9 @@ class Velonimo extends Table
     private function fromBgaCardsToVelonimoCards(array $bgaCards): array {
         return array_map(
             fn (array $card) => new VelonimoCard(
-                $card['card_id'],
-                $card['card_type'],
-                $card['card_type_arg']
+                (int) $card['id'],
+                (int) $card['type'],
+                (int) $card['type_arg']
             ),
             $bgaCards
         );
@@ -656,11 +659,11 @@ class Velonimo extends Table
 
         return array_map(
             fn (array $player) => new VelonimoPlayer(
-                $player['player_id'],
+                (int) $player['player_id'],
                 $player['player_name'],
-                $player['player_score'],
+                (int) $player['player_score'],
                 VelonimoPlayer::deserializeRoundsRanking($player['rounds_ranking']),
-                $player['is_wearing_jersey'],
+                ((int) $player['is_wearing_jersey']) === 1,
             ),
             $players
         );

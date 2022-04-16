@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 class VelonimoPlayer
 {
     private const ROUNDS_RANKING_SERIALIZED_KEY_VALUE_SEPARATOR = '=';
@@ -43,7 +45,13 @@ class VelonimoPlayer
     {
         /** @var string[] $rounds */
         $rounds = explode(self::ROUNDS_RANKING_SERIALIZED_ROUNDS_SEPARATOR, $serialized);
-        if (!$rounds) {
+        if (
+            !$rounds
+            || (
+                count($rounds) === 1
+                && $rounds[0] === ''
+            )
+        ) {
             return [];
         }
 
