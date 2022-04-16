@@ -21,11 +21,11 @@
 -- Example 1: create a standard "card" table to be used with the "Deck" tools (see example game "hearts"):
 
 CREATE TABLE IF NOT EXISTS `card` (
-  `card_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `card_type` VARCHAR(16) NOT NULL,
-  `card_type_arg` INT(11) NOT NULL,
-  `card_location` VARCHAR(16) NOT NULL,
-  `card_location_arg` INT(11) NOT NULL,
+  `card_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `card_type` VARCHAR(30) NOT NULL,
+  `card_type_arg` INT NOT NULL,
+  `card_location` VARCHAR(30) NOT NULL,
+  `card_location_arg` INT NOT NULL,
   PRIMARY KEY (`card_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
@@ -34,4 +34,4 @@ CREATE TABLE IF NOT EXISTS `card` (
 
 ALTER TABLE `player`
     ADD `rounds_ranking` VARCHAR(250) NOT NULL DEFAULT '',
-    ADD `is_wearing_jersey` INT(1) UNSIGNED NOT NULL DEFAULT 0;
+    ADD `is_wearing_jersey` TINYINT UNSIGNED NOT NULL DEFAULT 0;

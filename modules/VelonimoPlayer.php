@@ -104,22 +104,28 @@ class VelonimoPlayer
      *  MUTATING FUNCTIONS
      */
 
-    public function addPoints($points): void
+    public function addPoints($points): self
     {
         $this->score = $this->score + $points;
+
+        return $this;
     }
 
-    public function setIsWearingJersey(bool $isWearingJersey): void
+    public function setIsWearingJersey(bool $isWearingJersey): self
     {
         $this->isWearingJersey = $isWearingJersey;
+
+        return $this;
     }
 
-    public function addRoundRanking(int $round, int $rank): void
+    public function addRoundRanking(int $round, int $rank): self
     {
         if (isset($this->roundsRanking[$round])) {
             throw new BgaVisibleSystemException('History cannot be rewritten');
         }
 
         $this->roundsRanking[$round] = $rank;
+
+        return $this;
     }
 }

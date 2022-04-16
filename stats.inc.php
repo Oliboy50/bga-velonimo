@@ -56,7 +56,7 @@ $stats_type = [
             'name' => totranslate('Number of time someone played one or more cards'),
             'type' => 'int',
         ],
-        'skipTurnAction' => [
+        'passTurnAction' => [
             'id' => 11,
             'name' => totranslate('Number of time someone skipped his turn'),
             'type' => 'int',
@@ -70,7 +70,7 @@ $stats_type = [
             'name' => totranslate('Number of time this player played one or more cards'),
             'type' => 'int',
         ],
-        'skipTurnAction' => [
+        'passTurnAction' => [
             'id' => 11,
             'name' => totranslate('Number of time this player skipped his turn'),
             'type' => 'int',

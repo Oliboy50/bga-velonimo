@@ -54,10 +54,10 @@ $machinestates = [
     // The initial state. Do not modify.
     1 => [
         'name' => 'gameSetup',
-        'description' => '',
+        'description' => clienttranslate('Game setup'),
         'type' => 'manager',
         'action' => 'stGameSetup',
-        'transitions' => [ '' => 10],
+        'transitions' => ['' => 10],
     ],
 
     // Start round, deal cards and define the first player
@@ -96,7 +96,18 @@ $machinestates = [
         'description' => '',
         'type' => 'game',
         'action' => 'stActivateNextPlayer',
-        'transitions' => ['playerTurn' => 20],
+        'transitions' => ['playerTurn' => 20, 'playerSelectNextPlayer' => 30],
+    ],
+
+    // The "natural" next player don't have cards anymore,
+    // he must choose the next player who will play
+    30 => [
+        'name' => 'playerSelectNextPlayer',
+        'description' => clienttranslate('${actplayer} must choose the next player'),
+        'descriptionmyturn' => clienttranslate('${you} must choose the next player'),
+        'type' => 'activeplayer',
+        'possibleactions' => ['selectNextPlayer'],
+        'transitions' => ['firstPlayerTurn' => 12],
     ],
 
     // End round, count round points and give yellow jersey to the current winner
@@ -107,29 +118,6 @@ $machinestates = [
         'action' => 'stEndRound',
         'transitions' => ['nextRound' => 10, 'endGame' => 99],
     ],
-
-/*
-    Examples:
-
-    2 => [
-        'name' => 'nextPlayer',
-        'description' => '',
-        'type' => 'game',
-        'action' => 'stNextPlayer',
-        'updateGameProgression' => true,
-        'transitions' => ['endGame' => 99, 'nextPlayer' => 10]
-    ],
-
-    10 => [
-        'name' => 'playerTurn',
-        'description' => clienttranslate('${actplayer} must play a card or pass'),
-        'descriptionmyturn' => clienttranslate('${you} must play a card or pass'),
-        'type' => 'activeplayer',
-        'possibleactions' => ['playCard', 'pass'],
-        'transitions' => ['playCard' => 2, 'pass' => 2]
-    ],
-
-*/
 
     // Final state. Do not modify (and do not overload action/args methods).
     99 => [
