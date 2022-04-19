@@ -35,7 +35,7 @@ class Velonimo extends Table
     private const CARD_LOCATION_DISCARD = 'discard';
     private const CARD_LOCATION_PLAYED = 'played';
 
-    /** @var Deck */
+    /** @var Deck (BGA framework component to manage cards) */
     private $deck;
 
     function __construct()
@@ -121,7 +121,7 @@ class Velonimo extends Table
 
         // Create cards
         $cards = [];
-        // common cards
+        // colored cards
         foreach([
             COLOR_BLUE,
             COLOR_BROWN,
@@ -178,24 +178,25 @@ class Velonimo extends Table
     {
         $result = [];
 
-        // Players info
-        $result['players'] = $this->formatPlayersForClient($this->getPlayersFromDatabase());
-
-        // Rounds info
+        // Rounds
         $result['currentRound'] = self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
         $result['howManyRounds'] = self::getGameStateValue(self::GAME_STATE_HOW_MANY_ROUNDS);
 
-        // Last cards played on the table
+        // Players
+        $result['players'] = $players = $this->formatPlayersForClient($this->getPlayersFromDatabase());
+	    $result['nextPlayerIds'] = self::createNextPlayerTable(array_keys($players));
+        $result['currentPlayerId'] = $currentPlayerId = self::getCurrentPlayerId();
+        $result['currentPlayerCards'] = $this->formatCardsForClient(
+            $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYER_HAND, $currentPlayerId))
+        );
+
+        // Cards
+        $result['colorNames'] = $this->colorNames;
         $result['playedCards'] = $this->formatCardsForClient(
             $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYED))
         );
         $result['playedCardsValue'] = self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE);
         $result['playedCardsPlayerId'] = self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID);
-
-        // Cards in player hand
-        $result['hand'] = $this->formatCardsForClient(
-            $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYER_HAND, self::getCurrentPlayerId()))
-        );
 
         return $result;
     }
@@ -504,7 +505,7 @@ class Velonimo extends Table
         }
 
         self::notifyAllPlayers('roundEnded', '', [
-            'players' => $players,
+            'players' => $this->formatPlayersForClient($players),
         ]);
 
         // go to next round or end the game
@@ -611,7 +612,7 @@ class Velonimo extends Table
                 (int) $card['type'],
                 (int) $card['type_arg']
             ),
-            $bgaCards
+            array_values($bgaCards)
         );
     }
 
@@ -655,12 +656,14 @@ class Velonimo extends Table
      * @return VelonimoPlayer[]
      */
     private function getPlayersFromDatabase(): array {
-        $players = self::getCollectionFromDB('SELECT player_id, player_name, player_score, rounds_ranking, is_wearing_jersey FROM player');
+        $players = array_values(self::getCollectionFromDB('SELECT player_id, player_no, player_name, player_color, player_score, rounds_ranking, is_wearing_jersey FROM player'));
 
         return array_map(
             fn (array $player) => new VelonimoPlayer(
                 (int) $player['player_id'],
+                (int) $player['player_no'],
                 $player['player_name'],
+                $player['player_color'],
                 (int) $player['player_score'],
                 VelonimoPlayer::deserializeRoundsRanking($player['rounds_ranking']),
                 ((int) $player['is_wearing_jersey']) === 1,
@@ -707,17 +710,21 @@ class Velonimo extends Table
     }
 
     /**
-     * @param VelonimoPlayer[] $players
+     * @param array<int, VelonimoPlayer> $players Indexed by player ID
      */
     private function formatPlayersForClient(array $players): array {
-        return array_map(
-            fn (VelonimoPlayer $player) => [
+        $result = [];
+        foreach ($players as $player) {
+            $result[$player->getId()] = [
                 'id' => $player->getId(),
+                'position' => $player->getNaturalOrderPosition(),
                 'name' => $player->getName(),
+                'color' => $player->getColor(),
                 'score' => $player->getScore(),
-            ],
-            $players
-        );
+            ];
+        }
+
+        return $result;
     }
 
     /**

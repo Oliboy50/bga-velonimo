@@ -44,180 +44,256 @@
 
 /* Note: you must not use any @import directive */
 
-.card {
-    width: 300px;
-    height: 500px;
+/**
+Board
+ */
+#game_play_area {
+    position:relative;
+}
+
+#board {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#player-tables {
+    position: relative;
+    /*background-image:url("img/icon-shuffle.svg");*/
+    /*background-size:70px;*/
+    /*background-position:center center;*/
+    /*background-repeat:no-repeat;*/
+    background-color: #35714a;
+    border-radius: 30px;
+    box-shadow: 2px 2px 5px black;
+    border: 1px solid #193b27;
+}
+/**
+END Board
+ */
+
+/**
+Current player
+ */
+.spectatorMode #myhand-wrapper {
+    display: none;
+}
+
+#myhand .stockitem {
+    border-radius: 10px;
+    margin: 5px;
+    border: 1px solid grey;
+}
+#myhand .stockitem:hover {
+    cursor: pointer;
+    margin: 4px;
+    border: 2px solid black !important;
+}
+#myhand .stockitem_selected {
+    margin: 3px;
+    transform: scale(1.02);
+    border: 2px solid black !important;
+    box-shadow: 1px 1px 5px black, 2px 2px 4px black;
+}
+#myhand .stockitem.disabled {
+    cursor: not-allowed;
+    opacity: 0.5 !important;
+}
+#myhand .stockitem.disabled:hover {
+    cursor: not-allowed;
+    margin: 5px;
+    border: 1px solid gray !important;
+}
+/**
+END Current player
+ */
+
+/**
+Cards
+ */
+.cards-stack {
+    position: absolute;
+    width: 200px;
+    height: 100px;
+}
+.card-in-stack {
+    width: 60px;
+    height: 100px;
     background-image: url('img/velonimo_cards.png');
+    background-size: 600px 600px;
     background-repeat: no-repeat;
 }
-.card-adventurer-25 {
-    background-position: 0 0;
-}
-.card-adventurer-30 {
-    background-position: -300px 0;
-}
-.card-adventurer-35 {
-    background-position: -600px 0;
-}
-.card-adventurer-40 {
-    background-position: -900px 0;
-}
-.card-adventurer-45 {
-    background-position: -1200px 0;
-}
-.card-adventurer-50 {
-    background-position: -1500px 0;
-}
-.card-blue-1 {
-    background-position: -1800px 0;
-}
-.card-blue-2 {
-    background-position: -2100px 0;
-}
-.card-blue-3 {
-    background-position: -2400px 0;
-}
-.card-blue-4 {
-    background-position: 0 -500px;
-}
-.card-blue-5 {
-    background-position: -300px -500px;
-}
-.card-blue-6 {
-    background-position: -600px -500px;
-}
-.card-blue-7 {
-    background-position: -900px -500px;
-}
-.card-brown-1 {
-    background-position: -1200px -500px;
-}
-.card-brown-2 {
-    background-position: -1500px -500px;
-}
-.card-brown-3 {
-    background-position: -1800px -500px;
-}
-.card-brown-4 {
-    background-position: -2100px -500px;
-}
-.card-brown-5 {
-    background-position: -2400px -500px;
-}
-.card-brown-6 {
-    background-position: 0 -1000px;
-}
-.card-brown-7 {
-    background-position: -300px -1000px;
-}
-.card-gray-1 {
-    background-position: -600px -1000px;
-}
-.card-gray-2 {
-    background-position: -900px -1000px;
-}
-.card-gray-3 {
-    background-position: -1200px -1000px;
-}
-.card-gray-4 {
-    background-position: -1500px -1000px;
-}
-.card-gray-5 {
-    background-position: -1800px -1000px;
-}
-.card-gray-6 {
-    background-position: -2100px -1000px;
-}
-.card-gray-7 {
-    background-position: -2400px -1000px;
-}
-.card-green-1 {
-    background-position: 0 -1500px;
-}
-.card-green-2 {
-    background-position: -300px -1500px;
-}
-.card-green-3 {
-    background-position: -600px -1500px;
-}
-.card-green-4 {
-    background-position: -900px -1500px;
-}
-.card-green-5 {
-    background-position: -1200px -1500px;
-}
-.card-green-6 {
-    background-position: -1500px -1500px;
-}
-.card-green-7 {
-    background-position: -1800px -1500px;
+.card-unknown {
+    background-position: -540px -400px;
 }
 .card-jersey {
-    background-position: -2100px -1500px;
+    background-position: -420px -300px;
 }
-.card-pink-1 {
-    background-position: -2400px -1500px;
+.card-80-25 {
+    background-position: 0 0;
 }
-.card-pink-2 {
-    background-position: 0 -2000px;
+.card-80-30 {
+    background-position: -60px 0;
 }
-.card-pink-3 {
-    background-position: -300px -2000px;
+.card-80-35 {
+    background-position: -120px 0;
 }
-.card-pink-4 {
-    background-position: -600px -2000px;
+.card-80-40 {
+    background-position: -180px 0;
 }
-.card-pink-5 {
-    background-position: -900px -2000px;
+.card-80-45 {
+    background-position: -240px 0;
 }
-.card-pink-6 {
-    background-position: -1200px -2000px;
+.card-80-50 {
+    background-position: -300px 0;
 }
-.card-pink-7 {
-    background-position: -1500px -2000px;
+.card-10-1 {
+    background-position: -360px 0;
 }
-.card-red-1 {
-    background-position: -1800px -2000px;
+.card-10-2 {
+    background-position: -420px 0;
 }
-.card-red-2 {
-    background-position: -2100px -2000px;
+.card-10-3 {
+    background-position: -480px 0;
 }
-.card-red-3 {
-    background-position: -2400px -2000px;
+.card-10-4 {
+    background-position: 0 -500px;
 }
-.card-red-4 {
-    background-position: -2700px 0;
+.card-10-5 {
+    background-position: -60px -500px;
 }
-.card-red-5 {
-    background-position: -2700px -500px;
+.card-10-6 {
+    background-position: -120px -500px;
 }
-.card-red-6 {
-    background-position: -2700px -1000px;
+.card-10-7 {
+    background-position: -180px -500px;
 }
-.card-red-7 {
-    background-position: -2700px -1500px;
+.card-20-1 {
+    background-position: -240px -500px;
 }
-.card-unknown {
-    background-position: -2700px -2000px;
+.card-20-2 {
+    background-position: -300px -500px;
 }
-.card-yellow-1 {
-    background-position: 0 -2500px;
+.card-20-3 {
+    background-position: -360px -500px;
 }
-.card-yellow-2 {
-    background-position: -300px -2500px;
+.card-20-4 {
+    background-position: -420px -500px;
 }
-.card-yellow-3 {
-    background-position: -600px -2500px;
+.card-20-5 {
+    background-position: -480px -500px;
 }
-.card-yellow-4 {
-    background-position: -900px -2500px;
+.card-20-6 {
+    background-position: 0 -200px;
 }
-.card-yellow-5 {
-    background-position: -1200px -2500px;
+.card-20-7 {
+    background-position: -60px -200px;
 }
-.card-yellow-6 {
-    background-position: -1500px -2500px;
+.card-30-1 {
+    background-position: -120px -200px;
 }
-.card-yellow-7 {
-    background-position: -1800px -2500px;
+.card-30-2 {
+    background-position: -180px -200px;
 }
+.card-30-3 {
+    background-position: -240px -200px;
+}
+.card-30-4 {
+    background-position: -300px -200px;
+}
+.card-30-5 {
+    background-position: -360px -200px;
+}
+.card-30-6 {
+    background-position: -420px -200px;
+}
+.card-30-7 {
+    background-position: -480px -200px;
+}
+.card-40-1 {
+    background-position: 0 -300px;
+}
+.card-40-2 {
+    background-position: -60px -300px;
+}
+.card-40-3 {
+    background-position: -120px -300px;
+}
+.card-40-4 {
+    background-position: -180px -300px;
+}
+.card-40-5 {
+    background-position: -240px -300px;
+}
+.card-40-6 {
+    background-position: -300px -300px;
+}
+.card-40-7 {
+    background-position: -360px -300px;
+}
+.card-50-1 {
+    background-position: -480px -300px;
+}
+.card-50-2 {
+    background-position: 0 -400px;
+}
+.card-50-3 {
+    background-position: -60px -400px;
+}
+.card-50-4 {
+    background-position: -120px -400px;
+}
+.card-50-5 {
+    background-position: -180px -400px;
+}
+.card-50-6 {
+    background-position: -240px -400px;
+}
+.card-50-7 {
+    background-position: -300px -400px;
+}
+.card-60-1 {
+    background-position: -360px -400px;
+}
+.card-60-2 {
+    background-position: -420px -400px;
+}
+.card-60-3 {
+    background-position: -480px -400px;
+}
+.card-60-4 {
+    background-position: -540px 0;
+}
+.card-60-5 {
+    background-position: -540px -500px;
+}
+.card-60-6 {
+    background-position: -540px -200px;
+}
+.card-60-7 {
+    background-position: -540px -300px;
+}
+.card-70-1 {
+    background-position: 0 -500px;
+}
+.card-70-2 {
+    background-position: -60px -500px;
+}
+.card-70-3 {
+    background-position: -120px -500px;
+}
+.card-70-4 {
+    background-position: -180px -500px;
+}
+.card-70-5 {
+    background-position: -240px -500px;
+}
+.card-70-6 {
+    background-position: -300px -500px;
+}
+.card-70-7 {
+    background-position: -360px -500px;
+}
+/**
+END Cards
+ */

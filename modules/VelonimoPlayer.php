@@ -8,7 +8,9 @@ class VelonimoPlayer
     private const ROUNDS_RANKING_SERIALIZED_ROUNDS_SEPARATOR = '|';
 
     private int $bgaId;
+    private int $naturalOrderPosition;
     private string $name;
+    private string $color;
     private int $score;
     /**
      * @var array<int, int> where the key is the round_number and the value is the rank_number
@@ -19,18 +21,25 @@ class VelonimoPlayer
 
     public function __construct(
         int $bgaId,
+        int $naturalOrderPosition,
         string $name,
+        string $color,
         int $score,
         array $roundsRanking,
         bool $isWearingJersey
     ) {
         $this->bgaId = $bgaId;
+        $this->naturalOrderPosition = $naturalOrderPosition;
         $this->name = $name;
+        $this->color = $color;
         $this->score = $score;
         $this->roundsRanking = $roundsRanking;
         $this->isWearingJersey = $isWearingJersey;
     }
 
+    /*
+     * STATICS
+     */
     public static function serializeRoundsRanking(array $deserialized): string
     {
         $serialized = '';
@@ -40,7 +49,6 @@ class VelonimoPlayer
 
         return rtrim($serialized, self::ROUNDS_RANKING_SERIALIZED_ROUNDS_SEPARATOR);
     }
-
     public static function deserializeRoundsRanking(string $serialized): array
     {
         /** @var string[] $rounds */
@@ -71,61 +79,63 @@ class VelonimoPlayer
         return $deserialized;
     }
 
+    /*
+     * GETTERS
+     */
     public function getId(): int
     {
         return $this->bgaId;
     }
-
+    public function getNaturalOrderPosition(): int
+    {
+        return $this->naturalOrderPosition;
+    }
     public function getName(): string
     {
         return $this->name;
     }
-
+    public function getColor(): string
+    {
+        return $this->color;
+    }
     public function getScore(): int
     {
         return $this->score;
     }
-
     public function isWearingJersey(): bool
     {
         return $this->isWearingJersey;
     }
-
     public function getRoundsRanking(): array
     {
         return $this->roundsRanking;
     }
-
     public function getLastRoundRank(): int
     {
         $lastRound = max(array_keys($this->roundsRanking));
 
         return $this->roundsRanking[$lastRound];
     }
-
     public function isLastRoundWinner(): bool
     {
         return $this->getLastRoundRank() === 1;
     }
 
     /*
-     *  MUTATING FUNCTIONS
+     *  SETTERS
      */
-
     public function addPoints($points): self
     {
         $this->score = $this->score + $points;
 
         return $this;
     }
-
     public function setIsWearingJersey(bool $isWearingJersey): self
     {
         $this->isWearingJersey = $isWearingJersey;
 
         return $this;
     }
-
     public function addRoundRanking(int $round, int $rank): self
     {
         if (isset($this->roundsRanking[$round])) {
