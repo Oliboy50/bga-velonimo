@@ -66,8 +66,8 @@ function (dojo, declare) {
 
             // Cards
             this.playerHand = null; // https://en.doc.boardgamearena.com/Stock
-            this.cardWidth = 60;
-            this.cardHeight = 100;
+            this.cardWidth = 90;
+            this.cardHeight = 126;
 
             // Played cards position indexed by howManyPlayers
             this.playedCardsPosition = []; // array of [dx, dy] player card position offset
@@ -137,8 +137,8 @@ function (dojo, declare) {
             this.playerHand = new ebg.stock();
             this.playerHand.create(this, $('myhand'), this.cardWidth, this.cardHeight);
             this.playerHand.setSelectionAppearance('class');
-            this.playerHand.image_items_per_row = 10;
-            const cardsImageUrl = g_gamethemeurl+'img/velonimo_cards.png';
+            this.playerHand.image_items_per_row = 7;
+            const cardsImageUrl = g_gamethemeurl+'img/cards.png';
             // colored cards
             [
                 COLOR_BLUE,
@@ -191,6 +191,7 @@ function (dojo, declare) {
 
         ///////////////////////////////////////////////////
         //// Game & client states
+        ///////////////////////////////////////////////////
 
         // onEnteringState: this method is called each time we are entering into a new game state.
         //                  You can use this method to perform some user interface changes at this moment.
@@ -274,31 +275,41 @@ function (dojo, declare) {
             const state = this.gamedatas.gamestate.name;
             const selectedCards = this.playerHand.getSelectedItems();
 
-            // @TODO:
-            // if(state === "giveCards"){
-            //     this.removeActionButtons();
-            //     if(!this.playerHand.isSelected(item_id))
-            //     return;
-            //
-            //     if(items.length > this.gamedatas.nbr_cards_to_give)
-            //     this.playerHand.unselectItem(item_id);
-            //
-            //     items = this.playerHand.getSelectedItems()
-            //     if(items.length == this.gamedatas.nbr_cards_to_give)
-            //     this.addActionButton( 'giveCards_button', _('Give selected cards'), 'onGiveCards' );
-            // }
+            if (
+                state === 'firstPlayerTurn'
+                || state === 'playerTurn'
+            ){
+                this.removeActionButtons();
+
+                if (selectedCards.length > 0) {
+                    this.addActionButton('giveCards_button', _('Give selected cards'), 'onGiveCards');
+                }
+            }
         },
 
         ///////////////////////////////////////////////////
         //// Utility methods
+        ///////////////////////////////////////////////////
 
-        /*
+        requestAction: function (action, data) {
+            if (
+                typeof data !== 'object'
+                || data.hasOwnProperty('lock')
+                || data.hasOwnProperty('action')
+                || data.hasOwnProperty('module')
+                || data.hasOwnProperty('class')
+            ) {
+                console.error('[requestAction] Invalid data');
+                return;
+            }
 
-            Here, you can defines some utility methods that you can use everywhere in your javascript
-            script.
-
-        */
-
+            this.ajaxcall(
+                `/papayoo/papayoo/${action}.html`,
+                Object.assign({}, data, { lock: true }),
+                this,
+                () => {}
+            );
+        },
         getStockCardIdForColorAndValue: function(color, value) {
             return color + value;
         },
@@ -347,54 +358,27 @@ function (dojo, declare) {
 
         ///////////////////////////////////////////////////
         //// Player's action
+        ///////////////////////////////////////////////////
 
-        /*
+        onPlayCards: function() {
+            if (!this.checkAction('playCards')) {
+                return;
+            }
 
-            Here, you are defining methods to handle player's action (ex: results of mouse click on
-            game objects).
+            const playedCards = this.playerHand.getSelectedItems();
+            if (playedCards.length <= 0) {
+                return;
+            }
 
-            Most of the time, these methods:
-            _ check the action is possible at this game state.
-            _ make a call to the game server
-
-        */
-
-        /* Example:
-
-        onMyMethodToCall1: function(evt) {
-            console.log( 'onMyMethodToCall1' );
-
-            // Preventing default browser reaction
-            dojo.stopEvent( evt );
-
-            // Check that this action is possible (see "possibleactions" in states.inc.php)
-            if( ! this.checkAction( 'myAction' ) )
-            {   return; }
-
-            this.ajaxcall( "/velonimo/velonimo/myAction.html", {
-                                                                    lock: true,
-                                                                    myArgument1: arg1,
-                                                                    myArgument2: arg2,
-                                                                    ...
-                                                                 },
-                         this, function( result ) {
-
-                            // What to do after the server call if it succeeded
-                            // (most of the time: nothing)
-
-                         }, function( is_error) {
-
-                            // What to do after the server call in anyway (success or failure)
-                            // (most of the time: nothing)
-
-                         } );
+            this.requestAction('playCards', {
+                cards: playedCards.map(card => card.id).join(';')
+            });
         },
-
-        */
 
 
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
+        ///////////////////////////////////////////////////
 
         /*
             setupNotifications:
