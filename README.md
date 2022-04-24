@@ -2,6 +2,17 @@
 
 > Board Game Arena adaptation of a card game named Velonimo
 
+## Reminders
+
+### Create sprite of cards
+
+- Resize 180px wide PNG card images to be 90px wide and create sprite from them:
+  ```shell
+  magick montage $(ls blue-*.png) $(ls brown-*.png) $(ls gray-*.png) $(ls green-*.png) $(ls pink-*.png) $(ls red-*.png) $(ls yellow-*.png) $(ls adventurer-*.png) back.png -geometry +0+0 -tile 7x8 -mode concatenate -background none -resize 90 montage.png
+  ```
+- Reduce generated sprite size by ~90% sending it to https://tinypng.com
+
+
 ## License
 
 ### Original board game
@@ -14,5 +25,7 @@ What is contained in the first commit is licensed under [LICENCE_BGA](LICENCE_BG
 
 The images (in `img`) come from the original game design which is the property of the [Velonimo game designers](https://boardgamegeek.com/boardgame/323262/velonimo).
 The usage of these images in this project is done with the agreement of the Velonimo game publisher ([Stratosphères](https://www.studiostratospheres.com)).
+
+The game interface is inspired from [bga-papayoo](https://github.com/Syarwin/bga-papayoo).
 
 All the rest is licensed under GPLv3 - See [LICENSE.md](LICENSE.md) file.

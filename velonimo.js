@@ -15,6 +15,23 @@
  *
  */
 
+/**
+ * Velonimo JS coding rules
+ *
+ * Since this JS file is not transpiled,
+ * we cannot use the latest ecmascript features,
+ * so we target the following browsers:
+ *  - "Edge" 15+
+ *  - "Firefox" 54+
+ *  - "Chrome" 51+
+ *  - "Safari" 10+
+ *  - "Opera" 38+
+ *  - "Opera Mobile" 64+
+ *  - "Samsung Internet" 5+
+ *
+ * Use https://caniuse.com/ to see if you can use a feature.
+ */
+
 // Cards color ID
 const COLOR_BLUE = 10;
 const COLOR_BROWN = 20;
@@ -39,6 +56,10 @@ const VALUE_35 = 35;
 const VALUE_40 = 40;
 const VALUE_45 = 45;
 const VALUE_50 = 50;
+
+// DOM IDs
+const DOM_ID_PLAYER_HAND = 'my-hand';
+const DOM_CLASS_NON_SELECTABLE_CARD = 'non-selectable-player-card'
 
 define([
     'dojo','dojo/_base/declare',
@@ -135,7 +156,7 @@ function (dojo, declare) {
 
             // Init playerHand ("ebg.stock" component)
             this.playerHand = new ebg.stock();
-            this.playerHand.create(this, $('myhand'), this.cardWidth, this.cardHeight);
+            this.playerHand.create(this, $(DOM_ID_PLAYER_HAND), this.cardWidth, this.cardHeight);
             this.playerHand.setSelectionAppearance('class');
             this.playerHand.image_items_per_row = 7;
             const cardsImageUrl = g_gamethemeurl+'img/cards.png';
@@ -158,8 +179,13 @@ function (dojo, declare) {
                     VALUE_6,
                     VALUE_7,
                 ].forEach((value) => {
-                    const stockItemId = this.getStockCardIdForColorAndValue(color, value);
-                    this.playerHand.addItemType(stockItemId, stockItemId, cardsImageUrl, stockItemId);
+                    const cardPositionInSprite = this.getCardPositionInSpriteByColorAndValue(color, value);
+                    this.playerHand.addItemType(
+                        cardPositionInSprite, // stock item ID
+                        cardPositionInSprite, // card weight (used for sorting)
+                        cardsImageUrl, // sprite URL
+                        cardPositionInSprite // position in sprite
+                    );
                 });
             });
             // adventurer cards
@@ -171,14 +197,19 @@ function (dojo, declare) {
                 VALUE_45,
                 VALUE_50,
             ].forEach((value) => {
-                const stockItemId = this.getStockCardIdForColorAndValue(COLOR_ADVENTURER, value);
-                this.playerHand.addItemType(stockItemId, stockItemId, cardsImageUrl, stockItemId);
+                const cardPositionInSprite = this.getCardPositionInSpriteByColorAndValue(COLOR_ADVENTURER, value);
+                this.playerHand.addItemType(
+                    cardPositionInSprite, // stock item ID
+                    cardPositionInSprite, // card weight (used for sorting)
+                    cardsImageUrl, // sprite URL
+                    cardPositionInSprite // position in sprite
+                );
             });
 
             // Setup currentPlayer cards
             dojo.connect(this.playerHand, 'onChangeSelection', this, 'onPlayerHandSelectionChanged');
             gamedatas.currentPlayerCards.forEach((card) => {
-                this.playerHand.addToStockWithId(this.getStockCardIdForColorAndValue(card.color, card.value), card.id );
+                this.playerHand.addToStockWithId(this.getCardPositionInSpriteByColorAndValue(card.color, card.value), card.id );
             });
 
             // Cards played on table
@@ -272,17 +303,28 @@ function (dojo, declare) {
                 return;
             }
 
-            const state = this.gamedatas.gamestate.name;
-            const selectedCards = this.playerHand.getSelectedItems();
+            const cardId = parseInt(itemId, 10);
+            if (this.playerHand.isSelected(cardId)) {
+                this.onPlayerCardSelected(cardId);
+            } else {
+                this.onPlayerCardUnselected(cardId);
+            }
 
+            const state = this.gamedatas.gamestate.name;
             if (
                 state === 'firstPlayerTurn'
                 || state === 'playerTurn'
             ){
+                if (!this.isCurrentPlayerActive()) {
+                    return;
+                }
+
                 this.removeActionButtons();
 
+                const selectedCards = this.getSelectedPlayerCards();
                 if (selectedCards.length > 0) {
-                    this.addActionButton('giveCards_button', _('Give selected cards'), 'onGiveCards');
+                    // @TODO:
+                    // this.addActionButton('giveCards_button', _('Give selected cards'), 'onGiveCards');
                 }
             }
         },
@@ -304,14 +346,394 @@ function (dojo, declare) {
             }
 
             this.ajaxcall(
-                `/papayoo/papayoo/${action}.html`,
+                `/velonimo/velonimo/${action}.html`,
                 Object.assign({}, data, { lock: true }),
                 this,
                 () => {}
             );
         },
-        getStockCardIdForColorAndValue: function(color, value) {
-            return color + value;
+        /**
+         * This function gives the position of the card in the sprite "cards.png",
+         * it also gives weight to cards to sort them by color (blue-1, blue-2, ...) just like in the sprite,
+         * it also gives the type ID for the stock component.
+         *
+         *
+         * @param {number} color
+         * @param {number} value
+         * @returns {number}
+         */
+        getCardPositionInSpriteByColorAndValue: function(color, value) {
+            switch (color) {
+                case COLOR_BLUE:
+                    return value - 1;
+                case COLOR_BROWN:
+                    return 7 + value - 1;
+                case COLOR_GRAY:
+                    return 14 + value - 1;
+                case COLOR_GREEN:
+                    return 21 + value - 1;
+                case COLOR_PINK:
+                    return 28 + value - 1;
+                case COLOR_RED:
+                    return 35 + value - 1;
+                case COLOR_YELLOW:
+                    return 42 + value - 1;
+                case COLOR_ADVENTURER:
+                    switch (value) {
+                        case VALUE_25:
+                            return 49;
+                        case VALUE_30:
+                            return 50;
+                        case VALUE_35:
+                            return 51;
+                        case VALUE_40:
+                            return 52;
+                        case VALUE_45:
+                            return 53;
+                        case VALUE_50:
+                            return 54;
+                        default:
+                            return 55;
+                    }
+                default:
+                    return 55;
+            }
+        },
+        /**
+         *
+         * @param {number} position
+         * @param {number} cardId
+         * @returns {object}
+         */
+        getCardObjectFromPositionInSpriteAndId: function(position, cardId) {
+            let color;
+            let value;
+
+            switch (position) {
+                case 0:
+                    color = COLOR_BLUE;
+                    value = VALUE_1;
+                    break;
+                case 1:
+                    color = COLOR_BLUE;
+                    value = VALUE_2;
+                    break;
+                case 2:
+                    color = COLOR_BLUE;
+                    value = VALUE_3;
+                    break;
+                case 3:
+                    color = COLOR_BLUE;
+                    value = VALUE_4;
+                    break;
+                case 4:
+                    color = COLOR_BLUE;
+                    value = VALUE_5;
+                    break;
+                case 5:
+                    color = COLOR_BLUE;
+                    value = VALUE_6;
+                    break;
+                case 6:
+                    color = COLOR_BLUE;
+                    value = VALUE_7;
+                    break;
+                case 7:
+                    color = COLOR_BROWN;
+                    value = VALUE_1;
+                    break;
+                case 8:
+                    color = COLOR_BROWN;
+                    value = VALUE_2;
+                    break;
+                case 9:
+                    color = COLOR_BROWN;
+                    value = VALUE_3;
+                    break;
+                case 10:
+                    color = COLOR_BROWN;
+                    value = VALUE_4;
+                    break;
+                case 11:
+                    color = COLOR_BROWN;
+                    value = VALUE_5;
+                    break;
+                case 12:
+                    color = COLOR_BROWN;
+                    value = VALUE_6;
+                    break;
+                case 13:
+                    color = COLOR_BROWN;
+                    value = VALUE_7;
+                    break;
+                case 14:
+                    color = COLOR_GRAY;
+                    value = VALUE_1;
+                    break;
+                case 15:
+                    color = COLOR_GRAY;
+                    value = VALUE_2;
+                    break;
+                case 16:
+                    color = COLOR_GRAY;
+                    value = VALUE_3;
+                    break;
+                case 17:
+                    color = COLOR_GRAY;
+                    value = VALUE_4;
+                    break;
+                case 18:
+                    color = COLOR_GRAY;
+                    value = VALUE_5;
+                    break;
+                case 19:
+                    color = COLOR_GRAY;
+                    value = VALUE_6;
+                    break;
+                case 20:
+                    color = COLOR_GRAY;
+                    value = VALUE_7;
+                    break;
+                case 21:
+                    color = COLOR_GREEN;
+                    value = VALUE_1;
+                    break;
+                case 22:
+                    color = COLOR_GREEN;
+                    value = VALUE_2;
+                    break;
+                case 23:
+                    color = COLOR_GREEN;
+                    value = VALUE_3;
+                    break;
+                case 24:
+                    color = COLOR_GREEN;
+                    value = VALUE_4;
+                    break;
+                case 25:
+                    color = COLOR_GREEN;
+                    value = VALUE_5;
+                    break;
+                case 26:
+                    color = COLOR_GREEN;
+                    value = VALUE_6;
+                    break;
+                case 27:
+                    color = COLOR_GREEN;
+                    value = VALUE_7;
+                    break;
+                case 28:
+                    color = COLOR_PINK;
+                    value = VALUE_1;
+                    break;
+                case 29:
+                    color = COLOR_PINK;
+                    value = VALUE_2;
+                    break;
+                case 30:
+                    color = COLOR_PINK;
+                    value = VALUE_3;
+                    break;
+                case 31:
+                    color = COLOR_PINK;
+                    value = VALUE_4;
+                    break;
+                case 32:
+                    color = COLOR_PINK;
+                    value = VALUE_5;
+                    break;
+                case 33:
+                    color = COLOR_PINK;
+                    value = VALUE_6;
+                    break;
+                case 34:
+                    color = COLOR_PINK;
+                    value = VALUE_7;
+                    break;
+                case 35:
+                    color = COLOR_RED;
+                    value = VALUE_1;
+                    break;
+                case 36:
+                    color = COLOR_RED;
+                    value = VALUE_2;
+                    break;
+                case 37:
+                    color = COLOR_RED;
+                    value = VALUE_3;
+                    break;
+                case 38:
+                    color = COLOR_RED;
+                    value = VALUE_4;
+                    break;
+                case 39:
+                    color = COLOR_RED;
+                    value = VALUE_5;
+                    break;
+                case 40:
+                    color = COLOR_RED;
+                    value = VALUE_6;
+                    break;
+                case 41:
+                    color = COLOR_RED;
+                    value = VALUE_7;
+                    break;
+                case 42:
+                    color = COLOR_YELLOW;
+                    value = VALUE_1;
+                    break;
+                case 43:
+                    color = COLOR_YELLOW;
+                    value = VALUE_2;
+                    break;
+                case 44:
+                    color = COLOR_YELLOW;
+                    value = VALUE_3;
+                    break;
+                case 45:
+                    color = COLOR_YELLOW;
+                    value = VALUE_4;
+                    break;
+                case 46:
+                    color = COLOR_YELLOW;
+                    value = VALUE_5;
+                    break;
+                case 47:
+                    color = COLOR_YELLOW;
+                    value = VALUE_6;
+                    break;
+                case 48:
+                    color = COLOR_YELLOW;
+                    value = VALUE_7;
+                    break;
+                case 49:
+                    color = COLOR_ADVENTURER;
+                    value = VALUE_25;
+                    break;
+                case 50:
+                    color = COLOR_ADVENTURER;
+                    value = VALUE_30;
+                    break;
+                case 51:
+                    color = COLOR_ADVENTURER;
+                    value = VALUE_35;
+                    break;
+                case 52:
+                    color = COLOR_ADVENTURER;
+                    value = VALUE_40;
+                    break;
+                case 53:
+                    color = COLOR_ADVENTURER;
+                    value = VALUE_45;
+                    break;
+                case 54:
+                    color = COLOR_ADVENTURER;
+                    value = VALUE_50;
+                    break;
+                default:
+                    throw new Error(`Unsupported card position in sprite: ${position}`);
+            }
+
+            return {
+                id: cardId,
+                color: color,
+                value: value,
+            };
+        },
+        /**
+         * @param {number} color
+         * @param {number} value
+         * @param {object[]} cards
+         * @returns {object[]}
+         */
+        getCardsThatCannotBePlayedWithCard: function(color, value, cards) {
+            return cards.filter((card) => {
+                if (color === COLOR_ADVENTURER && value !== card.value) {
+                    return true;
+                }
+
+                if (color === card.color) {
+                    return false;
+                }
+
+                return value !== card.value;
+            });
+        },
+        /**
+         * @param {object[]} playerCards
+         * @returns {function(object[], object): object[]}
+         */
+        getPlayerCardsThatCannotBePlayedWithSelectedCardsReducer: function(playerCards) {
+            return (acc, card) => acc.concat(
+                this.getCardsThatCannotBePlayedWithCard(card.color, card.value, playerCards)
+                    .filter((c) => acc.every((accCard) => c.id !== accCard.id))
+            );
+        },
+        /**
+         * @returns {object[]}
+         */
+        getAllPlayerCards: function () {
+            return this.playerHand.getAllItems()
+                .map((item) => this.getCardObjectFromPositionInSpriteAndId(item.type, item.id));
+        },
+        /**
+         * @returns {object[]}
+         */
+        getSelectedPlayerCards: function () {
+            return this.playerHand.getSelectedItems()
+                .map((item) => this.getCardObjectFromPositionInSpriteAndId(item.type, item.id));
+        },
+        /**
+         * @param {number} cardId
+         */
+        onPlayerCardSelected: function (cardId) {
+            const playerCards = this.getAllPlayerCards();
+            const selectedCards = this.getSelectedPlayerCards();
+            const playerCardsThatCannotBePlayedWithSelectedCards = selectedCards.reduce(
+                this.getPlayerCardsThatCannotBePlayedWithSelectedCardsReducer(playerCards),
+                []
+            );
+
+            // unselect selected cards that cannot be played with the last selected card
+            selectedCards.forEach((card) => {
+                if (
+                    playerCardsThatCannotBePlayedWithSelectedCards.map((c) => c.id).includes(card.id)
+                    && cardId !== card.id
+                ) {
+                    this.playerHand.unselectItem(card.id);
+                }
+            });
+
+            // display non-selectable cards as non-selectable
+            this.displayCardsAsNonSelectable(
+                this.getSelectedPlayerCards()
+                    .reduce(this.getPlayerCardsThatCannotBePlayedWithSelectedCardsReducer(playerCards), [])
+            );
+        },
+        /**
+         * @param {number} cardId
+         */
+        onPlayerCardUnselected: function (cardId) {
+            const playerCards = this.getAllPlayerCards();
+
+            // display non-selectable cards as non-selectable
+            this.displayCardsAsNonSelectable(
+                this.getSelectedPlayerCards()
+                    .reduce(this.getPlayerCardsThatCannotBePlayedWithSelectedCardsReducer(playerCards), [])
+            );
+        },
+        /**
+         * @param {object[]} cards
+         */
+        displayCardsAsNonSelectable: function (cards) {
+            this.getAllPlayerCards().forEach((playedCard) => {
+                const cardDomId = `${DOM_ID_PLAYER_HAND}_item_${playedCard.id}`;
+                if (cards.map((card) => card.id).includes(playedCard.id)) {
+                    dojo.addClass(cardDomId, DOM_CLASS_NON_SELECTABLE_CARD);
+                } else {
+                    dojo.removeClass(cardDomId, DOM_CLASS_NON_SELECTABLE_CARD);
+                }
+            });
         },
         sortPlayedCards: function (cards) {
             return [...cards].sort((a, b) => b.value - a.value);
@@ -342,11 +764,11 @@ function (dojo, declare) {
                 );
             });
 
-            // place cards from where there animation will start
+            // place cards from where the animation will start
             if (playerId !== this.player_id) {
                 this.placeOnObject('cards-stack-'+topOfStackCardId, 'overall_player_board_'+playerId);
-            } else if ($('myhand_item_'+topOfStackCardId)) {
-                this.placeOnObject('cards-stack-'+topOfStackCardId, 'myhand_item_'+topOfStackCardId);
+            } else if ($(`${DOM_ID_PLAYER_HAND}_item_${topOfStackCardId}`)) {
+                this.placeOnObject('cards-stack-'+topOfStackCardId, `${DOM_ID_PLAYER_HAND}_item_${topOfStackCardId}`);
                 stackedCards.forEach((card) => {
                     this.playerHand.removeFromStockById(card.id);
                 });
@@ -365,7 +787,7 @@ function (dojo, declare) {
                 return;
             }
 
-            const playedCards = this.playerHand.getSelectedItems();
+            const playedCards = this.getSelectedPlayerCards();
             if (playedCards.length <= 0) {
                 return;
             }

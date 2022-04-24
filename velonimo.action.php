@@ -21,6 +21,8 @@
  *
  */
 
+declare(strict_types=1);
+
 class action_velonimo extends APP_GameAction
 {
     // Constructor: please do not modify

@@ -75,31 +75,31 @@ END Board
 /**
 Current player
  */
-.spectatorMode #myhand-wrapper {
+.spectatorMode #my-hand-wrapper {
     display: none;
 }
 
-#myhand .stockitem {
+#my-hand .stockitem {
     border-radius: 10px;
     margin: 5px;
     border: 1px solid grey;
 }
-#myhand .stockitem:hover {
+#my-hand .stockitem:hover {
     cursor: pointer;
     margin: 4px;
     border: 2px solid black !important;
 }
-#myhand .stockitem_selected {
+#my-hand .stockitem_selected {
     margin: 3px;
     transform: scale(1.02);
     border: 2px solid black !important;
     box-shadow: 1px 1px 5px black, 2px 2px 4px black;
 }
-#myhand .stockitem.disabled {
+#my-hand .stockitem.non-selectable-player-card {
     cursor: not-allowed;
     opacity: 0.5 !important;
 }
-#myhand .stockitem.disabled:hover {
+#my-hand .stockitem.non-selectable-player-card:hover {
     cursor: not-allowed;
     margin: 5px;
     border: 1px solid gray !important;

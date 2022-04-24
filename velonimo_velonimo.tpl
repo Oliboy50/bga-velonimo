@@ -2,9 +2,9 @@
 
 <div id="board"></div>
 
-<div id="myhand-wrapper" class="whiteblock">
+<div id="my-hand-wrapper" class="whiteblock">
     <h3>{MY_HAND}</h3>
-    <div id="myhand"></div>
+    <div id="my-hand"></div>
 </div>
 
 <script type="text/javascript">
