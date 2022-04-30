@@ -58,7 +58,19 @@ const VALUE_45 = 45;
 const VALUE_50 = 50;
 
 // DOM IDs
+const DOM_ID_BOARD_CARPET = 'board-carpet';
 const DOM_ID_PLAYER_HAND = 'my-hand';
+const DOM_ID_CURRENT_ROUND = 'current-round';
+const DOM_ID_ACTION_BUTTON_PLAY_CARDS = 'action-button-play-cards';
+const DOM_ID_ACTION_BUTTON_PASS_TURN = 'action-button-pass-turn';
+const DOM_ID_ACTION_BUTTON_SELECT_NEXT_PLAYER = 'action-button-select-next-player';
+
+// DOM classes
+const DOM_CLASS_PLAYER_TABLE = 'player-table'
+const DOM_CLASS_CARDS_STACK = 'cards-stack'
+const DOM_CLASS_DISABLED_ACTION_BUTTON = 'disabled'
+const DOM_CLASS_ACTIVE_PLAYER = 'active'
+const DOM_CLASS_SELECTABLE_PLAYER = 'selectable'
 const DOM_CLASS_NON_SELECTABLE_CARD = 'non-selectable-player-card'
 
 define([
@@ -72,30 +84,102 @@ function (dojo, declare) {
         /*
             Init global variables
          */
-        constructor: function() {
+        constructor: function () {
             // GameInfo
             this.currentRound = 0;
             this.howManyRounds = 0;
             this.howManyPlayers = 0;
+            this.players = [];
 
             // Board
-            this.margin = 20;
-            this.playertableWidth = 130;
-            this.playertableHeight = 165;
-            this.playertablesWidth = Math.min(740, (this.playertableWidth + (this.margin * 2.5)) * 5);
-            this.playertablesHeight = (this.playertableHeight + (this.margin * 2.5)) * 2.5;
+            this.boardCarpetWidth = 740;
+            this.boardCarpetHeight = 450;
 
             // Cards
             this.playerHand = null; // https://en.doc.boardgamearena.com/Stock
             this.cardWidth = 90;
             this.cardHeight = 126;
 
-            // Played cards position indexed by howManyPlayers
-            this.playedCardsPosition = []; // array of [dx, dy] player card position offset
-            this.playedCardsPosition[2] = [[0, 0.75], [0, -0.75]];
-            this.playedCardsPosition[3] = [[0, 0.75], [-0.75, -0.75], [0.75, -0.75]];
-            this.playedCardsPosition[4] = [[0, 0.75], [-1.2, 0], [0, -0.75], [1.2, 0]];
-            this.playedCardsPosition[5] = [[0, 0.75], [-1.2, 0.4], [-0.75, -0.75], [0.75, -0.75], [1.2, 0.4]];
+            // Player tables (a.k.a player places)
+            this.playerTableWidth = 130;
+            this.playerTableHeight = 130;
+            this.playerTableBorderSize = 0;
+            this.marginBetweenPlayers = 20;
+            const TABLE_STYLE_HORIZONTAL_LEFT = `left: ${this.marginBetweenPlayers}px;`;
+            const TABLE_STYLE_HORIZONTAL_CENTER = `left: ${(this.boardCarpetWidth / 2) - (this.playerTableWidth / 2) - (this.marginBetweenPlayers / 2)}px;`;
+            const TABLE_STYLE_HORIZONTAL_RIGHT = `right: ${this.marginBetweenPlayers}px;`;
+            const TABLE_STYLE_VERTICAL_TOP = `top: ${this.marginBetweenPlayers}px;`;
+            const TABLE_STYLE_VERTICAL_BOTTOM = `bottom: ${this.marginBetweenPlayers}px;`;
+            const CARDS_STYLE_ABOVE_TABLE = `top: -${this.cardHeight + this.playerTableBorderSize}px; left: -${this.playerTableBorderSize}px;`;
+            const CARDS_STYLE_BELOW_TABLE = `bottom: -${this.cardHeight + this.playerTableBorderSize}px; left: -${this.playerTableBorderSize}px;`;
+            // the current player place is always at the bottom of the board,
+            // in a way that players always stay closed to their hand
+            this.playersPlaceByNumberOfPlayers = {
+                2: {
+                    1: {
+                        tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
+                        cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+                    },
+                    2: {
+                        tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
+                        cardsStyle: CARDS_STYLE_BELOW_TABLE,
+                    },
+                },
+                3: {
+                    1: {
+                        tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
+                        cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+                    },
+                    2: {
+                        tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
+                        cardsStyle: CARDS_STYLE_BELOW_TABLE,
+                    },
+                    3: {
+                        tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
+                        cardsStyle: CARDS_STYLE_BELOW_TABLE,
+                    },
+                },
+                4: {
+                    1: {
+                        tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
+                        cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+                    },
+                    2: {
+                        tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
+                        cardsStyle: CARDS_STYLE_BELOW_TABLE,
+                    },
+                    3: {
+                        tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
+                        cardsStyle: CARDS_STYLE_BELOW_TABLE,
+                    },
+                    4: {
+                        tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
+                        cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+                    },
+                },
+                5: {
+                    1: {
+                        tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
+                        cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+                    },
+                    2: {
+                        tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_LEFT}`,
+                        cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+                    },
+                    3: {
+                        tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
+                        cardsStyle: CARDS_STYLE_BELOW_TABLE,
+                    },
+                    4: {
+                        tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
+                        cardsStyle: CARDS_STYLE_BELOW_TABLE,
+                    },
+                    5: {
+                        tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
+                        cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+                    },
+                },
+            };
         },
         /*
             setup:
@@ -109,52 +193,46 @@ function (dojo, declare) {
 
             "gamedatas" argument contains all datas retrieved by your "getAllDatas" PHP method.
         */
-        setup: function(gamedatas) {
+        setup: function (gamedatas) {
             console.log(gamedatas);
             this.currentRound = gamedatas.currentRound;
             this.howManyRounds = gamedatas.howManyRounds;
 
             // Setup board
             dojo.place(
-                `<div id="player-tables" style="width: ${this.playertablesWidth}px; height: ${this.playertablesHeight}px;"></div>
-<div class="player-board" id="gameinfo">
-    <div id="hand-counter"></div>
+                `<div id="${DOM_ID_BOARD_CARPET}"></div>
+<div id="game-info" class="player-board">
+    <div id="${DOM_ID_CURRENT_ROUND}"></div>
 </div>`,
                 'board'
             );
 
             // Setup players
-            const players = gamedatas.players;
-            const playerIds = Object.keys(players);
+            this.players = gamedatas.players;
+            const playerIds = Object.keys(this.players);
             this.howManyPlayers = playerIds.length;
-
-            let playerId = gamedatas.currentPlayerId;
-            if(!playerIds.includes(playerId)) {
-                playerId = playerIds[0];
-            }
-
-            const sizeDx = this.playertableWidth + (this.margin * 2);
-            const sizeDy = this.playertableHeight + (this.margin * 2);
-            for (let i = 1; i <= this.howManyPlayers; i++) {
-                const player = players[playerId];
-                const dx = this.playedCardsPosition[this.howManyPlayers][i-1][0];
-                const dy = this.playedCardsPosition[this.howManyPlayers][i-1][1];
+            // @TODO: always place the current player at the same position
+            // @TODO: support spectators
+            // let playerId = gamedatas.currentPlayerId;
+            // if(!playerIds.includes(playerId)) {
+            //     playerId = playerIds[0];
+            // }
+            const playersPlace = this.playersPlaceByNumberOfPlayers[this.howManyPlayers];
+            Object.entries(this.players).forEach((entry) => {
+                const player = entry[1];
+                const playerPosition = playersPlace[player.position];
 
                 dojo.place(this.format_block('jstpl_player_table', {
-                    w: this.playertableWidth,
-                    h: this.playertableHeight,
-                    x: (this.playertablesWidth / 2) + (dx * sizeDx) - (this.playertableWidth / 2),
-                    y: (this.playertablesHeight / 2) - (dy * sizeDy) - (this.playertableHeight / 2) - this.margin,
-                    id: playerId,
-                    position: player.position,
+                    id: player.id,
                     color: player.color,
-                    name: (player.name.length > 10 ? (player.name.substr(0,10) + "...") : player.name),
-                }), 'player-tables');
+                    name: (player.name.length > 10 ? (player.name.substr(0,10) + '...') : player.name),
+                    numberOfCardsInHand: player.howManyCards,
+                    tableStyle: playerPosition.tableStyle,
+                    cardsStyle: playerPosition.cardsStyle,
+                }), DOM_ID_BOARD_CARPET);
+            });
 
-                playerId = gamedatas.nextPlayerIds[playerId];
-            }
-
-            // Init playerHand ("ebg.stock" component)
+            // Init playerHand "ebg.stock" component
             this.playerHand = new ebg.stock();
             this.playerHand.create(this, $(DOM_ID_PLAYER_HAND), this.cardWidth, this.cardHeight);
             this.playerHand.setSelectionAppearance('class');
@@ -208,97 +286,86 @@ function (dojo, declare) {
 
             // Setup currentPlayer cards
             dojo.connect(this.playerHand, 'onChangeSelection', this, 'onPlayerHandSelectionChanged');
-            gamedatas.currentPlayerCards.forEach((card) => {
-                this.playerHand.addToStockWithId(this.getCardPositionInSpriteByColorAndValue(card.color, card.value), card.id );
-            });
+            this.addCardsToPlayerHand(gamedatas.currentPlayerCards);
 
-            // Cards played on table
-            this.playCardsOnTable(playerId, gamedatas.playedCards);
+            // Setup cards played on table
+            this.displayCardsOnTable(gamedatas.playedCardsPlayerId, gamedatas.playedCards);
 
-            // Setup game notifications to handle (see "setupNotifications" method below)
+            // Setup game info
+            this.refreshGameInfos();
+
+            // Setup game notifications to handle
             this.setupNotifications();
         },
-
 
         ///////////////////////////////////////////////////
         //// Game & client states
         ///////////////////////////////////////////////////
-
-        // onEnteringState: this method is called each time we are entering into a new game state.
-        //                  You can use this method to perform some user interface changes at this moment.
-        //
-        onEnteringState: function(stateName, args) {
-            console.log( 'Entering state: '+stateName );
-
-            switch( stateName )
-            {
-
-            /* Example:
-
-            case 'myGameState':
-
-                // Show some HTML block at this game state
-                dojo.style( 'my_html_block_id', 'display', 'block' );
-
-                break;
-           */
-
-
-            case 'dummmy':
-                break;
+        onEnteringState: function (state, data) {
+            // show active player
+            if (
+                state === 'firstPlayerTurn'
+                || state === 'playerTurn'
+                || state === 'playerSelectNextPlayer'
+            ) {
+                dojo.addClass(`player-table-${data.args.activePlayerId}`, DOM_CLASS_ACTIVE_PLAYER);
             }
-        },
 
-        // onLeavingState: this method is called each time we are leaving a game state.
-        //                 You can use this method to perform some user interface changes at this moment.
-        //
-        onLeavingState: function(stateName) {
-            console.log( 'Leaving state: '+stateName );
+            // do special things for state
+            switch (state) {
+                case 'playerSelectNextPlayer':
+                    if (this.player_id === data.args.activePlayerId) {
+                        // hide active player
+                        dojo.removeClass(`player-table-${data.args.activePlayerId}`, DOM_CLASS_ACTIVE_PLAYER);
 
-            switch( stateName )
-            {
+                        Object.entries(data.args.selectablePlayers).forEach((entry) => {
+                            const player = entry[1];
 
-            /* Example:
+                            // setup click on player tables
+                            dojo.addClass(`player-table-${player.id}`, DOM_CLASS_SELECTABLE_PLAYER);
+                            this.connect($(`player-table-${player.id}`), 'onclick', () => this.onSelectNextPlayer(player.id));
 
-            case 'myGameState':
-
-                // Hide the HTML block we are displaying only during this game state
-                dojo.style( 'my_html_block_id', 'display', 'none' );
-
-                break;
-           */
-
-
-            case 'dummmy':
-                break;
-            }
-        },
-
-        // onUpdateActionButtons: in this method you can manage "action buttons" that are displayed in the
-        //                        action status bar (ie: the HTML links in the status bar).
-        //
-        onUpdateActionButtons: function(stateName, args) {
-            console.log( 'onUpdateActionButtons: '+stateName );
-
-            if(this.isCurrentPlayerActive()) {
-                switch(stateName) {
-/*
-                 Example:
-
-                 case 'myGameState':
-
-                    // Add 3 action buttons in the action status bar:
-
-                    this.addActionButton( 'button_1_id', _('Button 1 label'), 'onMyMethodToCall1' );
-                    this.addActionButton( 'button_2_id', _('Button 2 label'), 'onMyMethodToCall2' );
-                    this.addActionButton( 'button_3_id', _('Button 3 label'), 'onMyMethodToCall3' );
+                            // setup click on action buttons
+                            this.addActionButton(`${DOM_ID_ACTION_BUTTON_SELECT_NEXT_PLAYER}-${player.id}`, player.name, () => this.onSelectNextPlayer(player.id), null, false, 'gray');
+                            dojo.style(`${DOM_ID_ACTION_BUTTON_SELECT_NEXT_PLAYER}-${player.id}`, 'color', `#${player.color}`);
+                        });
+                    }
                     break;
-*/
-                }
             }
         },
-        onPlayerHandSelectionChanged: function(controlName, itemId)
-        {
+        onLeavingState: function (state) {
+            // hide active player
+            dojo.query(`.${DOM_CLASS_PLAYER_TABLE}`).removeClass(DOM_CLASS_ACTIVE_PLAYER);
+
+            // do special things for state
+            switch (state) {
+                case 'playerSelectNextPlayer':
+                    Object.entries(this.players).forEach((entry) => {
+                        const player = entry[1];
+                        dojo.removeClass(`player-table-${player.id}`, DOM_CLASS_SELECTABLE_PLAYER);
+                        this.disconnect($(`player-table-${player.id}`), 'onclick');
+                    });
+                    break;
+            }
+        },
+        onUpdateActionButtons: function (state, args) {
+            this.removeActionButtons();
+
+            if (!this.isCurrentPlayerActive()) {
+                return;
+            }
+
+            switch (state) {
+                case 'firstPlayerTurn':
+                    this.setupPlayCardsActionButton();
+                    break;
+                case 'playerTurn':
+                    this.addActionButton(DOM_ID_ACTION_BUTTON_PASS_TURN, _('Pass'), 'onPassTurn');
+                    this.setupPlayCardsActionButton();
+                    break;
+            }
+        },
+        onPlayerHandSelectionChanged: function (controlName, itemId) {
             if (typeof itemId === 'undefined') {
                 return;
             }
@@ -311,21 +378,15 @@ function (dojo, declare) {
             }
 
             const state = this.gamedatas.gamestate.name;
-            if (
-                state === 'firstPlayerTurn'
-                || state === 'playerTurn'
-            ){
-                if (!this.isCurrentPlayerActive()) {
-                    return;
-                }
+            switch (state) {
+                case 'firstPlayerTurn':
+                case 'playerTurn':
+                    if (!this.isCurrentPlayerActive()) {
+                        return;
+                    }
 
-                this.removeActionButtons();
-
-                const selectedCards = this.getSelectedPlayerCards();
-                if (selectedCards.length > 0) {
-                    // @TODO:
-                    // this.addActionButton('giveCards_button', _('Give selected cards'), 'onGiveCards');
-                }
+                    this.setupPlayCardsActionButton();
+                    break;
             }
         },
 
@@ -333,6 +394,10 @@ function (dojo, declare) {
         //// Utility methods
         ///////////////////////////////////////////////////
 
+        /**
+         * @param {string} action
+         * @param {object} data
+         */
         requestAction: function (action, data) {
             if (
                 typeof data !== 'object'
@@ -352,6 +417,34 @@ function (dojo, declare) {
                 () => {}
             );
         },
+        refreshGameInfos: function () {
+            // display players data
+            Object.entries(this.players).forEach((entry) => {
+                const player = entry[1];
+                // score
+                if (this.scoreCtrl.hasOwnProperty(player.id)) {
+                    this.scoreCtrl[player.id].toValue(player.score);
+                }
+                // number of remaining cards in player hand
+                $(`player-table-${player.id}-number-of-cards`).innerHTML = player.howManyCards;
+            });
+
+            // display current round
+            $(DOM_ID_CURRENT_ROUND).innerHTML = `${this.currentRound} / ${this.howManyRounds}`;
+        },
+        setupPlayCardsActionButton: function () {
+            // @TODO: auto-pass if cannot play higher than last played value
+            if (!$(DOM_ID_ACTION_BUTTON_PLAY_CARDS)) {
+                this.addActionButton(DOM_ID_ACTION_BUTTON_PLAY_CARDS, _('Play selected cards'), 'onPlayCards');
+                dojo.place(`<span id="${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value"></span>`, DOM_ID_ACTION_BUTTON_PLAY_CARDS);
+                this.addTooltip(`${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value`, _('Total value of selected cards'), '');
+            }
+
+            // @TODO: do not enable button if less than last played value
+            const selectedCards = this.getSelectedPlayerCards();
+            dojo.toggleClass(DOM_ID_ACTION_BUTTON_PLAY_CARDS, DOM_CLASS_DISABLED_ACTION_BUTTON, selectedCards.length <= 0);
+            $(`${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value`).innerHTML = ` (${this.getCardsValue(selectedCards)})`;
+        },
         /**
          * This function gives the position of the card in the sprite "cards.png",
          * it also gives weight to cards to sort them by color (blue-1, blue-2, ...) just like in the sprite,
@@ -362,7 +455,7 @@ function (dojo, declare) {
          * @param {number} value
          * @returns {number}
          */
-        getCardPositionInSpriteByColorAndValue: function(color, value) {
+        getCardPositionInSpriteByColorAndValue: function (color, value) {
             switch (color) {
                 case COLOR_BLUE:
                     return value - 1;
@@ -405,7 +498,7 @@ function (dojo, declare) {
          * @param {number} cardId
          * @returns {object}
          */
-        getCardObjectFromPositionInSpriteAndId: function(position, cardId) {
+        getCardObjectFromPositionInSpriteAndId: function (position, cardId) {
             let color;
             let value;
 
@@ -646,7 +739,7 @@ function (dojo, declare) {
          * @param {object[]} cards
          * @returns {object[]}
          */
-        getCardsThatCannotBePlayedWithCard: function(color, value, cards) {
+        getCardsThatCannotBePlayedWithCard: function (color, value, cards) {
             return cards.filter((card) => {
                 if (color === COLOR_ADVENTURER && value !== card.value) {
                     return true;
@@ -661,9 +754,9 @@ function (dojo, declare) {
         },
         /**
          * @param {object[]} playerCards
-         * @returns {function(object[], object): object[]}
+         * @returns {function (object[], object): object[]}
          */
-        getPlayerCardsThatCannotBePlayedWithSelectedCardsReducer: function(playerCards) {
+        getPlayerCardsThatCannotBePlayedWithSelectedCardsReducer: function (playerCards) {
             return (acc, card) => acc.concat(
                 this.getCardsThatCannotBePlayedWithCard(card.color, card.value, playerCards)
                     .filter((c) => acc.every((accCard) => c.id !== accCard.id))
@@ -682,6 +775,27 @@ function (dojo, declare) {
         getSelectedPlayerCards: function () {
             return this.playerHand.getSelectedItems()
                 .map((item) => this.getCardObjectFromPositionInSpriteAndId(item.type, item.id));
+        },
+        /**
+         * @param {object[]} cards
+         */
+        getCardsValue: function (cards) {
+            if (!cards.length) {
+                return 0;
+            }
+
+            if (cards.length === 1) {
+                return cards[0].value;
+            }
+
+            let minCardValue = 1000;
+            cards.forEach((card) => {
+                if (card.value < minCardValue) {
+                    minCardValue = card.value;
+                }
+            });
+
+            return (cards.length * 10) + minCardValue;
         },
         /**
          * @param {number} cardId
@@ -727,38 +841,46 @@ function (dojo, declare) {
          */
         displayCardsAsNonSelectable: function (cards) {
             this.getAllPlayerCards().forEach((playedCard) => {
-                const cardDomId = `${DOM_ID_PLAYER_HAND}_item_${playedCard.id}`;
-                if (cards.map((card) => card.id).includes(playedCard.id)) {
-                    dojo.addClass(cardDomId, DOM_CLASS_NON_SELECTABLE_CARD);
-                } else {
-                    dojo.removeClass(cardDomId, DOM_CLASS_NON_SELECTABLE_CARD);
-                }
+                dojo.toggleClass(
+                    `${DOM_ID_PLAYER_HAND}_item_${playedCard.id}`,
+                    DOM_CLASS_NON_SELECTABLE_CARD,
+                    cards.map((card) => card.id).includes(playedCard.id)
+                );
             });
         },
+        /**
+         * @param {object[]} cards
+         */
         sortPlayedCards: function (cards) {
             return [...cards].sort((a, b) => b.value - a.value);
         },
-        playCardsOnTable: function(playerId, cards) {
+        /**
+         * @param {number} playerId
+         * @param {object[]} cards
+         */
+        displayCardsOnTable: function (playerId, cards) {
             if (cards.length <= 0) {
                 return;
             }
 
             const stackedCards = this.sortPlayedCards(cards);
-            const topOfStackCardId = stackedCards[stackedCards.length - 1];
+            const topOfStackCardId = stackedCards[stackedCards.length - 1].id;
 
             // create played cards
             dojo.place(
                 this.format_block('jstpl_cards_stack', {
                     id: topOfStackCardId,
+                    width: ((stackedCards.length - 1) * (this.cardWidth / 3)) + this.cardWidth,
                 }),
                 `player-table-${playerId}-cards`
             );
             stackedCards.forEach((card) => {
+                const position = this.getCardPositionInSpriteByColorAndValue(card.color, card.value)
                 dojo.place(
                     this.format_block('jstpl_card_in_stack', {
                         id: card.id,
-                        color: card.color,
-                        value: card.value,
+                        x: (position % 7) * this.cardWidth,
+                        y: Math.floor(position / 7) * this.cardHeight,
                     }),
                     `cards-stack-${topOfStackCardId}`
                 );
@@ -766,23 +888,34 @@ function (dojo, declare) {
 
             // place cards from where the animation will start
             if (playerId !== this.player_id) {
-                this.placeOnObject('cards-stack-'+topOfStackCardId, 'overall_player_board_'+playerId);
+                this.placeOnObject(`cards-stack-${topOfStackCardId}`, `player-table-${playerId}-hand`);
             } else if ($(`${DOM_ID_PLAYER_HAND}_item_${topOfStackCardId}`)) {
-                this.placeOnObject('cards-stack-'+topOfStackCardId, `${DOM_ID_PLAYER_HAND}_item_${topOfStackCardId}`);
+                this.placeOnObject(`cards-stack-${topOfStackCardId}`, `${DOM_ID_PLAYER_HAND}_item_${topOfStackCardId}`);
                 stackedCards.forEach((card) => {
                     this.playerHand.removeFromStockById(card.id);
                 });
             }
 
             // move cards to their destination
-            this.slideToObject('cards-stack-'+topOfStackCardId, `player-table-${playerId}-cards`).play();
+            this.slideToObject(`cards-stack-${topOfStackCardId}`, `player-table-${playerId}-cards`).play();
+        },
+        /**
+         * @param {object[]} cards
+         */
+        addCardsToPlayerHand: function (cards) {
+            cards.forEach((card) => {
+                this.playerHand.addToStockWithId(this.getCardPositionInSpriteByColorAndValue(card.color, card.value), card.id );
+            });
+        },
+        discardCards: function () {
+            dojo.query(`.${DOM_CLASS_CARDS_STACK}`).forEach(dojo.destroy);
         },
 
         ///////////////////////////////////////////////////
         //// Player's action
         ///////////////////////////////////////////////////
 
-        onPlayCards: function() {
+        onPlayCards: function () {
             if (!this.checkAction('playCards')) {
                 return;
             }
@@ -795,8 +928,28 @@ function (dojo, declare) {
             this.requestAction('playCards', {
                 cards: playedCards.map(card => card.id).join(';')
             });
-        },
 
+            // reset cards selection
+            this.playerHand.unselectAll();
+            this.displayCardsAsNonSelectable([]);
+            this.setupPlayCardsActionButton();
+        },
+        onPassTurn: function () {
+            if (!this.checkAction('passTurn')) {
+                return;
+            }
+
+            this.requestAction('passTurn', {});
+        },
+        onSelectNextPlayer: function (selectedPlayerId) {
+            if (!this.checkAction('selectNextPlayer')) {
+                return;
+            }
+
+            this.requestAction('selectNextPlayer', {
+                selectedPlayerId: selectedPlayerId,
+            });
+        },
 
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
@@ -811,36 +964,47 @@ function (dojo, declare) {
                   your velonimo.game.php file.
 
         */
-        setupNotifications: function() {
-            console.log( 'notifications subscriptions setup' );
+        setupNotifications: function () {
+            [
+                ['roundStarted', 1],
+                ['cardsGiven', 1],
+                ['cardsPlayed', 1000],
+                ['cardsDiscarded', 1],
+                ['roundEnded', 1],
+            ].forEach((notif) => {
+                const name = notif[0];
+                const lockDurationInMs = notif[1];
 
-            // TODO: here, associate your game notifications with local methods
-
-            // Example 1: standard notification handling
-            // dojo.subscribe( 'cardPlayed', this, "notif_cardPlayed" );
-
-            // Example 2: standard notification handling + tell the user interface to wait
-            //            during 3 seconds after calling the method in order to let the players
-            //            see what is happening in the game.
-            // dojo.subscribe( 'cardPlayed', this, "notif_cardPlayed" );
-            // this.notifqueue.setSynchronous( 'cardPlayed', 3000 );
-            //
+                dojo.subscribe(name, this, `notif_${name}`);
+                this.notifqueue.setSynchronous(name, lockDurationInMs);
+            });
         },
-
-        // TODO: from this point and below, you can write your game notifications handling methods
-
-        /*
-        Example:
-
-        notif_cardPlayed: function(notif) {
-            console.log( 'notif_cardPlayed' );
-            console.log( notif );
-
-            // Note: notif.args contains the arguments specified during you "notifyAllPlayers" / "notifyPlayer" PHP call
-
-            // TODO: play the card in the user interface.
+        notif_roundStarted: function (data) {
+            this.currentRound = data.args.currentRound;
+            this.players = data.args.players;
+            this.refreshGameInfos();
         },
+        notif_cardsGiven: function (data) {
+            this.playerHand.removeAll();
+            this.addCardsToPlayerHand(data.args.cards);
+        },
+        notif_cardsPlayed: function (data) {
+            // remove last played cards
+            this.discardCards();
 
-        */
+            // place new played cards
+            this.displayCardsOnTable(data.args.playerId, data.args.playedCards);
+
+            // update number of cards in players hand
+            this.players[data.args.playerId].howManyCards = data.args.remainingNumberOfCards;
+            this.refreshGameInfos();
+        },
+        notif_cardsDiscarded: function (data) {
+            this.discardCards();
+        },
+        notif_roundEnded: function (data) {
+            this.players = data.args.players;
+            this.refreshGameInfos();
+        },
    });
 });

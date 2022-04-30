@@ -6,6 +6,17 @@ declare(strict_types=1);
  * Velonimo constants
  */
 
+// States
+define('ST_BGA_GAME_SETUP', 1);
+define('ST_START_ROUND', 10);
+define('ST_FIRST_PLAYER_TURN', 12);
+define('ST_PLAYER_TURN', 20);
+define('ST_ACTIVATE_NEXT_PLAYER', 22);
+define('ST_PLAYER_SELECT_NEXT_PLAYER', 30);
+define('ST_APPLY_SELECTED_NEXT_PLAYER', 31);
+define('ST_END_ROUND', 80);
+define('ST_BGA_GAME_END', 99);
+
 // Cards color ID
 define('COLOR_BLUE', 10);
 define('COLOR_BROWN', 20);

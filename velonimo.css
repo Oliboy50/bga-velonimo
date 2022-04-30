@@ -57,16 +57,77 @@ Board
     justify-content: center;
 }
 
-#player-tables {
+#game-info {
+    width: auto; /* to cancel the width property of the BGA ".player-board" class */
+    position: absolute;
+    top: 0;
+    left: 2px;
+    border: 1px solid black;
+    border-radius: 8px;
+}
+#current-round {
+    font-size: 1.5em;
+}
+
+#board-carpet {
     position: relative;
-    /*background-image:url("img/icon-shuffle.svg");*/
-    /*background-size:70px;*/
-    /*background-position:center center;*/
-    /*background-repeat:no-repeat;*/
-    background-color: #35714a;
-    border-radius: 30px;
+    width: 740px;
+    height: 450px;
+    background-color: #e9c646;
     box-shadow: 2px 2px 5px black;
-    border: 1px solid #193b27;
+    border: 1px solid #3b3119;
+}
+
+.player-table {
+    position: absolute; /* position is dynamically computed */
+    width: 130px;
+    height: 130px;
+    text-align: center;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    box-sizing: border-box;
+    background-color: rgba(255,255,255,0.7);
+    padding: 5px;
+}
+.player-table.active {
+    border: 2px solid #ff0000;
+}
+.player-table.selectable {
+    cursor: pointer;
+    border: 2px solid black;
+}
+.player-table.selectable:hover {
+    border: 2px solid #ff0000;
+    transform: scale(1.02);
+}
+.player-table-name {
+    font-weight: bold;
+    pointer-events: none;
+}
+.player-table-hand {
+    position: relative;
+    width: 90px;
+    height: 90px;
+    margin: 5px auto 0;
+    background-image: url('img/remaining_cards.png');
+    background-repeat: no-repeat;
+    background-position: center center;
+    pointer-events: none;
+}
+.player-table-hand .number-of-cards {
+    position: absolute;
+    left: 20px;
+    top: 20px;
+    font-size: 2em;
+    text-align: center;
+    width: 1em;
+    pointer-events: none;
+}
+.player-table-cards {
+    position: absolute; /* position is dynamically computed */
+    width: 130px; /* player table width */
+    height: 126px; /* card height */
+    pointer-events: none;
 }
 /**
 END Board
@@ -112,13 +173,16 @@ END Current player
 Cards
  */
 .cards-stack {
-    position: absolute;
-    width: 200px;
-    height: 100px;
+    position: absolute; /* position is dynamically computed */
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
 }
 .card-in-stack {
     width: 90px;
     height: 126px;
+    margin-right: -60px; /* 2/3 card width */
+    border-radius: 10px;
     background-image: url('img/cards.png');
     background-size: 630px 1008px;
     background-repeat: no-repeat;

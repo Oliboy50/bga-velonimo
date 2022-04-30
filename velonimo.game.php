@@ -28,7 +28,9 @@ class Velonimo extends Table
     private const GAME_STATE_CURRENT_ROUND = 'currentRound';
     private const GAME_STATE_LAST_PLAYED_CARDS_VALUE = 'valueToBeat';
     private const GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID = 'playerIdForValueToBeat';
-    private const GAME_STATE_HOW_MANY_ROUNDS = 'howManyRounds';
+    private const GAME_STATE_SELECTED_NEXT_PLAYER_ID = 'selectedNextPlayerId';
+
+    private const GAME_OPTION_HOW_MANY_ROUNDS = 'howManyRounds';
 
     private const CARD_LOCATION_DECK = 'deck';
     private const CARD_LOCATION_PLAYER_HAND = 'hand';
@@ -38,8 +40,7 @@ class Velonimo extends Table
     /** @var Deck (BGA framework component to manage cards) */
     private $deck;
 
-    function __construct()
-	{
+    function __construct() {
         parent::__construct();
 
         // Your global variables labels:
@@ -52,15 +53,15 @@ class Velonimo extends Table
             self::GAME_STATE_CURRENT_ROUND => 10,
             self::GAME_STATE_LAST_PLAYED_CARDS_VALUE => 11,
             self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID => 12,
-            self::GAME_STATE_HOW_MANY_ROUNDS => 100,
+            self::GAME_STATE_SELECTED_NEXT_PLAYER_ID => 13,
+            self::GAME_OPTION_HOW_MANY_ROUNDS => 100,
         ]);
 
         $this->deck = self::getNew('module.common.deck');
         $this->deck->init('card');
 	}
 
-    protected function getGameName()
-    {
+    protected function getGameName() {
 		// Used for translations and stuff. Please do not modify.
         return 'velonimo';
     }
@@ -72,8 +73,7 @@ class Velonimo extends Table
         In this method, you must setup the game according to the game rules, so that
         the game is ready to be played.
     */
-    protected function setupNewGame($players, $options = [])
-    {
+    protected function setupNewGame($players, $options = []) {
         self::DbQuery('DELETE FROM player WHERE 1');
 
         // Set the colors of the players with HTML color code
@@ -109,6 +109,7 @@ class Velonimo extends Table
         self::setGameStateValue(self::GAME_STATE_CURRENT_ROUND, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, 0);
+        self::setGameStateValue(self::GAME_STATE_SELECTED_NEXT_PLAYER_ID, 0);
 
         // Init game statistics
         // (note: statistics used in this file must be defined in your stats.inc.php file)
@@ -174,29 +175,27 @@ class Velonimo extends Table
         _ when the game starts
         _ when a player refreshes the game page (F5)
     */
-    protected function getAllDatas()
-    {
+    protected function getAllDatas() {
         $result = [];
 
         // Rounds
-        $result['currentRound'] = self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
-        $result['howManyRounds'] = self::getGameStateValue(self::GAME_STATE_HOW_MANY_ROUNDS);
+        $result['currentRound'] = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
+        $result['howManyRounds'] = (int) self::getGameStateValue(self::GAME_OPTION_HOW_MANY_ROUNDS);
 
         // Players
-        $result['players'] = $players = $this->formatPlayersForClient($this->getPlayersFromDatabase());
-	    $result['nextPlayerIds'] = self::createNextPlayerTable(array_keys($players));
-        $result['currentPlayerId'] = $currentPlayerId = self::getCurrentPlayerId();
+        $result['players'] = $this->formatPlayersForClient($this->getPlayersFromDatabase());
+        // @TODO: support spectator
         $result['currentPlayerCards'] = $this->formatCardsForClient(
-            $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYER_HAND, $currentPlayerId))
+            $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYER_HAND, (int) self::getCurrentPlayerId()))
         );
 
         // Cards
-        $result['colorNames'] = $this->colorNames;
+        // @TODO: $result['colorNames'] = $this->colorNames;
         $result['playedCards'] = $this->formatCardsForClient(
             $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYED))
         );
-        $result['playedCardsValue'] = self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE);
-        $result['playedCardsPlayerId'] = self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID);
+        $result['playedCardsValue'] = (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE);
+        $result['playedCardsPlayerId'] = (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID);
 
         return $result;
     }
@@ -211,28 +210,16 @@ class Velonimo extends Table
         This method is called each time we are in a game state with the "updateGameProgression" property set to true
         (see states.inc.php)
     */
-    function getGameProgression()
-    {
-        $howManyRounds = self::getGameStateValue(self::GAME_STATE_HOW_MANY_ROUNDS);
-        $currentRound = self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
+    function getGameProgression() {
+        $howManyRounds = (int) self::getGameStateValue(self::GAME_OPTION_HOW_MANY_ROUNDS);
+        $currentRound = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
 
         return ((int) floor(($currentRound - 1) / $howManyRounds)) * 100;
     }
 
-
-//////////////////////////////////////////////////////////////////////////////
-//////////// Utility functions
-////////////
-
-    /*
-        In this space, you can put any utility methods useful for your game logic
-    */
-
-
-
-//////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 //////////// Player actions
-////////////
+////////////////////////////////////////////////////////////////////////////
 
     /*
         Each time a player is doing some game action, one of the methods below is called.
@@ -242,8 +229,7 @@ class Velonimo extends Table
     /**
      * @param int[] $playedCardIds
      */
-    function playCards(array $playedCardIds)
-    {
+    function playCards(array $playedCardIds) {
         self::checkAction('playCards');
 
         // validate $playedCardIds
@@ -261,17 +247,18 @@ class Velonimo extends Table
         }
 
         // make sure the cards are in player's hand
-        $currentPlayerId = self::getCurrentPlayerId();
+        $currentPlayerId = (int) self::getCurrentPlayerId();
         $currentPlayerCards = $this->fromBgaCardsToVelonimoCards(
             $this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYER_HAND, $currentPlayerId)
         );
-        $currentPlayerCardIds = array_map(fn(VelonimoCard $card) => $card->getId(), $currentPlayerCards);
+        $currentPlayerCardIds = array_map(fn (VelonimoCard $card) => $card->getId(), $currentPlayerCards);
         foreach ($playedCardIds as $id) {
-            if (!in_array($currentPlayerCardIds, $id, true)) {
+            if (!in_array($id, $currentPlayerCardIds, true)) {
                 throw new BgaUserException(self::_('You cannot play a card which is not in your hand.'));
             }
         }
 
+        // get played cards object from ID
         /** @var VelonimoCard[] $playedCards */
         $playedCards = [];
         foreach ($currentPlayerCards as $playerCard) {
@@ -280,7 +267,29 @@ class Velonimo extends Table
             }
         }
 
-        $lastPlayedCardsValue = self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE);
+        // check that played cards can be played together
+        /** @var VelonimoCard $lastCheckedCard */
+        $lastCheckedCard = null;
+        foreach ($playedCards as $card) {
+            if (!$lastCheckedCard) {
+                $lastCheckedCard = $card;
+                continue;
+            }
+
+            if (
+                $lastCheckedCard->getColor() === COLOR_ADVENTURER
+                || (
+                    $lastCheckedCard->getColor() !== $card->getColor()
+                    && $lastCheckedCard->getValue() !== $card->getValue()
+                )
+            ) {
+                throw new BgaUserException(self::_('You cannot play a card which is not in your hand.'));
+            }
+            $lastCheckedCard = $card;
+        }
+
+        // check that played cards value is higher than the previous played cards value
+        $lastPlayedCardsValue = (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE);
         $playedCardsValue = $this->getCardsValue($playedCards);
         if ($playedCardsValue <= $lastPlayedCardsValue) {
             throw new BgaUserException(sprintf(
@@ -294,12 +303,13 @@ class Velonimo extends Table
         $this->deck->moveCards($playedCardIds, self::CARD_LOCATION_PLAYED, $currentPlayerId);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, $currentPlayerId);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, $playedCardsValue);
-        self::incStat('table', 'playCardsAction');
-        self::incStat('player', 'playCardsAction', $currentPlayerId);
+        self::incStat(1, 'playCardsAction');
+        self::incStat(1, 'playCardsAction', $currentPlayerId);
         self::notifyAllPlayers('cardsPlayed', clienttranslate('${playerName} plays ${playedCardsValue}'), [
             'playerId' => $currentPlayerId,
-            'playerName' => self::getCurrentPlayerName(),
             'playedCards' => $this->formatCardsForClient($playedCards),
+            'remainingNumberOfCards' => count($currentPlayerCards) - count($playedCards),
+            'playerName' => self::getCurrentPlayerName(),
             'playedCardsValue' => $playedCardsValue,
         ]);
 
@@ -311,15 +321,11 @@ class Velonimo extends Table
 
         // the player played his last card, set its rank for this round
         $players = $this->getPlayersFromDatabase();
-        $currentRound = self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
+        $currentRound = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
         $nextRankForRound = $this->getNextRankForRound($players, $currentRound);
         $currentPlayer = $this->getPlayerById($currentPlayerId, $players);
         $currentPlayer->addRoundRanking($currentRound, $nextRankForRound);
-        self::DbQuery(sprintf(
-            'UPDATE player SET rounds_ranking=%s WHERE player_id=%s',
-            VelonimoPlayer::serializeRoundsRanking($currentPlayer->getRoundsRanking()),
-            $currentPlayer->getId()
-        ));
+        $this->updatePlayerRoundsRanking($currentPlayer);
 
         // if there are at least 2 players who have cards, it's next player turn
         $playersWhoCanPlay = array_filter(
@@ -334,28 +340,22 @@ class Velonimo extends Table
         // end the round
         $lastPlayer = $playersWhoCanPlay[0];
         $lastPlayer->addRoundRanking($currentRound, $nextRankForRound + 1);
-        self::DbQuery(sprintf(
-            'UPDATE player SET rounds_ranking=%s WHERE player_id=%s',
-            VelonimoPlayer::serializeRoundsRanking($lastPlayer->getRoundsRanking()),
-            $lastPlayer->getId()
-        ));
+        $this->updatePlayerRoundsRanking($lastPlayer);
         $this->gamestate->nextState('endRound');
     }
 
-    function passTurn()
-    {
+    function passTurn() {
         self::checkAction('passTurn');
 
         $this->incStat(1, 'passTurnAction');
-        $this->incStat(1, 'passTurnAction', self::getCurrentPlayerId());
+        $this->incStat(1, 'passTurnAction', (int) self::getCurrentPlayerId());
 
         // @TODO: notify
 
         $this->gamestate->nextState('nextPlayer');
     }
 
-    function selectNextPlayer(int $nextPlayerId)
-    {
+    function selectNextPlayer(int $nextPlayerId) {
         self::checkAction('selectNextPlayer');
 
         // make sure the selected player can play
@@ -363,20 +363,18 @@ class Velonimo extends Table
             $this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYER_HAND, $nextPlayerId)
         );
         if (empty($nextPlayerCards)) {
-            throw new BgaUserException(self::_('This player cannot play. Please select another player who has cards.'));
+            throw new BgaUserException(self::_('This player cannot play. Please select a player who has cards.'));
         }
 
-        self::giveExtraTime($nextPlayerId);
-        $this->gamestate->changeActivePlayer($nextPlayerId);
-
-        // @TODO: notify
-
-        $this->gamestate->nextState('firstPlayerTurn');
+        // in order to change the active player during an "activeplayer" type state,
+        // we have to use an intermediate global variable and an intermediate "game" type state
+        self::setGameStateValue(self::GAME_STATE_SELECTED_NEXT_PLAYER_ID, $nextPlayerId);
+        $this->gamestate->nextState('applySelectedNextPlayer');
     }
 
-//////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 //////////// Game state arguments
-////////////
+////////////////////////////////////////////////////////////////////////////
 
     /*
         Here, you can create methods defined as "game state arguments" (see "args" property in states.inc.php).
@@ -384,43 +382,39 @@ class Velonimo extends Table
         game state.
     */
 
-    /*
-
-    Example for game state "MyGameState":
-
-    function argMyGameState()
-    {
-        // Get some values from the current game situation in database...
-
-        // return values:
+    function argPlayerTurn() {
         return [
-            'variable1' => $value1,
-            'variable2' => $value2,
-            ...
+            'activePlayerId' => (int) self::getActivePlayerId(),
         ];
     }
-    */
 
-//////////////////////////////////////////////////////////////////////////////
+    function argPlayerSelectNextPlayer() {
+        $currentRound = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
+
+        return [
+            'activePlayerId' => (int) self::getActivePlayerId(),
+            'selectablePlayers' => $this->formatPlayersForClient($this->getPlayersWhoCanPlayDuringRound($currentRound)),
+        ];
+    }
+
+////////////////////////////////////////////////////////////////////////////
 //////////// Game state actions
-////////////
+////////////////////////////////////////////////////////////////////////////
 
     /*
         Here, you can create methods defined as "game state actions" (see "action" property in states.inc.php).
         The action method of state X is called everytime the current game state is set to X.
     */
 
-    function stStartRound()
-    {
+    function stStartRound() {
+        $this->discardLastPlayedCards();
         // take back all cards and shuffle them
         $this->deck->moveAllCardsInLocation(null, self::CARD_LOCATION_DECK);
         $this->deck->shuffle(self::CARD_LOCATION_DECK);
 
         // increment current round value
-        self::setGameStateValue(
-            self::GAME_STATE_CURRENT_ROUND,
-            self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND) + 1
-        );
+        $newRound = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND) + 1;
+        self::setGameStateValue(self::GAME_STATE_CURRENT_ROUND, $newRound);
 
         // deal 11 cards to each player
         $players = $this->getPlayersFromDatabase();
@@ -430,7 +424,7 @@ class Velonimo extends Table
                 $this->deck->pickCards(11, self::CARD_LOCATION_DECK, $player->getId())
             );
 
-            self::notifyPlayer($player->getId(), 'newHand', '', [
+            self::notifyPlayer($player->getId(), 'cardsGiven', '', [
                 'cards' => $this->formatCardsForClient($cards),
             ]);
         }
@@ -442,45 +436,64 @@ class Velonimo extends Table
             self::activeNextPlayer();
         }
 
+        self::notifyAllPlayers('roundStarted', '', [
+            'currentRound' => $newRound,
+            'players' => $this->formatPlayersForClient($players),
+        ]);
+
         $this->gamestate->nextState('firstPlayerTurn');
     }
 
-    function stActivateNextPlayer()
-    {
+    function stActivateNextPlayer() {
         $players = $this->getPlayersFromDatabase();
-        $currentRound = self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
+        $currentRound = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
         $playersWhoCanPlayIds = array_map(
             fn (VelonimoPlayer $player) => $player->getId(),
             $this->getPlayersWhoCanPlayDuringRound($currentRound, $players)
         );
-        $playerIdWhoPlayedTheLastCards = self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID);
+        $playerIdWhoPlayedTheLastCards = (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID);
 
         // @TODO: make sure we can use "self::activeNextPlayer()" in a loop,
         //        if we can't => either try to use the nextPlayerTable() or make this state recursive
         // activate next players until we find one who can play
         foreach ($players as $ignored) {
             $nextPlayerId = self::activeNextPlayer();
+            $nextPlayerCanPlay = in_array($nextPlayerId, $playersWhoCanPlayIds, true);
             // if the next player is the one who played the last played cards, remove the cards from the table
             if ($nextPlayerId === $playerIdWhoPlayedTheLastCards) {
                 $this->discardLastPlayedCards();
-                $this->gamestate->nextState('playerSelectNextPlayer');
+                if ($nextPlayerCanPlay) {
+                    self::giveExtraTime($nextPlayerId);
+                    $this->gamestate->nextState('firstPlayerTurn');
+                } else {
+                    $this->gamestate->nextState('playerSelectNextPlayer');
+                }
                 return;
             }
-            if (in_array($nextPlayerId, $playersWhoCanPlayIds, true)) {
+            if ($nextPlayerCanPlay) {
                 self::giveExtraTime($nextPlayerId);
-                break;
+                $this->gamestate->nextState('playerTurn');
+                return;
             }
         }
-
-        $this->gamestate->nextState('playerTurn');
     }
 
-    function stEndRound()
-    {
+    function stApplySelectedNextPlayer() {
+        $nextPlayerId = (int) self::getGameStateValue(self::GAME_STATE_SELECTED_NEXT_PLAYER_ID);
+
+        self::giveExtraTime($nextPlayerId);
+        $this->gamestate->changeActivePlayer($nextPlayerId);
+
+        // @TODO: notify
+
+        $this->gamestate->nextState('firstPlayerTurn');
+    }
+
+    function stEndRound() {
         // update players score and jersey
         $players = $this->getPlayersFromDatabase();
         $numberOfPlayers = count($players);
-        $currentRound = self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
+        $currentRound = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
         foreach ($players as $k => $player) {
             $players[$k] = $player->addPoints(
                 $this->getNumberOfPointsAtRankForRound(
@@ -509,7 +522,7 @@ class Velonimo extends Table
         ]);
 
         // go to next round or end the game
-        $howManyRounds = self::getGameStateValue(self::GAME_STATE_HOW_MANY_ROUNDS);
+        $howManyRounds = (int) self::getGameStateValue(self::GAME_OPTION_HOW_MANY_ROUNDS);
         if ($currentRound < $howManyRounds) {
             $this->gamestate->nextState('nextRound');
         } else {
@@ -517,9 +530,9 @@ class Velonimo extends Table
         }
     }
 
-//////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 //////////// Zombie
-////////////
+////////////////////////////////////////////////////////////////////////////
 
     /*
         zombieTurn:
@@ -534,8 +547,7 @@ class Velonimo extends Table
         you must _never_ use getCurrentPlayerId() or getCurrentPlayerName(), otherwise it will fail with a "Not logged" error message.
     */
 
-    function zombieTurn($state, $active_player)
-    {
+    function zombieTurn($state, $activePlayer) {
         // @TODO: zombie
     	$statename = $state['name'];
 
@@ -549,19 +561,12 @@ class Velonimo extends Table
             return;
         }
 
-        if ($state['type'] === 'multipleactiveplayer') {
-            // Make sure player is in a non blocking status for role turn
-            $this->gamestate->setPlayerNonMultiactive($active_player, '');
-
-            return;
-        }
-
         throw new feException('Zombie mode not supported at this game state: '.$statename);
     }
 
-///////////////////////////////////////////////////////////////////////////////////:
+////////////////////////////////////////////////////////////////////////////
 ////////// DB upgrade
-//////////
+////////////////////////////////////////////////////////////////////////////
 
     /*
         upgradeTableDb:
@@ -574,8 +579,7 @@ class Velonimo extends Table
 
     */
 
-    function upgradeTableDb($from_version)
-    {
+    function upgradeTableDb($from_version) {
         // $from_version is the current version of this game database, in numerical form.
         // For example, if the game was running with a release of your game named "140430-1345",
         // $from_version is equal to 1404301345
@@ -598,9 +602,9 @@ class Velonimo extends Table
 //        // Please add your future database scheme changes here
     }
 
-///////////////////////////////////////////////////////////////////////////////////:
+////////////////////////////////////////////////////////////////////////////
 ////////// Velonimo specific functions
-//////////
+////////////////////////////////////////////////////////////////////////////
 
     /**
      * @return VelonimoCard[]
@@ -721,6 +725,7 @@ class Velonimo extends Table
                 'name' => $player->getName(),
                 'color' => $player->getColor(),
                 'score' => $player->getScore(),
+                'howManyCards' => count($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYER_HAND, $player->getId())),
             ];
         }
 
@@ -828,10 +833,18 @@ class Velonimo extends Table
         return null;
     }
 
-    private function discardLastPlayedCards(): void
-    {
+    private function discardLastPlayedCards(): void {
         $this->deck->moveAllCardsInLocation(self::CARD_LOCATION_PLAYED, self::CARD_LOCATION_DISCARD);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, 0);
+        self::notifyAllPlayers('cardsDiscarded', '', []);
+    }
+
+    private function updatePlayerRoundsRanking(VelonimoPlayer $player): void {
+        self::DbQuery(sprintf(
+            'UPDATE player SET rounds_ranking="%s" WHERE player_id=%s',
+            VelonimoPlayer::serializeRoundsRanking($player->getRoundsRanking()),
+            $player->getId()
+        ));
     }
 }

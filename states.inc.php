@@ -49,78 +49,91 @@
 
 //    !! It is not a good idea to modify this file when a game is running !!
 
+require_once('modules/constants.inc.php');
 
 $machinestates = [
     // The initial state. Do not modify.
-    1 => [
+    ST_BGA_GAME_SETUP => [
         'name' => 'gameSetup',
         'description' => clienttranslate('Game setup'),
         'type' => 'manager',
         'action' => 'stGameSetup',
-        'transitions' => ['' => 10],
+        'transitions' => ['' => ST_START_ROUND],
     ],
 
     // Start round, deal cards and define the first player
-    10 => [
+    ST_START_ROUND => [
         'name' => 'startRound',
         'description' => '',
         'type' => 'game',
         'action' => 'stStartRound',
         'updateGameProgression' => true,
-        'transitions' => ['firstPlayerTurn' => 12],
+        'transitions' => ['firstPlayerTurn' => ST_FIRST_PLAYER_TURN],
     ],
 
     // The first player of a round must play cards
-    12 => [
+    ST_FIRST_PLAYER_TURN => [
         'name' => 'firstPlayerTurn',
         'description' => clienttranslate('${actplayer} must play cards'),
         'descriptionmyturn' => clienttranslate('${you} must play cards'),
         'type' => 'activeplayer',
+        'args' => 'argPlayerTurn',
         'possibleactions' => ['playCards'],
-        'transitions' => ['nextPlayer' => 22],
+        'transitions' => ['nextPlayer' => ST_ACTIVATE_NEXT_PLAYER, 'endRound' => ST_END_ROUND],
     ],
 
     // The next player must choose to play cards or pass
-    20 => [
+    ST_PLAYER_TURN => [
         'name' => 'playerTurn',
         'description' => clienttranslate('${actplayer} must play cards or pass'),
         'descriptionmyturn' => clienttranslate('${you} must play cards or pass'),
         'type' => 'activeplayer',
+        'args' => 'argPlayerTurn',
         'possibleactions' => ['playCards', 'passTurn'],
-        'transitions' => ['nextPlayer' => 22, 'endRound' => 80],
+        'transitions' => ['nextPlayer' => ST_ACTIVATE_NEXT_PLAYER, 'endRound' => ST_END_ROUND],
     ],
 
     // Activate the next player who can play
-    22 => [
+    ST_ACTIVATE_NEXT_PLAYER => [
         'name' => 'activateNextPlayer',
         'description' => '',
         'type' => 'game',
         'action' => 'stActivateNextPlayer',
-        'transitions' => ['playerTurn' => 20, 'playerSelectNextPlayer' => 30],
+        'transitions' => ['firstPlayerTurn' => ST_FIRST_PLAYER_TURN, 'playerTurn' => ST_PLAYER_TURN, 'playerSelectNextPlayer' => ST_PLAYER_SELECT_NEXT_PLAYER],
     ],
 
     // The "natural" next player don't have cards anymore,
     // he must choose the next player who will play
-    30 => [
+    ST_PLAYER_SELECT_NEXT_PLAYER => [
         'name' => 'playerSelectNextPlayer',
         'description' => clienttranslate('${actplayer} must choose the next player'),
         'descriptionmyturn' => clienttranslate('${you} must choose the next player'),
         'type' => 'activeplayer',
+        'args' => 'argPlayerSelectNextPlayer',
         'possibleactions' => ['selectNextPlayer'],
-        'transitions' => ['firstPlayerTurn' => 12],
+        'transitions' => ['applySelectedNextPlayer' => ST_APPLY_SELECTED_NEXT_PLAYER],
+    ],
+
+    // Intermediate state to change the active player
+    ST_APPLY_SELECTED_NEXT_PLAYER => [
+        'name' => 'applySelectedNextPlayer',
+        'description' => '',
+        'type' => 'game',
+        'action' => 'stApplySelectedNextPlayer',
+        'transitions' => ['firstPlayerTurn' => ST_FIRST_PLAYER_TURN],
     ],
 
     // End round, count round points and give yellow jersey to the current winner
-    80 => [
+    ST_END_ROUND => [
         'name' => 'endRound',
         'description' => '',
         'type' => 'game',
         'action' => 'stEndRound',
-        'transitions' => ['nextRound' => 10, 'endGame' => 99],
+        'transitions' => ['nextRound' => ST_START_ROUND, 'endGame' => ST_BGA_GAME_END],
     ],
 
     // Final state. Do not modify (and do not overload action/args methods).
-    99 => [
+    ST_BGA_GAME_END => [
         'name' => 'gameEnd',
         'description' => clienttranslate('End of game'),
         'type' => 'manager',

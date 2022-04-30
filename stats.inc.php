@@ -58,7 +58,7 @@ $stats_type = [
         ],
         'passTurnAction' => [
             'id' => 11,
-            'name' => totranslate('Number of time someone skipped his turn'),
+            'name' => totranslate('Number of time someone passed'),
             'type' => 'int',
         ],
     ],
@@ -72,7 +72,7 @@ $stats_type = [
         ],
         'passTurnAction' => [
             'id' => 11,
-            'name' => totranslate('Number of time this player skipped his turn'),
+            'name' => totranslate('Number of time this player passed'),
             'type' => 'int',
         ],
     ],

@@ -73,7 +73,7 @@ class VelonimoPlayer
             ) {
                 throw new BgaVisibleSystemException('Invalid rounds ranking');
             }
-            $deserialized[$roundAndRanking[0]] = $roundAndRanking[1];
+            $deserialized[(int) $roundAndRanking[0]] = (int) $roundAndRanking[1];
         }
 
         return $deserialized;

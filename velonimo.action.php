@@ -42,9 +42,29 @@ class action_velonimo extends APP_GameAction
         self::setAjaxMode();
 
         $cardsArg = trim(self::getArg('cards', AT_numberlist, true), ';');
-        $cardIds = explode( ';', $cardsArg );
+        $cardIds = explode(';', $cardsArg);
 
-        $this->game->playCards($cardIds);
+        $this->game->playCards(array_map(fn ($id) => (int) $id, $cardIds));
+
+        self::ajaxResponse();
+    }
+
+    public function passTurn()
+    {
+        self::setAjaxMode();
+
+        $this->game->passTurn();
+
+        self::ajaxResponse();
+    }
+
+    public function selectNextPlayer()
+    {
+        self::setAjaxMode();
+
+        $selectedPlayerId = trim(self::getArg('selectedPlayerId', AT_int, true));
+
+        $this->game->selectNextPlayer((int) $selectedPlayerId);
 
         self::ajaxResponse();
     }
