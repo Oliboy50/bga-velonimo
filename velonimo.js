@@ -89,6 +89,7 @@ function (dojo, declare) {
             this.currentRound = 0;
             this.howManyRounds = 0;
             this.howManyPlayers = 0;
+            this.playedCardsValue = 0;
             this.players = [];
 
             // Board
@@ -114,7 +115,7 @@ function (dojo, declare) {
             const CARDS_STYLE_BELOW_TABLE = `bottom: -${this.cardHeight + this.playerTableBorderSize}px; left: -${this.playerTableBorderSize}px;`;
             // the current player place is always at the bottom of the board,
             // in a way that players always stay closed to their hand
-            this.playersPlaceByNumberOfPlayers = {
+            this.playersPlacesByNumberOfPlayers = {
                 2: {
                     1: {
                         tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
@@ -217,7 +218,7 @@ function (dojo, declare) {
             // if(!playerIds.includes(playerId)) {
             //     playerId = playerIds[0];
             // }
-            const playersPlace = this.playersPlaceByNumberOfPlayers[this.howManyPlayers];
+            const playersPlace = this.playersPlacesByNumberOfPlayers[this.howManyPlayers];
             Object.entries(this.players).forEach((entry) => {
                 const player = entry[1];
                 const playerPosition = playersPlace[player.position];
@@ -289,7 +290,7 @@ function (dojo, declare) {
             this.addCardsToPlayerHand(gamedatas.currentPlayerCards);
 
             // Setup cards played on table
-            this.displayCardsOnTable(gamedatas.playedCardsPlayerId, gamedatas.playedCards);
+            this.displayCardsOnTable(gamedatas.playedCardsPlayerId, gamedatas.playedCards, gamedatas.playedCardsValue);
 
             // Setup game info
             this.refreshGameInfos();
@@ -437,13 +438,13 @@ function (dojo, declare) {
             if (!$(DOM_ID_ACTION_BUTTON_PLAY_CARDS)) {
                 this.addActionButton(DOM_ID_ACTION_BUTTON_PLAY_CARDS, _('Play selected cards'), 'onPlayCards');
                 dojo.place(`<span id="${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value"></span>`, DOM_ID_ACTION_BUTTON_PLAY_CARDS);
-                this.addTooltip(`${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value`, _('Total value of selected cards'), '');
+                this.addTooltip(`${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value`, _('Total value of selected cards'), ' (0)');
             }
 
-            // @TODO: do not enable button if less than last played value
             const selectedCards = this.getSelectedPlayerCards();
-            dojo.toggleClass(DOM_ID_ACTION_BUTTON_PLAY_CARDS, DOM_CLASS_DISABLED_ACTION_BUTTON, selectedCards.length <= 0);
-            $(`${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value`).innerHTML = ` (${this.getCardsValue(selectedCards)})`;
+            const selectedCardsValue = this.getCardsValue(selectedCards);
+            dojo.toggleClass(DOM_ID_ACTION_BUTTON_PLAY_CARDS, DOM_CLASS_DISABLED_ACTION_BUTTON, selectedCardsValue <= this.playedCardsValue);
+            $(`${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value`).innerText = ` (${selectedCardsValue})`;
         },
         /**
          * This function gives the position of the card in the sprite "cards.png",
@@ -857,8 +858,10 @@ function (dojo, declare) {
         /**
          * @param {number} playerId
          * @param {object[]} cards
+         * @param {number} cardsValue
          */
-        displayCardsOnTable: function (playerId, cards) {
+        displayCardsOnTable: function (playerId, cards, cardsValue) {
+            this.playedCardsValue = cardsValue;
             if (cards.length <= 0) {
                 return;
             }
@@ -908,6 +911,7 @@ function (dojo, declare) {
             });
         },
         discardCards: function () {
+            this.playedCardsValue = 0;
             dojo.query(`.${DOM_CLASS_CARDS_STACK}`).forEach(dojo.destroy);
         },
 
@@ -993,7 +997,7 @@ function (dojo, declare) {
             this.discardCards();
 
             // place new played cards
-            this.displayCardsOnTable(data.args.playerId, data.args.playedCards);
+            this.displayCardsOnTable(data.args.playerId, data.args.playedCards, gamedatas.playedCardsValue);
 
             // update number of cards in players hand
             this.players[data.args.playerId].howManyCards = data.args.remainingNumberOfCards;

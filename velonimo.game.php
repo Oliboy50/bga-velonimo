@@ -306,7 +306,7 @@ class Velonimo extends Table
         self::incStat(1, 'playCardsAction');
         self::incStat(1, 'playCardsAction', $currentPlayerId);
         self::notifyAllPlayers('cardsPlayed', clienttranslate('${playerName} plays ${playedCardsValue}'), [
-            'playerId' => $currentPlayerId,
+            'playedCardsPlayerId' => $currentPlayerId,
             'playedCards' => $this->formatCardsForClient($playedCards),
             'remainingNumberOfCards' => count($currentPlayerCards) - count($playedCards),
             'playerName' => self::getCurrentPlayerName(),
