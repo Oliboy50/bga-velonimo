@@ -117,65 +117,65 @@ function (dojo, declare) {
             // in a way that players always stay closed to their hand
             this.playersPlacesByNumberOfPlayers = {
                 2: {
-                    1: {
+                    0: {
                         tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
                         cardsStyle: CARDS_STYLE_ABOVE_TABLE,
                     },
-                    2: {
+                    1: {
                         tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
                         cardsStyle: CARDS_STYLE_BELOW_TABLE,
                     },
                 },
                 3: {
-                    1: {
+                    0: {
                         tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
                         cardsStyle: CARDS_STYLE_ABOVE_TABLE,
                     },
-                    2: {
+                    1: {
                         tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
                         cardsStyle: CARDS_STYLE_BELOW_TABLE,
                     },
-                    3: {
+                    2: {
                         tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
                         cardsStyle: CARDS_STYLE_BELOW_TABLE,
                     },
                 },
                 4: {
-                    1: {
+                    0: {
                         tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
                         cardsStyle: CARDS_STYLE_ABOVE_TABLE,
                     },
-                    2: {
+                    1: {
                         tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
                         cardsStyle: CARDS_STYLE_BELOW_TABLE,
                     },
-                    3: {
+                    2: {
                         tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
                         cardsStyle: CARDS_STYLE_BELOW_TABLE,
                     },
-                    4: {
+                    3: {
                         tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
                         cardsStyle: CARDS_STYLE_ABOVE_TABLE,
                     },
                 },
                 5: {
-                    1: {
+                    0: {
                         tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
                         cardsStyle: CARDS_STYLE_ABOVE_TABLE,
                     },
-                    2: {
+                    1: {
                         tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_LEFT}`,
                         cardsStyle: CARDS_STYLE_ABOVE_TABLE,
                     },
-                    3: {
+                    2: {
                         tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
                         cardsStyle: CARDS_STYLE_BELOW_TABLE,
                     },
-                    4: {
+                    3: {
                         tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
                         cardsStyle: CARDS_STYLE_BELOW_TABLE,
                     },
-                    5: {
+                    4: {
                         tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
                         cardsStyle: CARDS_STYLE_ABOVE_TABLE,
                     },
@@ -195,6 +195,7 @@ function (dojo, declare) {
             "gamedatas" argument contains all datas retrieved by your "getAllDatas" PHP method.
         */
         setup: function (gamedatas) {
+            // @TODO: remove log
             console.log(gamedatas);
             this.currentRound = gamedatas.currentRound;
             this.howManyRounds = gamedatas.howManyRounds;
@@ -210,18 +211,13 @@ function (dojo, declare) {
 
             // Setup players
             this.players = gamedatas.players;
-            const playerIds = Object.keys(this.players);
-            this.howManyPlayers = playerIds.length;
-            // @TODO: always place the current player at the same position
-            // @TODO: support spectators
-            // let playerId = gamedatas.currentPlayerId;
-            // if(!playerIds.includes(playerId)) {
-            //     playerId = playerIds[0];
-            // }
+            this.howManyPlayers = Object.keys(this.players).length;
             const playersPlace = this.playersPlacesByNumberOfPlayers[this.howManyPlayers];
-            Object.entries(this.players).forEach((entry) => {
-                const player = entry[1];
-                const playerPosition = playersPlace[player.position];
+            this.sortPlayersToHaveTheCurrentPlayerFirstIfPresent(
+                this.sortPlayersByTurnOrderPosition(Object.entries(this.players).map((entry) => entry[1])),
+                gamedatas.currentPlayerId
+            ).forEach((player, index) => {
+                const playerPosition = playersPlace[index];
 
                 dojo.place(this.format_block('jstpl_player_table', {
                     id: player.id,
@@ -233,6 +229,7 @@ function (dojo, declare) {
                 }), DOM_ID_BOARD_CARPET);
             });
 
+            // @TODO: support spectators (do not show "my hand" in this case)
             // Init playerHand "ebg.stock" component
             this.playerHand = new ebg.stock();
             this.playerHand.create(this, $(DOM_ID_PLAYER_HAND), this.cardWidth, this.cardHeight);
@@ -851,9 +848,30 @@ function (dojo, declare) {
         },
         /**
          * @param {object[]} cards
+         * @return {object[]}
          */
         sortPlayedCards: function (cards) {
             return [...cards].sort((a, b) => b.value - a.value);
+        },
+        /**
+         * @param {object[]} players
+         * @return {object[]}
+         */
+        sortPlayersByTurnOrderPosition: function (players) {
+            return [...players].sort((a, b) => a.position - b.position);
+        },
+        /**
+         * @param {object[]} players
+         * @param {number} currentPlayerId
+         * @return {object[]}
+         */
+        sortPlayersToHaveTheCurrentPlayerFirstIfPresent: function (players, currentPlayerId) {
+            const currentPlayerIndex = players.findIndex((player) => player.id === currentPlayerId);
+            if (currentPlayerIndex <= 0) {
+                return players;
+            }
+
+            return [...players.slice(currentPlayerIndex), ...players.slice(0, currentPlayerIndex)];
         },
         /**
          * @param {number} playerId
@@ -997,10 +1015,10 @@ function (dojo, declare) {
             this.discardCards();
 
             // place new played cards
-            this.displayCardsOnTable(data.args.playerId, data.args.playedCards, gamedatas.playedCardsValue);
+            this.displayCardsOnTable(data.args.playedCardsPlayerId, data.args.playedCards, data.args.playedCardsValue);
 
             // update number of cards in players hand
-            this.players[data.args.playerId].howManyCards = data.args.remainingNumberOfCards;
+            this.players[data.args.playedCardsPlayerId].howManyCards = data.args.remainingNumberOfCards;
             this.refreshGameInfos();
         },
         notif_cardsDiscarded: function (data) {

@@ -177,6 +177,7 @@ class Velonimo extends Table
     */
     protected function getAllDatas() {
         $result = [];
+        $currentPlayerId = (int) self::getCurrentPlayerId();
 
         // Rounds
         $result['currentRound'] = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
@@ -185,8 +186,9 @@ class Velonimo extends Table
         // Players
         $result['players'] = $this->formatPlayersForClient($this->getPlayersFromDatabase());
         // @TODO: support spectator
+        $result['currentPlayerId'] = $currentPlayerId;
         $result['currentPlayerCards'] = $this->formatCardsForClient(
-            $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYER_HAND, (int) self::getCurrentPlayerId()))
+            $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYER_HAND, $currentPlayerId))
         );
 
         // Cards
