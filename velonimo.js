@@ -86,6 +86,7 @@ function (dojo, declare) {
          */
         constructor: function () {
             // GameInfo
+            this.currentState = null;
             this.currentRound = 0;
             this.howManyRounds = 0;
             this.howManyPlayers = 0;
@@ -197,6 +198,7 @@ function (dojo, declare) {
         setup: function (gamedatas) {
             // @TODO: remove log
             console.log(gamedatas);
+            this.currentState = gamedatas.gamestate.name;
             this.currentRound = gamedatas.currentRound;
             this.howManyRounds = gamedatas.howManyRounds;
 
@@ -300,20 +302,19 @@ function (dojo, declare) {
         //// Game & client states
         ///////////////////////////////////////////////////
         onEnteringState: function (state, data) {
-            // show active player
-            if (
-                state === 'firstPlayerTurn'
-                || state === 'playerTurn'
-                || state === 'playerSelectNextPlayer'
-            ) {
-                dojo.addClass(`player-table-${data.args.activePlayerId}`, DOM_CLASS_ACTIVE_PLAYER);
-            }
-
-            // do special things for state
+            this.currentState = state;
             switch (state) {
+                case 'firstPlayerTurn':
+                    // show active player
+                    dojo.addClass(`player-table-${data.args.activePlayerId}`, DOM_CLASS_ACTIVE_PLAYER);
+                    break;
+                case 'playerTurn':
+                    // show active player
+                    dojo.addClass(`player-table-${data.args.activePlayerId}`, DOM_CLASS_ACTIVE_PLAYER);
+                    break;
                 case 'playerSelectNextPlayer':
-                    if (this.player_id === data.args.activePlayerId) {
-                        // hide active player
+                    if (this.isCurrentPlayerActive()) {
+                        // hide active player state for active player
                         dojo.removeClass(`player-table-${data.args.activePlayerId}`, DOM_CLASS_ACTIVE_PLAYER);
 
                         Object.entries(data.args.selectablePlayers).forEach((entry) => {
@@ -327,6 +328,9 @@ function (dojo, declare) {
                             this.addActionButton(`${DOM_ID_ACTION_BUTTON_SELECT_NEXT_PLAYER}-${player.id}`, player.name, () => this.onSelectNextPlayer(player.id), null, false, 'gray');
                             dojo.style(`${DOM_ID_ACTION_BUTTON_SELECT_NEXT_PLAYER}-${player.id}`, 'color', `#${player.color}`);
                         });
+                    } else {
+                        // show active player for other players
+                        dojo.addClass(`player-table-${data.args.activePlayerId}`, DOM_CLASS_ACTIVE_PLAYER);
                     }
                     break;
             }
@@ -345,6 +349,9 @@ function (dojo, declare) {
                     });
                     break;
             }
+
+            // reset currentState
+            this.currentState = null;
         },
         onUpdateActionButtons: function (state, args) {
             this.removeActionButtons();
@@ -359,7 +366,13 @@ function (dojo, declare) {
                     break;
                 case 'playerTurn':
                     this.addActionButton(DOM_ID_ACTION_BUTTON_PASS_TURN, _('Pass'), 'onPassTurn');
-                    this.setupPlayCardsActionButton();
+                    // check if player can play or auto-pass its turn
+                    if (!this.currentPlayerCanPlayCards()) {
+                        // click on "Pass" after either 3, 4 or 5 seconds
+                        this.clickActionButtonAfterAFewSeconds(DOM_ID_ACTION_BUTTON_PASS_TURN, Math.floor((Math.random() * 3) + 3));
+                    } else {
+                        this.setupPlayCardsActionButton();
+                    }
                     break;
             }
         },
@@ -375,8 +388,7 @@ function (dojo, declare) {
                 this.onPlayerCardUnselected(cardId);
             }
 
-            const state = this.gamedatas.gamestate.name;
-            switch (state) {
+            switch (this.currentState) {
                 case 'firstPlayerTurn':
                 case 'playerTurn':
                     if (!this.isCurrentPlayerActive()) {
@@ -415,6 +427,58 @@ function (dojo, declare) {
                 () => {}
             );
         },
+        /**
+         * Return true if:
+         *  - the current player is spectator
+         *  - the current player is in replay mode
+         *  - the game has ended (a.k.a. archive mode)
+         *
+         * @see https://en.doc.boardgamearena.com/Game_interface_logic:_yourgamename.js
+         *
+         * @return {boolean}
+         */
+        isReadOnly() {
+            return this.isSpectator || typeof g_replayFrom !== 'undefined' || g_archive_mode;
+        },
+        /**
+         * Setup a countdown to automatically click on an action button after a few seconds.
+         *
+         * @see https://github.com/bga-devs/tisaac-boilerplate/blob/master/modules/js/Core/game.js#L251-L297
+         *
+         * @param {string} buttonId
+         * @param {number} howManySeconds
+         */
+        clickActionButtonAfterAFewSeconds: function (buttonId, howManySeconds) {
+            const button = $(buttonId);
+            if (!button || this.isReadOnly()) {
+                return;
+            }
+
+            this._actionTimerLabel = button.innerHTML;
+            this._actionTimerSeconds = howManySeconds;
+            this._actionTimerFunction = () => {
+                const button = $(buttonId);
+                if (!button) {
+                    this.clearTimerForClickActionButtonAfterAFewSeconds();
+                    return;
+                }
+                if (this._actionTimerSeconds-- > 1) {
+                    button.innerHTML = `${this._actionTimerLabel} (${this._actionTimerSeconds})`;
+                    return;
+                }
+
+                button.click();
+                this.clearTimerForClickActionButtonAfterAFewSeconds();
+            };
+            this._actionTimerFunction();
+            this._actionTimerId = setInterval(this._actionTimerFunction, 1000);
+        },
+        clearTimerForClickActionButtonAfterAFewSeconds: function () {
+            if (this._actionTimerId) {
+                clearInterval(this._actionTimerId);
+                delete this._actionTimerId;
+            }
+        },
         refreshGameInfos: function () {
             // display players data
             Object.entries(this.players).forEach((entry) => {
@@ -431,7 +495,6 @@ function (dojo, declare) {
             $(DOM_ID_CURRENT_ROUND).innerHTML = `${this.currentRound} / ${this.howManyRounds}`;
         },
         setupPlayCardsActionButton: function () {
-            // @TODO: auto-pass if cannot play higher than last played value
             if (!$(DOM_ID_ACTION_BUTTON_PLAY_CARDS)) {
                 this.addActionButton(DOM_ID_ACTION_BUTTON_PLAY_CARDS, _('Play selected cards'), 'onPlayCards');
                 dojo.place(`<span id="${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value"></span>`, DOM_ID_ACTION_BUTTON_PLAY_CARDS);
@@ -737,6 +800,35 @@ function (dojo, declare) {
          * @param {object[]} cards
          * @returns {object[]}
          */
+        getCardsThatCanBePlayedWithCard: function (color, value, cards) {
+            return cards.filter((card) => {
+                if (color === COLOR_ADVENTURER && value !== card.value) {
+                    return false;
+                }
+
+                if (color === card.color) {
+                    return true;
+                }
+
+                return value === card.value;
+            });
+        },
+        /**
+         * @param {object[]} playerCards
+         * @returns {function (object[], object, number, object[]): object[]}
+         */
+        getPlayerCardsThatCanBePlayedWithCardsReducer: function (playerCards) {
+            return (acc, card, i, cards) => acc.concat(
+                this.getCardsThatCanBePlayedWithCard(card.color, card.value, playerCards)
+                    .filter((c) => acc.every((accCard) => c.id !== accCard.id))
+            ).filter((c) => cards.every((cardsCard) => c.id !== cardsCard.id));
+        },
+        /**
+         * @param {number} color
+         * @param {number} value
+         * @param {object[]} cards
+         * @returns {object[]}
+         */
         getCardsThatCannotBePlayedWithCard: function (color, value, cards) {
             return cards.filter((card) => {
                 if (color === COLOR_ADVENTURER && value !== card.value) {
@@ -754,7 +846,7 @@ function (dojo, declare) {
          * @param {object[]} playerCards
          * @returns {function (object[], object): object[]}
          */
-        getPlayerCardsThatCannotBePlayedWithSelectedCardsReducer: function (playerCards) {
+        getPlayerCardsThatCannotBePlayedWithCardsReducer: function (playerCards) {
             return (acc, card) => acc.concat(
                 this.getCardsThatCannotBePlayedWithCard(card.color, card.value, playerCards)
                     .filter((c) => acc.every((accCard) => c.id !== accCard.id))
@@ -775,7 +867,55 @@ function (dojo, declare) {
                 .map((item) => this.getCardObjectFromPositionInSpriteAndId(item.type, item.id));
         },
         /**
+         * @returns {object[]}
+         */
+        getPlayerCardsCombinationsSortedByHighestValue: function () {
+            const playerCards = this.getAllPlayerCards();
+            const sortCardsById = (a, b) => a.id - b.id;
+            const highestPlayableGroupOfCards = playerCards.reduce((acc, card) => {
+                const cardsThatCanBePlayedWithCard = [card]
+                    .reduce(this.getPlayerCardsThatCanBePlayedWithCardsReducer(playerCards), []);
+
+                if (!cardsThatCanBePlayedWithCard.length) {
+                    // add single card combination
+                    return [...acc, [card]];
+                }
+
+                return [
+                    ...acc,
+                    // add highest color combination
+                    [card, ...cardsThatCanBePlayedWithCard].filter((c) => c.color === card.color).sort(sortCardsById),
+                    // add highest value combination
+                    [card, ...cardsThatCanBePlayedWithCard].filter((c) => c.value === card.value).sort(sortCardsById),
+                ];
+
+            }, []);
+
+            return highestPlayableGroupOfCards
+                // format combinations
+                .map((cards) => ({
+                    cards: cards,
+                    value: this.getCardsValue(cards),
+                }))
+                // sort combinations by highest value
+                .sort((a, b) => {
+                    return b.value - a.value;
+                })
+                // remove duplicated combinations
+                .filter((combination, i, combinations) => {
+                    if (
+                        i <= 0
+                        || combinations[i - 1].value !== combination.value
+                    ) {
+                        return true;
+                    }
+
+                    return !combinations[i - 1].cards.every((c, idx) => c.id === combination.cards[idx].id);
+                });
+        },
+        /**
          * @param {object[]} cards
+         * @returns {number}
          */
         getCardsValue: function (cards) {
             if (!cards.length) {
@@ -796,13 +936,24 @@ function (dojo, declare) {
             return (cards.length * 10) + minCardValue;
         },
         /**
+         * @returns {boolean}
+         */
+        currentPlayerCanPlayCards: function () {
+            const playerCardsCombinations = this.getPlayerCardsCombinationsSortedByHighestValue();
+            if (!playerCardsCombinations.length) {
+                return false;
+            }
+
+            return this.playedCardsValue < playerCardsCombinations[0].value;
+        },
+        /**
          * @param {number} cardId
          */
         onPlayerCardSelected: function (cardId) {
             const playerCards = this.getAllPlayerCards();
             const selectedCards = this.getSelectedPlayerCards();
             const playerCardsThatCannotBePlayedWithSelectedCards = selectedCards.reduce(
-                this.getPlayerCardsThatCannotBePlayedWithSelectedCardsReducer(playerCards),
+                this.getPlayerCardsThatCannotBePlayedWithCardsReducer(playerCards),
                 []
             );
 
@@ -819,7 +970,7 @@ function (dojo, declare) {
             // display non-selectable cards as non-selectable
             this.displayCardsAsNonSelectable(
                 this.getSelectedPlayerCards()
-                    .reduce(this.getPlayerCardsThatCannotBePlayedWithSelectedCardsReducer(playerCards), [])
+                    .reduce(this.getPlayerCardsThatCannotBePlayedWithCardsReducer(playerCards), [])
             );
         },
         /**
@@ -831,7 +982,7 @@ function (dojo, declare) {
             // display non-selectable cards as non-selectable
             this.displayCardsAsNonSelectable(
                 this.getSelectedPlayerCards()
-                    .reduce(this.getPlayerCardsThatCannotBePlayedWithSelectedCardsReducer(playerCards), [])
+                    .reduce(this.getPlayerCardsThatCannotBePlayedWithCardsReducer(playerCards), [])
             );
         },
         /**
