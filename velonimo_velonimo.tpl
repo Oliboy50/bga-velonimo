@@ -12,6 +12,7 @@
     <div id="player-table-\${id}-name" class="player-table-name" style="color:#\${color}">\${name}</div>
     <div id="player-table-\${id}-hand" class="player-table-hand"><span id="player-table-\${id}-number-of-cards" class="number-of-cards">\${numberOfCardsInHand}</span></div>
     <div id="player-table-\${id}-cards" class="player-table-cards" style="\${cardsStyle}"></div>
+    <div id="player-table-\${id}-jersey" class="player-table-jersey"><span class="jersey-overlay"></span></div>
 </div>`;
 
     var jstpl_cards_stack = '<div id="cards-stack-${id}" class="cards-stack" style="width: ${width}px;"></div>';

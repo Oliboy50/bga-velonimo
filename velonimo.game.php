@@ -26,6 +26,7 @@ require_once('modules/VelonimoPlayer.php');
 class Velonimo extends Table
 {
     private const GAME_STATE_CURRENT_ROUND = 'currentRound';
+    private const GAME_STATE_JERSEY_HAS_BEEN_USED_IN_THE_CURRENT_ROUND = 'jerseyUsedInRound';
     private const GAME_STATE_LAST_PLAYED_CARDS_VALUE = 'valueToBeat';
     private const GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID = 'playerIdForValueToBeat';
     private const GAME_STATE_SELECTED_NEXT_PLAYER_ID = 'selectedNextPlayerId';
@@ -54,6 +55,7 @@ class Velonimo extends Table
             self::GAME_STATE_LAST_PLAYED_CARDS_VALUE => 11,
             self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID => 12,
             self::GAME_STATE_SELECTED_NEXT_PLAYER_ID => 13,
+            self::GAME_STATE_JERSEY_HAS_BEEN_USED_IN_THE_CURRENT_ROUND => 14,
             self::GAME_OPTION_HOW_MANY_ROUNDS => 100,
         ]);
 
@@ -110,6 +112,7 @@ class Velonimo extends Table
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, 0);
         self::setGameStateValue(self::GAME_STATE_SELECTED_NEXT_PLAYER_ID, 0);
+        self::setGameStateValue(self::GAME_STATE_JERSEY_HAS_BEEN_USED_IN_THE_CURRENT_ROUND, 0);
 
         // Init game statistics
         // (note: statistics used in this file must be defined in your stats.inc.php file)
@@ -181,6 +184,7 @@ class Velonimo extends Table
 
         // Rounds
         $result['currentRound'] = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
+        $result['jerseyHasBeenUsedInTheCurrentRound'] = $this->isJerseyUsedInCurrentRound();
         $result['howManyRounds'] = (int) self::getGameStateValue(self::GAME_OPTION_HOW_MANY_ROUNDS);
 
         // Players
@@ -231,7 +235,7 @@ class Velonimo extends Table
     /**
      * @param int[] $playedCardIds
      */
-    function playCards(array $playedCardIds) {
+    function playCards(array $playedCardIds, bool $cardsPlayedWithJersey) {
         self::checkAction('playCards');
 
         // validate $playedCardIds
@@ -290,9 +294,21 @@ class Velonimo extends Table
             $lastCheckedCard = $card;
         }
 
+        // check that player is allowed to use jersey
+        $players = $this->getPlayersFromDatabase();
+        $currentPlayer = $this->getPlayerById($currentPlayerId, $players);
+        if ($cardsPlayedWithJersey) {
+            if ($this->isJerseyUsedInCurrentRound()) {
+                throw new BgaUserException(self::_('The jersey can be used only once by turn.'));
+            }
+            if (!$currentPlayer->isWearingJersey()) {
+                throw new BgaUserException(self::_('You cannot play the jersey if you are not wearing it.'));
+            }
+        }
+
         // check that played cards value is higher than the previous played cards value
         $lastPlayedCardsValue = (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE);
-        $playedCardsValue = $this->getCardsValue($playedCards);
+        $playedCardsValue = $this->getCardsValue($playedCards, $cardsPlayedWithJersey);
         if ($playedCardsValue <= $lastPlayedCardsValue) {
             throw new BgaUserException(sprintf(
                 self::_('The value of the cards you play must be higher than %s.'),
@@ -303,6 +319,9 @@ class Velonimo extends Table
         // discard table cards and play cards
         $this->deck->moveAllCardsInLocation(self::CARD_LOCATION_PLAYED, self::CARD_LOCATION_DISCARD);
         $this->deck->moveCards($playedCardIds, self::CARD_LOCATION_PLAYED, $currentPlayerId);
+        if ($cardsPlayedWithJersey) {
+            self::setGameStateValue(self::GAME_STATE_JERSEY_HAS_BEEN_USED_IN_THE_CURRENT_ROUND, 1);
+        }
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, $currentPlayerId);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, $playedCardsValue);
         self::incStat(1, 'playCardsAction');
@@ -313,6 +332,7 @@ class Velonimo extends Table
             'remainingNumberOfCards' => count($currentPlayerCards) - count($playedCards),
             'playerName' => self::getCurrentPlayerName(),
             'playedCardsValue' => $playedCardsValue,
+            'withJersey' => $cardsPlayedWithJersey,
         ]);
 
         // if the player did not play his last card, it's next player turn
@@ -322,10 +342,8 @@ class Velonimo extends Table
         }
 
         // the player played his last card, set its rank for this round
-        $players = $this->getPlayersFromDatabase();
         $currentRound = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
         $nextRankForRound = $this->getNextRankForRound($players, $currentRound);
-        $currentPlayer = $this->getPlayerById($currentPlayerId, $players);
         $currentPlayer->addRoundRanking($currentRound, $nextRankForRound);
         $this->updatePlayerRoundsRanking($currentPlayer);
 
@@ -519,6 +537,9 @@ class Velonimo extends Table
             ));
         }
 
+        // re-allow the jersey to be used
+        self::setGameStateValue(self::GAME_STATE_JERSEY_HAS_BEEN_USED_IN_THE_CURRENT_ROUND, 0);
+
         self::notifyAllPlayers('roundEnded', '', [
             'players' => $this->formatPlayersForClient($players),
         ]);
@@ -639,13 +660,21 @@ class Velonimo extends Table
     /**
      * @param VelonimoCard[] $cards
      */
-    private function getCardsValue(array $cards): int {
+    private function getCardsValue(array $cards, bool $withJersey): int {
         if (count($cards) <= 0) {
             return 0;
         }
 
+        // the jersey cannot be played with an adventurer
+        if ($withJersey && in_array(COLOR_ADVENTURER, array_map(fn (VelonimoCard $c) => $c->getColor(), $cards), true)) {
+            return 0;
+        }
+
+        $addJerseyValueIfUsed = fn (int $value) => $value + ($withJersey ? JERSEY_VALUE : 0);
+
+
         if (count($cards) === 1) {
-            return $cards[0]->getValue();
+            return $addJerseyValueIfUsed($cards[0]->getValue());
         }
 
         $minCardValue = 1000;
@@ -655,7 +684,7 @@ class Velonimo extends Table
             }
         }
 
-        return (count($cards) * 10) + $minCardValue;
+        return $addJerseyValueIfUsed((count($cards) * 10) + $minCardValue);
     }
 
     /**
@@ -727,6 +756,7 @@ class Velonimo extends Table
                 'name' => $player->getName(),
                 'color' => $player->getColor(),
                 'score' => $player->getScore(),
+                'isWearingJersey' => $player->isWearingJersey(),
                 'howManyCards' => count($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYER_HAND, $player->getId())),
             ];
         }
@@ -848,5 +878,9 @@ class Velonimo extends Table
             VelonimoPlayer::serializeRoundsRanking($player->getRoundsRanking()),
             $player->getId()
         ));
+    }
+
+    private function isJerseyUsedInCurrentRound(): bool {
+        return 1 === (int) self::getGameStateValue(self::GAME_STATE_JERSEY_HAS_BEEN_USED_IN_THE_CURRENT_ROUND);
     }
 }

@@ -57,21 +57,111 @@ const VALUE_40 = 40;
 const VALUE_45 = 45;
 const VALUE_50 = 50;
 
+// Jersey value
+const JERSEY_VALUE = 10;
+
 // DOM IDs
 const DOM_ID_BOARD_CARPET = 'board-carpet';
 const DOM_ID_PLAYER_HAND = 'my-hand';
 const DOM_ID_CURRENT_ROUND = 'current-round';
 const DOM_ID_ACTION_BUTTON_PLAY_CARDS = 'action-button-play-cards';
+const DOM_ID_ACTION_BUTTON_PLAY_CARDS_WITH_JERSEY = 'action-button-play-cards-with-jersey';
 const DOM_ID_ACTION_BUTTON_PASS_TURN = 'action-button-pass-turn';
 const DOM_ID_ACTION_BUTTON_SELECT_NEXT_PLAYER = 'action-button-select-next-player';
 
 // DOM classes
 const DOM_CLASS_PLAYER_TABLE = 'player-table'
+const DOM_CLASS_PLAYER_IS_WEARING_JERSEY = 'is-wearing-jersey'
+const DOM_CLASS_PLAYER_HAS_USED_JERSEY = 'has-used-jersey'
 const DOM_CLASS_CARDS_STACK = 'cards-stack'
 const DOM_CLASS_DISABLED_ACTION_BUTTON = 'disabled'
 const DOM_CLASS_ACTIVE_PLAYER = 'active'
 const DOM_CLASS_SELECTABLE_PLAYER = 'selectable'
 const DOM_CLASS_NON_SELECTABLE_CARD = 'non-selectable-player-card'
+
+// Style
+const BOARD_CARPET_WIDTH = 740;
+const BOARD_CARPET_HEIGHT = 450;
+const CARD_WIDTH = 90;
+const CARD_HEIGHT = 126;
+const PLAYER_TABLE_WIDTH = 130;
+const PLAYER_TABLE_HEIGHT = 130;
+const PLAYER_TABLE_BORDER_SIZE = 2;
+const MARGIN_BETWEEN_PLAYERS = 20;
+const TABLE_STYLE_HORIZONTAL_LEFT = `left: ${MARGIN_BETWEEN_PLAYERS}px;`;
+const TABLE_STYLE_HORIZONTAL_CENTER = `left: ${(BOARD_CARPET_WIDTH / 2) - (PLAYER_TABLE_WIDTH / 2) - (MARGIN_BETWEEN_PLAYERS / 2)}px;`;
+const TABLE_STYLE_HORIZONTAL_RIGHT = `right: ${MARGIN_BETWEEN_PLAYERS}px;`;
+const TABLE_STYLE_VERTICAL_TOP = `top: ${MARGIN_BETWEEN_PLAYERS}px;`;
+const TABLE_STYLE_VERTICAL_BOTTOM = `bottom: ${MARGIN_BETWEEN_PLAYERS}px;`;
+const CARDS_STYLE_ABOVE_TABLE = `top: -${CARD_HEIGHT + PLAYER_TABLE_BORDER_SIZE}px; left: -${PLAYER_TABLE_BORDER_SIZE}px;`;
+const CARDS_STYLE_BELOW_TABLE = `bottom: -${CARD_HEIGHT + PLAYER_TABLE_BORDER_SIZE}px; left: -${PLAYER_TABLE_BORDER_SIZE}px;`;
+// the current player (index 0 == current player) place is always at the bottom of the board, in a way that players always stay closed to their hand
+const PLAYERS_PLACES_BY_NUMBER_OF_PLAYERS = {
+    2: {
+        0: {
+            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
+            cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+        },
+        1: {
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
+            cardsStyle: CARDS_STYLE_BELOW_TABLE,
+        },
+    },
+    3: {
+        0: {
+            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
+            cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+        },
+        1: {
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_LEFT}`,
+            cardsStyle: CARDS_STYLE_BELOW_TABLE,
+        },
+        2: {
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
+            cardsStyle: CARDS_STYLE_BELOW_TABLE,
+        },
+    },
+    4: {
+        0: {
+            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
+            cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+        },
+        1: {
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_LEFT}`,
+            cardsStyle: CARDS_STYLE_BELOW_TABLE,
+        },
+        2: {
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
+            cardsStyle: CARDS_STYLE_BELOW_TABLE,
+        },
+        3: {
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
+            cardsStyle: CARDS_STYLE_BELOW_TABLE,
+        },
+    },
+    5: {
+        0: {
+            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_LEFT}`,
+            cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+        },
+        1: {
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
+            cardsStyle: CARDS_STYLE_BELOW_TABLE,
+        },
+        2: {
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
+            cardsStyle: CARDS_STYLE_BELOW_TABLE,
+        },
+        3: {
+            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
+            cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+        },
+        4: {
+            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
+            cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+        },
+    },
+};
 
 define([
     'dojo','dojo/_base/declare',
@@ -81,125 +171,22 @@ define([
 ],
 function (dojo, declare) {
     return declare('bgagame.velonimo', ebg.core.gamegui, {
-        /*
-            Init global variables
-         */
         constructor: function () {
-            // GameInfo
             this.currentState = null;
             this.currentRound = 0;
+            this.currentPlayerHasJersey = false;
+            this.jerseyHasBeenUsedInTheCurrentRound = false;
             this.howManyRounds = 0;
-            this.howManyPlayers = 0;
             this.playedCardsValue = 0;
             this.players = [];
-
-            // Board
-            this.boardCarpetWidth = 740;
-            this.boardCarpetHeight = 450;
-
-            // Cards
             this.playerHand = null; // https://en.doc.boardgamearena.com/Stock
-            this.cardWidth = 90;
-            this.cardHeight = 126;
-
-            // Player tables (a.k.a player places)
-            this.playerTableWidth = 130;
-            this.playerTableHeight = 130;
-            this.playerTableBorderSize = 0;
-            this.marginBetweenPlayers = 20;
-            const TABLE_STYLE_HORIZONTAL_LEFT = `left: ${this.marginBetweenPlayers}px;`;
-            const TABLE_STYLE_HORIZONTAL_CENTER = `left: ${(this.boardCarpetWidth / 2) - (this.playerTableWidth / 2) - (this.marginBetweenPlayers / 2)}px;`;
-            const TABLE_STYLE_HORIZONTAL_RIGHT = `right: ${this.marginBetweenPlayers}px;`;
-            const TABLE_STYLE_VERTICAL_TOP = `top: ${this.marginBetweenPlayers}px;`;
-            const TABLE_STYLE_VERTICAL_BOTTOM = `bottom: ${this.marginBetweenPlayers}px;`;
-            const CARDS_STYLE_ABOVE_TABLE = `top: -${this.cardHeight + this.playerTableBorderSize}px; left: -${this.playerTableBorderSize}px;`;
-            const CARDS_STYLE_BELOW_TABLE = `bottom: -${this.cardHeight + this.playerTableBorderSize}px; left: -${this.playerTableBorderSize}px;`;
-            // the current player place is always at the bottom of the board,
-            // in a way that players always stay closed to their hand
-            this.playersPlacesByNumberOfPlayers = {
-                2: {
-                    0: {
-                        tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-                        cardsStyle: CARDS_STYLE_ABOVE_TABLE,
-                    },
-                    1: {
-                        tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-                        cardsStyle: CARDS_STYLE_BELOW_TABLE,
-                    },
-                },
-                3: {
-                    0: {
-                        tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-                        cardsStyle: CARDS_STYLE_ABOVE_TABLE,
-                    },
-                    1: {
-                        tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-                        cardsStyle: CARDS_STYLE_BELOW_TABLE,
-                    },
-                    2: {
-                        tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
-                        cardsStyle: CARDS_STYLE_BELOW_TABLE,
-                    },
-                },
-                4: {
-                    0: {
-                        tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-                        cardsStyle: CARDS_STYLE_ABOVE_TABLE,
-                    },
-                    1: {
-                        tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-                        cardsStyle: CARDS_STYLE_BELOW_TABLE,
-                    },
-                    2: {
-                        tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
-                        cardsStyle: CARDS_STYLE_BELOW_TABLE,
-                    },
-                    3: {
-                        tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
-                        cardsStyle: CARDS_STYLE_ABOVE_TABLE,
-                    },
-                },
-                5: {
-                    0: {
-                        tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-                        cardsStyle: CARDS_STYLE_ABOVE_TABLE,
-                    },
-                    1: {
-                        tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_LEFT}`,
-                        cardsStyle: CARDS_STYLE_ABOVE_TABLE,
-                    },
-                    2: {
-                        tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-                        cardsStyle: CARDS_STYLE_BELOW_TABLE,
-                    },
-                    3: {
-                        tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
-                        cardsStyle: CARDS_STYLE_BELOW_TABLE,
-                    },
-                    4: {
-                        tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
-                        cardsStyle: CARDS_STYLE_ABOVE_TABLE,
-                    },
-                },
-            };
         },
-        /*
-            setup:
-
-            This method must set up the game user interface according to current game situation specified
-            in parameters.
-
-            The method is called each time the game interface is displayed to a player, ie:
-            _ when the game starts
-            _ when a player refreshes the game page (F5)
-
-            "gamedatas" argument contains all datas retrieved by your "getAllDatas" PHP method.
-        */
         setup: function (gamedatas) {
             // @TODO: remove log
             console.log(gamedatas);
             this.currentState = gamedatas.gamestate.name;
             this.currentRound = gamedatas.currentRound;
+            this.jerseyHasBeenUsedInTheCurrentRound = gamedatas.jerseyHasBeenUsedInTheCurrentRound;
             this.howManyRounds = gamedatas.howManyRounds;
 
             // Setup board
@@ -213,8 +200,8 @@ function (dojo, declare) {
 
             // Setup players
             this.players = gamedatas.players;
-            this.howManyPlayers = Object.keys(this.players).length;
-            const playersPlace = this.playersPlacesByNumberOfPlayers[this.howManyPlayers];
+            const howManyPlayers = Object.keys(this.players).length;
+            const playersPlace = PLAYERS_PLACES_BY_NUMBER_OF_PLAYERS[howManyPlayers];
             this.sortPlayersToHaveTheCurrentPlayerFirstIfPresent(
                 this.sortPlayersByTurnOrderPosition(Object.entries(this.players).map((entry) => entry[1])),
                 gamedatas.currentPlayerId
@@ -234,7 +221,7 @@ function (dojo, declare) {
             // @TODO: support spectators (do not show "my hand" in this case)
             // Init playerHand "ebg.stock" component
             this.playerHand = new ebg.stock();
-            this.playerHand.create(this, $(DOM_ID_PLAYER_HAND), this.cardWidth, this.cardHeight);
+            this.playerHand.create(this, $(DOM_ID_PLAYER_HAND), CARD_WIDTH, CARD_HEIGHT);
             this.playerHand.setSelectionAppearance('class');
             this.playerHand.image_items_per_row = 7;
             const cardsImageUrl = g_gamethemeurl+'img/cards.png';
@@ -403,7 +390,6 @@ function (dojo, declare) {
         ///////////////////////////////////////////////////
         //// Utility methods
         ///////////////////////////////////////////////////
-
         /**
          * @param {string} action
          * @param {object} data
@@ -489,22 +475,47 @@ function (dojo, declare) {
                 }
                 // number of remaining cards in player hand
                 $(`player-table-${player.id}-number-of-cards`).innerHTML = player.howManyCards;
+                // setup jersey
+                if (player.isWearingJersey) {
+                    this.currentPlayerHasJersey = this.player_id === player.id;
+                }
+                dojo.toggleClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_HAS_USED_JERSEY, player.isWearingJersey && this.jerseyHasBeenUsedInTheCurrentRound);
+                dojo.toggleClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_IS_WEARING_JERSEY, player.isWearingJersey);
+                // @TODO: transition for jersey
+                // this.placeOnObject(`cards-stack-${topOfStackCardId}`, `player-table-${playerId}-hand`);
+                // this.slideToObject(`cards-stack-${topOfStackCardId}`, `player-table-${playerId}-cards`).play();
             });
 
             // display current round
             $(DOM_ID_CURRENT_ROUND).innerHTML = `${this.currentRound} / ${this.howManyRounds}`;
         },
         setupPlayCardsActionButton: function () {
-            if (!$(DOM_ID_ACTION_BUTTON_PLAY_CARDS)) {
-                this.addActionButton(DOM_ID_ACTION_BUTTON_PLAY_CARDS, _('Play selected cards'), 'onPlayCards');
-                dojo.place(`<span id="${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value"></span>`, DOM_ID_ACTION_BUTTON_PLAY_CARDS);
-                this.addTooltip(`${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value`, _('Total value of selected cards'), ' (0)');
-            }
-
             const selectedCards = this.getSelectedPlayerCards();
-            const selectedCardsValue = this.getCardsValue(selectedCards);
+            const selectedCardsValue = this.getCardsValue(selectedCards, false);
+
+            // setup playCards without jersey
+            if (!$(DOM_ID_ACTION_BUTTON_PLAY_CARDS)) {
+                this.addActionButton(DOM_ID_ACTION_BUTTON_PLAY_CARDS, _('Play selected cards'), () => this.onPlayCards(false));
+                dojo.place(`<span id="${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value"> (${selectedCardsValue})</span>`, DOM_ID_ACTION_BUTTON_PLAY_CARDS);
+                this.addTooltip(`${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value`, _('Total value of selected cards'), '');
+            }
             dojo.toggleClass(DOM_ID_ACTION_BUTTON_PLAY_CARDS, DOM_CLASS_DISABLED_ACTION_BUTTON, selectedCardsValue <= this.playedCardsValue);
             $(`${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value`).innerText = ` (${selectedCardsValue})`;
+
+            // setup playCards with jersey
+            if (
+                this.currentPlayerHasJersey
+                && !this.jerseyHasBeenUsedInTheCurrentRound
+            ) {
+                const selectedCardsWithJerseyValue = this.getCardsValue(selectedCards, true);
+                if (!$(DOM_ID_ACTION_BUTTON_PLAY_CARDS_WITH_JERSEY)) {
+                    this.addActionButton(DOM_ID_ACTION_BUTTON_PLAY_CARDS_WITH_JERSEY, _('Play jersey with selected cards'), () => this.onPlayCards(true));
+                    dojo.place(`<span id="${DOM_ID_ACTION_BUTTON_PLAY_CARDS_WITH_JERSEY}-value"> (${selectedCardsWithJerseyValue})</span>`, DOM_ID_ACTION_BUTTON_PLAY_CARDS_WITH_JERSEY);
+                    this.addTooltip(`${DOM_ID_ACTION_BUTTON_PLAY_CARDS_WITH_JERSEY}-value`, _(`Total value of selected cards + jersey (${JERSEY_VALUE})`), '');
+                }
+                dojo.toggleClass(DOM_ID_ACTION_BUTTON_PLAY_CARDS_WITH_JERSEY, DOM_CLASS_DISABLED_ACTION_BUTTON, selectedCardsWithJerseyValue <= this.playedCardsValue);
+                $(`${DOM_ID_ACTION_BUTTON_PLAY_CARDS_WITH_JERSEY}-value`).innerText = ` (${selectedCardsWithJerseyValue})`;
+            }
         },
         /**
          * This function gives the position of the card in the sprite "cards.png",
@@ -895,7 +906,7 @@ function (dojo, declare) {
                 // format combinations
                 .map((cards) => ({
                     cards: cards,
-                    value: this.getCardsValue(cards),
+                    value: this.getCardsValue(cards, false),
                 }))
                 // sort combinations by highest value
                 .sort((a, b) => {
@@ -915,15 +926,23 @@ function (dojo, declare) {
         },
         /**
          * @param {object[]} cards
+         * @param {boolean} withJersey
          * @returns {number}
          */
-        getCardsValue: function (cards) {
+        getCardsValue: function (cards, withJersey) {
             if (!cards.length) {
                 return 0;
             }
 
+            // the jersey cannot be played with an adventurer
+            if (withJersey && cards.map((c) => c.color).includes(COLOR_ADVENTURER)) {
+                return 0;
+            }
+
+            const addJerseyValueIfUsed = (value) => value + (withJersey ? JERSEY_VALUE : 0);
+
             if (cards.length === 1) {
-                return cards[0].value;
+                return addJerseyValueIfUsed(cards[0].value);
             }
 
             let minCardValue = 1000;
@@ -933,7 +952,7 @@ function (dojo, declare) {
                 }
             });
 
-            return (cards.length * 10) + minCardValue;
+            return addJerseyValueIfUsed((cards.length * 10) + minCardValue);
         },
         /**
          * @returns {boolean}
@@ -944,7 +963,9 @@ function (dojo, declare) {
                 return false;
             }
 
-            return this.playedCardsValue < playerCardsCombinations[0].value;
+            const playerCanPlayJersey = this.currentPlayerHasJersey && !this.jerseyHasBeenUsedInTheCurrentRound;
+
+            return this.playedCardsValue < (playerCardsCombinations[0].value + (playerCanPlayJersey ? JERSEY_VALUE : 0));
         },
         /**
          * @param {number} cardId
@@ -997,6 +1018,11 @@ function (dojo, declare) {
                 );
             });
         },
+        unselectAllCards: function () {
+            this.playerHand.unselectAll();
+            this.displayCardsAsNonSelectable([]);
+            this.setupPlayCardsActionButton();
+        },
         /**
          * @param {object[]} cards
          * @return {object[]}
@@ -1042,7 +1068,7 @@ function (dojo, declare) {
             dojo.place(
                 this.format_block('jstpl_cards_stack', {
                     id: topOfStackCardId,
-                    width: ((stackedCards.length - 1) * (this.cardWidth / 3)) + this.cardWidth,
+                    width: ((stackedCards.length - 1) * (CARD_WIDTH / 3)) + CARD_WIDTH,
                 }),
                 `player-table-${playerId}-cards`
             );
@@ -1051,8 +1077,8 @@ function (dojo, declare) {
                 dojo.place(
                     this.format_block('jstpl_card_in_stack', {
                         id: card.id,
-                        x: (position % 7) * this.cardWidth,
-                        y: Math.floor(position / 7) * this.cardHeight,
+                        x: (position % 7) * CARD_WIDTH,
+                        y: Math.floor(position / 7) * CARD_HEIGHT,
                     }),
                     `cards-stack-${topOfStackCardId}`
                 );
@@ -1087,8 +1113,10 @@ function (dojo, declare) {
         ///////////////////////////////////////////////////
         //// Player's action
         ///////////////////////////////////////////////////
-
-        onPlayCards: function () {
+        /**
+         * @param {boolean} withJersey
+         */
+        onPlayCards: function (withJersey) {
             if (!this.checkAction('playCards')) {
                 return;
             }
@@ -1099,13 +1127,14 @@ function (dojo, declare) {
             }
 
             this.requestAction('playCards', {
-                cards: playedCards.map(card => card.id).join(';')
+                cards: playedCards.map(card => card.id).join(';'),
+                withJersey: withJersey,
             });
 
-            // reset cards selection
-            this.playerHand.unselectAll();
-            this.displayCardsAsNonSelectable([]);
-            this.setupPlayCardsActionButton();
+            this.unselectAllCards();
+
+            // @TODO: turn back jersey to show that it cannot be used anymore
+            //        (using notification to be sure that the request is accepted on the backend side)
         },
         onPassTurn: function () {
             if (!this.checkAction('passTurn')) {
@@ -1114,6 +1143,9 @@ function (dojo, declare) {
 
             this.requestAction('passTurn', {});
         },
+        /**
+         * @param {number} selectedPlayerId
+         */
         onSelectNextPlayer: function (selectedPlayerId) {
             if (!this.checkAction('selectNextPlayer')) {
                 return;
@@ -1127,16 +1159,6 @@ function (dojo, declare) {
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
         ///////////////////////////////////////////////////
-
-        /*
-            setupNotifications:
-
-            In this method, you associate each of your game notifications with your local method to handle it.
-
-            Note: game notification names correspond to "notifyAllPlayers" and "notifyPlayer" calls in
-                  your velonimo.game.php file.
-
-        */
         setupNotifications: function () {
             [
                 ['roundStarted', 1],
@@ -1170,6 +1192,13 @@ function (dojo, declare) {
 
             // update number of cards in players hand
             this.players[data.args.playedCardsPlayerId].howManyCards = data.args.remainingNumberOfCards;
+
+            // update jersey state if it has been used
+            if (data.args.withJersey) {
+                this.jerseyHasBeenUsedInTheCurrentRound = true;
+            }
+
+            // refresh remaining game info
             this.refreshGameInfos();
         },
         notif_cardsDiscarded: function (data) {
@@ -1177,6 +1206,7 @@ function (dojo, declare) {
         },
         notif_roundEnded: function (data) {
             this.players = data.args.players;
+            this.jerseyHasBeenUsedInTheCurrentRound = false;
             this.refreshGameInfos();
         },
    });

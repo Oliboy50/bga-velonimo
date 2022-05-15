@@ -100,23 +100,61 @@ Board
     border: 2px solid #ff0000;
     transform: scale(1.02);
 }
+.player-table.is-wearing-jersey .player-table-jersey {
+    position: absolute;
+    bottom: 10px;
+    right: 0;
+    width: 60px;
+    height: 83px;
+    background-size: 60px 83px;
+    background-image: url('img/jersey.png');
+    background-repeat: no-repeat;
+    background-position: center center;
+    pointer-events: none;
+}
+.player-table.is-wearing-jersey.has-used-jersey .jersey-overlay {
+    display: block;
+    position: relative;
+    top: 20px;
+    height: 50px;
+    width: 10px;
+    margin: 0 auto;
+    background: black;
+    transform: rotate(45deg);
+}
+.player-table.is-wearing-jersey.has-used-jersey .jersey-overlay:after {
+    content: "";
+    position: absolute;
+    left: -20px;
+    top: 20px;
+    width: 50px;
+    height: 10px;
+    background: black;
+}
 .player-table-name {
     font-weight: bold;
     pointer-events: none;
 }
 .player-table-hand {
     position: relative;
-    width: 90px;
+    width: 65px;
     height: 90px;
+    background-size: 65px 90px;
     margin: 5px auto 0;
+    border-radius: 5px;
     background-image: url('img/remaining_cards.png');
     background-repeat: no-repeat;
     background-position: center center;
     pointer-events: none;
+    transition-property: all;
+    transition-duration: 1s;
+}
+.player-table.is-wearing-jersey .player-table-hand {
+    margin: 5px 0 0 -5px;
 }
 .player-table-hand .number-of-cards {
     position: absolute;
-    left: 20px;
+    left: 8px;
     top: 20px;
     font-size: 2em;
     text-align: center;

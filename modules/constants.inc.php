@@ -41,3 +41,6 @@ define('VALUE_35', 35);
 define('VALUE_40', 40);
 define('VALUE_45', 45);
 define('VALUE_50', 50);
+
+// Jersey value
+define('JERSEY_VALUE', 10);

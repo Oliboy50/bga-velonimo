@@ -44,7 +44,9 @@ class action_velonimo extends APP_GameAction
         $cardsArg = trim(self::getArg('cards', AT_numberlist, true), ';');
         $cardIds = explode(';', $cardsArg);
 
-        $this->game->playCards(array_map(fn ($id) => (int) $id, $cardIds));
+        $withJerseyArg = (bool) self::getArg('withJersey', AT_bool, true);
+
+        $this->game->playCards(array_map(fn ($id) => (int) $id, $cardIds), $withJerseyArg);
 
         self::ajaxResponse();
     }
