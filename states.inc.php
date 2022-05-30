@@ -74,12 +74,16 @@ $machinestates = [
     // The first player of a round must play cards
     ST_FIRST_PLAYER_TURN => [
         'name' => 'firstPlayerTurn',
-        'description' => clienttranslate('${actplayer} must play cards'),
-        'descriptionmyturn' => clienttranslate('${you} must play cards'),
+        'description' => clienttranslate('${actplayer} must play one or more cards'),
+        'descriptionmyturn' => clienttranslate('${you} must play one or more cards'),
         'type' => 'activeplayer',
         'args' => 'argPlayerTurn',
         'possibleactions' => ['playCards'],
-        'transitions' => ['nextPlayer' => ST_ACTIVATE_NEXT_PLAYER, 'endRound' => ST_END_ROUND],
+        'transitions' => [
+            'pickCardsFromAnotherPlayer' => ST_PLAYER_PICK_CARDS_FROM_PLAYER,
+            'nextPlayer' => ST_ACTIVATE_NEXT_PLAYER,
+            'endRound' => ST_END_ROUND,
+        ],
     ],
 
     // The next player must choose to play cards or pass
@@ -90,7 +94,11 @@ $machinestates = [
         'type' => 'activeplayer',
         'args' => 'argPlayerTurn',
         'possibleactions' => ['playCards', 'passTurn'],
-        'transitions' => ['nextPlayer' => ST_ACTIVATE_NEXT_PLAYER, 'endRound' => ST_END_ROUND],
+        'transitions' => [
+            'pickCardsFromAnotherPlayer' => ST_PLAYER_PICK_CARDS_FROM_PLAYER,
+            'nextPlayer' => ST_ACTIVATE_NEXT_PLAYER,
+            'endRound' => ST_END_ROUND,
+        ],
     ],
 
     // Activate the next player who can play
@@ -121,6 +129,30 @@ $machinestates = [
         'type' => 'game',
         'action' => 'stApplySelectedNextPlayer',
         'transitions' => ['firstPlayerTurn' => ST_FIRST_PLAYER_TURN],
+    ],
+
+    // When someone plays one or more cards of value "1",
+    // this player has to pick one or more cards from another player of its choice
+    ST_PLAYER_PICK_CARDS_FROM_PLAYER => [
+        'name' => 'playerSelectPlayerToPickCards',
+        'description' => clienttranslate('${actplayer} must randomly pick ${numberOfCards} cards from another player\'s hand'),
+        'descriptionmyturn' => clienttranslate('${you} must randomly pick ${numberOfCards} cards from another player\'s hand'),
+        'type' => 'activeplayer',
+        'args' => 'argPlayerSelectPlayerToPickCards',
+        'possibleactions' => ['selectPlayerToPickCards'],
+        'transitions' => ['giveCardsBack' => ST_PLAYER_GIVE_CARDS_BACK_TO_PLAYER_AFTER_PICKING],
+    ],
+
+    // After picking cards from another player's hand,
+    // the player who picked cards must give back the same number of cards of its choice
+    ST_PLAYER_GIVE_CARDS_BACK_TO_PLAYER_AFTER_PICKING => [
+        'name' => 'playerGiveCardsBackAfterPicking',
+        'description' => clienttranslate('${actplayer} must choose ${numberOfCards} cards for ${selectedPlayerName}'),
+        'descriptionmyturn' => clienttranslate('${you} must choose ${numberOfCards} cards for ${selectedPlayerName}'),
+        'type' => 'activeplayer',
+        'args' => 'argPlayerGiveCardsBackAfterPicking',
+        'possibleactions' => ['selectCardsToGiveBack'],
+        'transitions' => ['nextPlayer' => ST_ACTIVATE_NEXT_PLAYER],
     ],
 
     // End round, count round points and give yellow jersey to the current winner

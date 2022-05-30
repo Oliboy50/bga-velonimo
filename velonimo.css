@@ -73,10 +73,15 @@ Board
     position: relative;
     width: 740px;
     height: 450px;
-    background-color: #e9c646;
+    background-color: #35714a;
     box-shadow: 2px 2px 5px black;
     border: 1px solid #3b3119;
 }
+/*
+#board-carpet.yellow {
+    background-color: #e9c646;
+}
+*/
 
 .player-table {
     position: absolute; /* position is dynamically computed */
@@ -100,37 +105,6 @@ Board
     border: 2px solid #ff0000;
     transform: scale(1.02);
 }
-.player-table.is-wearing-jersey .player-table-jersey {
-    position: absolute;
-    bottom: 10px;
-    right: 0;
-    width: 60px;
-    height: 83px;
-    background-size: 60px 83px;
-    background-image: url('img/jersey.png');
-    background-repeat: no-repeat;
-    background-position: center center;
-    pointer-events: none;
-}
-.player-table.is-wearing-jersey.has-used-jersey .jersey-overlay {
-    display: block;
-    position: relative;
-    top: 20px;
-    height: 50px;
-    width: 10px;
-    margin: 0 auto;
-    background: black;
-    transform: rotate(45deg);
-}
-.player-table.is-wearing-jersey.has-used-jersey .jersey-overlay:after {
-    content: "";
-    position: absolute;
-    left: -20px;
-    top: 20px;
-    width: 50px;
-    height: 10px;
-    background: black;
-}
 .player-table-name {
     font-weight: bold;
     pointer-events: none;
@@ -147,7 +121,7 @@ Board
     background-position: center center;
     pointer-events: none;
     transition-property: all;
-    transition-duration: 1s;
+    transition-duration: 0.4s;
 }
 .player-table.is-wearing-jersey .player-table-hand {
     margin: 5px 0 0 -5px;
@@ -166,6 +140,43 @@ Board
     width: 130px; /* player table width */
     height: 126px; /* card height */
     pointer-events: none;
+}
+.player-table.is-wearing-jersey .player-table-jersey {
+    position: absolute;
+    bottom: 10px;
+    right: 0;
+    width: 60px;
+    height: 83px;
+    background-size: 60px 83px;
+    background-image: url('img/jersey.png');
+    background-repeat: no-repeat;
+    background-position: center center;
+    pointer-events: none;
+    transition-property: opacity;
+    transition-duration: 0.4s;
+}
+.player-table.is-wearing-jersey.has-used-jersey .player-table-jersey {
+    opacity: 0.2;
+}
+/* @TODO: try to only reduce opacity of jersey instead of using a cross overlay */
+.player-table.is-wearing-jersey.has-used-jersey .jersey-overlay {
+    display: block;
+    position: relative;
+    top: 20px;
+    height: 50px;
+    width: 10px;
+    margin: 0 auto;
+    background: black;
+    transform: rotate(45deg);
+}
+.player-table.is-wearing-jersey.has-used-jersey .jersey-overlay:after {
+    content: "";
+    position: absolute;
+    left: -20px;
+    top: 20px;
+    width: 50px;
+    height: 10px;
+    background: black;
 }
 /**
 END Board
@@ -210,20 +221,28 @@ END Current player
 /**
 Cards
  */
+.velonimo-card {
+    width: 90px;
+    height: 126px;
+    border-radius: 10px;
+    background-repeat: no-repeat;
+}
+.velonimo-card.front-side {
+    background-image: url('img/cards.png'); /* background-position is dynamically computed */
+    background-size: 630px 1008px;
+}
+.velonimo-card.back-side {
+    background-image: url('img/remaining_cards.png');
+    background-size: 90px 126px;
+}
 .cards-stack {
-    position: absolute; /* position is dynamically computed */
+    position: absolute; /* position and width are dynamically computed */
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
 }
-.card-in-stack {
-    width: 90px;
-    height: 126px;
-    margin-right: -60px; /* 2/3 card width */
-    border-radius: 10px;
-    background-image: url('img/cards.png');
-    background-size: 630px 1008px;
-    background-repeat: no-repeat;
+.cards-stack .velonimo-card {
+    margin-right: -60px; /* 2/3 of card width */
 }
 /**
 END Cards
