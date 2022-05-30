@@ -43,7 +43,7 @@ $gameinfos = [
     'bgg_id' => 323262,
 
     // Players configuration that can be played (ex: 2 to 4 players)
-    'players' => [2, 3, 4, 5],
+    'players' => [3, 4, 5],
 
     // Suggest players to play with this number of players. Must be null if there is no such advice, or if there is only one possible player configuration.
     'suggest_player_number' => null,
@@ -70,6 +70,7 @@ $gameinfos = [
     // Note: if you are NOT using any tie breaker, leave the empty string.
     //
     // Example: 'tie_breaker_description' => totranslate( "Number of remaining cards in hand" ),
+    // @TODO: tie breaker
     'tie_breaker_description' => '',
 
     // If in the game, all losers are equal (no score to rank them or explicit in the rules that losers are not ranked between them), set this to true

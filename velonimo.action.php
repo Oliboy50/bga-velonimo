@@ -70,4 +70,27 @@ class action_velonimo extends APP_GameAction
 
         self::ajaxResponse();
     }
+
+    public function selectPlayerToPickCards()
+    {
+        self::setAjaxMode();
+
+        $selectedPlayerId = trim(self::getArg('selectedPlayerId', AT_int, true));
+
+        $this->game->selectPlayerToPickCards((int) $selectedPlayerId);
+
+        self::ajaxResponse();
+    }
+
+    public function selectCardsToGiveBack()
+    {
+        self::setAjaxMode();
+
+        $cardsArg = trim(self::getArg('cards', AT_numberlist, true), ';');
+        $cardIds = explode(';', $cardsArg);
+
+        $this->game->selectCardsToGiveBack(array_map(fn ($id) => (int) $id, $cardIds));
+
+        self::ajaxResponse();
+    }
 }

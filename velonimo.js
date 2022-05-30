@@ -67,7 +67,8 @@ const DOM_ID_CURRENT_ROUND = 'current-round';
 const DOM_ID_ACTION_BUTTON_PLAY_CARDS = 'action-button-play-cards';
 const DOM_ID_ACTION_BUTTON_PLAY_CARDS_WITH_JERSEY = 'action-button-play-cards-with-jersey';
 const DOM_ID_ACTION_BUTTON_PASS_TURN = 'action-button-pass-turn';
-const DOM_ID_ACTION_BUTTON_SELECT_NEXT_PLAYER = 'action-button-select-next-player';
+const DOM_ID_ACTION_BUTTON_SELECT_PLAYER = 'action-button-select-player';
+const DOM_ID_ACTION_BUTTON_GIVE_CARDS = 'action-button-give-cards';
 
 // DOM classes
 const DOM_CLASS_PLAYER_TABLE = 'player-table'
@@ -173,11 +174,12 @@ function (dojo, declare) {
     return declare('bgagame.velonimo', ebg.core.gamegui, {
         constructor: function () {
             this.currentState = null;
-            this.currentRound = 0;
+            this.currentRound = -1;
             this.currentPlayerHasJersey = false;
             this.jerseyHasBeenUsedInTheCurrentRound = false;
-            this.howManyRounds = 0;
-            this.playedCardsValue = 0;
+            this.howManyRounds = -1;
+            this.playedCardsValue = -1;
+            this.howManyCardsToGiveBack = -1;
             this.players = [];
             this.playerHand = null; // https://en.doc.boardgamearena.com/Stock
         },
@@ -276,7 +278,8 @@ function (dojo, declare) {
             this.addCardsToPlayerHand(gamedatas.currentPlayerCards);
 
             // Setup cards played on table
-            this.displayCardsOnTable(gamedatas.playedCardsPlayerId, gamedatas.playedCards, gamedatas.playedCardsValue);
+            this.playedCardsValue = gamedatas.playedCardsValue;
+            this.moveCardsFromPlayerHandToTable(gamedatas.playedCardsPlayerId, gamedatas.playedCards);
 
             // Setup game info
             this.refreshGameInfos();
@@ -292,32 +295,24 @@ function (dojo, declare) {
             this.currentState = state;
             switch (state) {
                 case 'firstPlayerTurn':
-                    // show active player
-                    dojo.addClass(`player-table-${data.args.activePlayerId}`, DOM_CLASS_ACTIVE_PLAYER);
-                    break;
                 case 'playerTurn':
                     // show active player
                     dojo.addClass(`player-table-${data.args.activePlayerId}`, DOM_CLASS_ACTIVE_PLAYER);
                     break;
                 case 'playerSelectNextPlayer':
+                    this.setupSelectPlayerAction(data.args.activePlayerId, data.args.selectablePlayers, this.onSelectNextPlayer);
+                    break;
+                case 'playerSelectPlayerToPickCards':
+                    this.setupSelectPlayerAction(data.args.activePlayerId, data.args.selectablePlayers, this.onSelectPlayerToPickCards);
+                    break;
+                case 'playerGiveCardsBackAfterPicking':
+                    // show active player
+                    dojo.addClass(`player-table-${data.args.activePlayerId}`, DOM_CLASS_ACTIVE_PLAYER);
+
+                    this.howManyCardsToGiveBack = data.args.numberOfCards;
+
                     if (this.isCurrentPlayerActive()) {
-                        // hide active player state for active player
-                        dojo.removeClass(`player-table-${data.args.activePlayerId}`, DOM_CLASS_ACTIVE_PLAYER);
-
-                        Object.entries(data.args.selectablePlayers).forEach((entry) => {
-                            const player = entry[1];
-
-                            // setup click on player tables
-                            dojo.addClass(`player-table-${player.id}`, DOM_CLASS_SELECTABLE_PLAYER);
-                            this.connect($(`player-table-${player.id}`), 'onclick', () => this.onSelectNextPlayer(player.id));
-
-                            // setup click on action buttons
-                            this.addActionButton(`${DOM_ID_ACTION_BUTTON_SELECT_NEXT_PLAYER}-${player.id}`, player.name, () => this.onSelectNextPlayer(player.id), null, false, 'gray');
-                            dojo.style(`${DOM_ID_ACTION_BUTTON_SELECT_NEXT_PLAYER}-${player.id}`, 'color', `#${player.color}`);
-                        });
-                    } else {
-                        // show active player for other players
-                        dojo.addClass(`player-table-${data.args.activePlayerId}`, DOM_CLASS_ACTIVE_PLAYER);
+                        this.unselectAllCards();
                     }
                     break;
             }
@@ -329,11 +324,15 @@ function (dojo, declare) {
             // do special things for state
             switch (state) {
                 case 'playerSelectNextPlayer':
+                case 'playerSelectPlayerToPickCards':
                     Object.entries(this.players).forEach((entry) => {
                         const player = entry[1];
                         dojo.removeClass(`player-table-${player.id}`, DOM_CLASS_SELECTABLE_PLAYER);
                         this.disconnect($(`player-table-${player.id}`), 'onclick');
                     });
+                    break;
+                case 'playerGiveCardsBackAfterPicking':
+                    this.howManyCardsToGiveBack = -1;
                     break;
             }
 
@@ -361,13 +360,26 @@ function (dojo, declare) {
                         this.setupPlayCardsActionButton();
                     }
                     break;
+                case 'playerGiveCardsBackAfterPicking':
+                    this.setupGiveCardsBackAfterPickingActionButton();
+                    break;
             }
         },
         onPlayerHandSelectionChanged: function (controlName, itemId) {
             if (typeof itemId === 'undefined') {
                 return;
             }
+            const isCurrentPlayerActive = this.isCurrentPlayerActive();
 
+            if (
+                isCurrentPlayerActive
+                && this.currentState === 'playerGiveCardsBackAfterPicking'
+            ) {
+                this.setupGiveCardsBackAfterPickingActionButton();
+                return;
+            }
+
+            // cards combo helper (disable cards that cannot be played with current selection)
             const cardId = parseInt(itemId, 10);
             if (this.playerHand.isSelected(cardId)) {
                 this.onPlayerCardSelected(cardId);
@@ -378,11 +390,9 @@ function (dojo, declare) {
             switch (this.currentState) {
                 case 'firstPlayerTurn':
                 case 'playerTurn':
-                    if (!this.isCurrentPlayerActive()) {
-                        return;
+                    if (isCurrentPlayerActive) {
+                        this.setupPlayCardsActionButton();
                     }
-
-                    this.setupPlayCardsActionButton();
                     break;
             }
         },
@@ -518,6 +528,40 @@ function (dojo, declare) {
             }
         },
         /**
+         *
+         * @param {number} activePlayerId
+         * @param {object[]} selectablePlayers Indexed by playerId.
+         * @param {function(number)} onClickOnActionButton The function arg is the selected playerId.
+         */
+        setupSelectPlayerAction: function (activePlayerId, selectablePlayers, onClickOnActionButton) {
+            if (this.isCurrentPlayerActive()) {
+                // hide active player state for active player
+                dojo.removeClass(`player-table-${activePlayerId}`, DOM_CLASS_ACTIVE_PLAYER);
+
+                Object.entries(selectablePlayers).forEach((entry) => {
+                    const player = entry[1];
+
+                    // setup click on player tables
+                    dojo.addClass(`player-table-${player.id}`, DOM_CLASS_SELECTABLE_PLAYER);
+                    this.connect($(`player-table-${player.id}`), 'onclick', () => onClickOnActionButton.bind(this)(player.id));
+
+                    // setup click on action buttons
+                    this.addActionButton(`${DOM_ID_ACTION_BUTTON_SELECT_PLAYER}-${player.id}`, player.name, () => onClickOnActionButton.bind(this)(player.id), null, false, 'gray');
+                    dojo.style(`${DOM_ID_ACTION_BUTTON_SELECT_PLAYER}-${player.id}`, 'color', `#${player.color}`);
+                });
+            } else {
+                // show active player for other players
+                dojo.addClass(`player-table-${activePlayerId}`, DOM_CLASS_ACTIVE_PLAYER);
+            }
+        },
+        setupGiveCardsBackAfterPickingActionButton: function () {
+            const selectedCards = this.getSelectedPlayerCards();
+            if (!$(DOM_ID_ACTION_BUTTON_GIVE_CARDS)) {
+                this.addActionButton(DOM_ID_ACTION_BUTTON_GIVE_CARDS, _('Give selected cards'), () => this.onSelectCardsToGiveBack());
+            }
+            dojo.toggleClass(DOM_ID_ACTION_BUTTON_GIVE_CARDS, DOM_CLASS_DISABLED_ACTION_BUTTON, selectedCards.length !== this.howManyCardsToGiveBack);
+        },
+        /**
          * This function gives the position of the card in the sprite "cards.png",
          * it also gives weight to cards to sort them by color (blue-1, blue-2, ...) just like in the sprite,
          * it also gives the type ID for the stock component.
@@ -563,6 +607,20 @@ function (dojo, declare) {
                 default:
                     return 55;
             }
+        },
+        /**
+         * @param {number} position
+         * @return {number}
+         */
+        getAbsoluteCardBackgroundPositionXFromCardPosition: function (position) {
+            return (position % 7) * CARD_WIDTH;
+        },
+        /**
+         * @param {number} position
+         * @return {number}
+         */
+        getAbsoluteCardBackgroundPositionYFromCardPosition: function (position) {
+            return Math.floor(position / 7) * CARD_HEIGHT;
         },
         /**
          *
@@ -1021,7 +1079,6 @@ function (dojo, declare) {
         unselectAllCards: function () {
             this.playerHand.unselectAll();
             this.displayCardsAsNonSelectable([]);
-            this.setupPlayCardsActionButton();
         },
         /**
          * @param {object[]} cards
@@ -1053,10 +1110,8 @@ function (dojo, declare) {
         /**
          * @param {number} playerId
          * @param {object[]} cards
-         * @param {number} cardsValue
          */
-        displayCardsOnTable: function (playerId, cards, cardsValue) {
-            this.playedCardsValue = cardsValue;
+        moveCardsFromPlayerHandToTable: function (playerId, cards) {
             if (cards.length <= 0) {
                 return;
             }
@@ -1073,12 +1128,12 @@ function (dojo, declare) {
                 `player-table-${playerId}-cards`
             );
             stackedCards.forEach((card) => {
-                const position = this.getCardPositionInSpriteByColorAndValue(card.color, card.value)
+                const position = this.getCardPositionInSpriteByColorAndValue(card.color, card.value);
                 dojo.place(
                     this.format_block('jstpl_card_in_stack', {
                         id: card.id,
-                        x: (position % 7) * CARD_WIDTH,
-                        y: Math.floor(position / 7) * CARD_HEIGHT,
+                        x: this.getAbsoluteCardBackgroundPositionXFromCardPosition(position),
+                        y: this.getAbsoluteCardBackgroundPositionYFromCardPosition(position),
                     }),
                     `cards-stack-${topOfStackCardId}`
                 );
@@ -1098,15 +1153,67 @@ function (dojo, declare) {
             this.slideToObject(`cards-stack-${topOfStackCardId}`, `player-table-${playerId}-cards`).play();
         },
         /**
+         * @param {number} senderId
+         * @param {object[]} cards
+         */
+        receiveCardsFromAnotherPlayer: function (senderId, cards) {
+            cards.forEach((card) => {
+                const position = this.getCardPositionInSpriteByColorAndValue(card.color, card.value);
+                const backgroundPositionX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position);
+                const backgroundPositionY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position);
+                this.slideTemporaryObject(
+                    `<div class="velonimo-card front-side" style="position: absolute; background-position: -${backgroundPositionX}px -${backgroundPositionY}px;"></div>`,
+                    `player-table-${senderId}-hand`,
+                    `player-table-${senderId}-hand`,
+                    DOM_ID_PLAYER_HAND
+                ).play();
+                this.playerHand.addToStockWithId(position, card.id);
+            });
+        },
+        /**
+         * @param {number} receiverId
+         * @param {object[]} cards
+         */
+        sendCardsToAnotherPlayer: function (receiverId, cards) {
+            cards.forEach((card) => {
+                const position = this.getCardPositionInSpriteByColorAndValue(card.color, card.value);
+                const backgroundPositionX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position);
+                const backgroundPositionY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position);
+                const animationStartDomId = $(`${DOM_ID_PLAYER_HAND}_item_${card.id}`) ? `${DOM_ID_PLAYER_HAND}_item_${card.id}` : DOM_ID_PLAYER_HAND;
+                this.slideTemporaryObject(
+                    `<div class="velonimo-card front-side" style="position: absolute; background-position: -${backgroundPositionX}px -${backgroundPositionY}px;"></div>`,
+                    animationStartDomId,
+                    animationStartDomId,
+                    `player-table-${receiverId}-hand`
+                ).play();
+                this.playerHand.removeFromStockById(card.id);
+            });
+        },
+        /**
+         * @param {number} senderId
+         * @param {number} receiverId
+         * @param {number} numberOfCards
+         */
+        moveCardsBetweenTwoOtherPlayers: function (senderId, receiverId, numberOfCards) {
+            for (let i = 0; i < numberOfCards; i++) {
+                this.slideTemporaryObject(
+                    `<div class="velonimo-card back-side" style="position: absolute;"></div>`,
+                    `player-table-${senderId}-hand`,
+                    `player-table-${senderId}-hand`,
+                    `player-table-${receiverId}-hand`
+                ).play();
+            }
+        },
+        /**
          * @param {object[]} cards
          */
         addCardsToPlayerHand: function (cards) {
             cards.forEach((card) => {
-                this.playerHand.addToStockWithId(this.getCardPositionInSpriteByColorAndValue(card.color, card.value), card.id );
+                this.playerHand.addToStockWithId(this.getCardPositionInSpriteByColorAndValue(card.color, card.value), card.id);
             });
         },
         discardCards: function () {
-            this.playedCardsValue = 0;
+            this.playedCardsValue = -1;
             dojo.query(`.${DOM_CLASS_CARDS_STACK}`).forEach(dojo.destroy);
         },
 
@@ -1132,6 +1239,7 @@ function (dojo, declare) {
             });
 
             this.unselectAllCards();
+            this.setupPlayCardsActionButton();
 
             // @TODO: turn back jersey to show that it cannot be used anymore
             //        (using notification to be sure that the request is accepted on the backend side)
@@ -1155,6 +1263,34 @@ function (dojo, declare) {
                 selectedPlayerId: selectedPlayerId,
             });
         },
+        /**
+         * @param {number} selectedPlayerId
+         */
+        onSelectPlayerToPickCards: function (selectedPlayerId) {
+            if (!this.checkAction('selectPlayerToPickCards')) {
+                return;
+            }
+
+            this.requestAction('selectPlayerToPickCards', {
+                selectedPlayerId: selectedPlayerId,
+            });
+        },
+        onSelectCardsToGiveBack: function () {
+            if (!this.checkAction('selectCardsToGiveBack')) {
+                return;
+            }
+
+            const selectedCards = this.getSelectedPlayerCards();
+            if (selectedCards.length <= 0) {
+                return;
+            }
+
+            this.requestAction('selectCardsToGiveBack', {
+                cards: selectedCards.map(card => card.id).join(';'),
+            });
+
+            this.unselectAllCards();
+        },
 
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
@@ -1162,9 +1298,12 @@ function (dojo, declare) {
         setupNotifications: function () {
             [
                 ['roundStarted', 1],
-                ['cardsGiven', 1],
+                ['cardsDealt', 1],
                 ['cardsPlayed', 1000],
                 ['cardsDiscarded', 1],
+                ['cardsReceivedFromAnotherPlayer', 1000],
+                ['cardsSentToAnotherPlayer', 1000],
+                ['cardsMovedBetweenTwoOtherPlayers', 1000],
                 ['roundEnded', 1],
             ].forEach((notif) => {
                 const name = notif[0];
@@ -1179,7 +1318,7 @@ function (dojo, declare) {
             this.players = data.args.players;
             this.refreshGameInfos();
         },
-        notif_cardsGiven: function (data) {
+        notif_cardsDealt: function (data) {
             this.playerHand.removeAll();
             this.addCardsToPlayerHand(data.args.cards);
         },
@@ -1188,7 +1327,8 @@ function (dojo, declare) {
             this.discardCards();
 
             // place new played cards
-            this.displayCardsOnTable(data.args.playedCardsPlayerId, data.args.playedCards, data.args.playedCardsValue);
+            this.playedCardsValue = data.args.playedCardsValue;
+            this.moveCardsFromPlayerHandToTable(data.args.playedCardsPlayerId, data.args.playedCards);
 
             // update number of cards in players hand
             this.players[data.args.playedCardsPlayerId].howManyCards = data.args.remainingNumberOfCards;
@@ -1203,6 +1343,33 @@ function (dojo, declare) {
         },
         notif_cardsDiscarded: function (data) {
             this.discardCards();
+        },
+        notif_cardsReceivedFromAnotherPlayer: function (data) {
+            this.players[data.args.senderPlayerId].howManyCards = this.players[data.args.senderPlayerId].howManyCards - data.args.cards.length;
+
+            this.receiveCardsFromAnotherPlayer(data.args.senderPlayerId, data.args.cards);
+
+            this.players[this.player_id].howManyCards = this.players[this.player_id].howManyCards + data.args.cards.length;
+
+            this.refreshGameInfos();
+        },
+        notif_cardsSentToAnotherPlayer: function (data) {
+            this.players[this.player_id].howManyCards = this.players[this.player_id].howManyCards - data.args.cards.length;
+
+            this.sendCardsToAnotherPlayer(data.args.receiverPlayerId, data.args.cards);
+
+            this.players[data.args.receiverPlayerId].howManyCards = this.players[data.args.receiverPlayerId].howManyCards + data.args.cards.length;
+
+            this.refreshGameInfos();
+        },
+        notif_cardsMovedBetweenTwoOtherPlayers: function (data) {
+            this.players[data.args.senderPlayerId].howManyCards = this.players[data.args.senderPlayerId].howManyCards - data.args.numberOfCards;
+
+            this.moveCardsBetweenTwoOtherPlayers(data.args.senderPlayerId, data.args.receiverPlayerId, data.args.numberOfCards);
+
+            this.players[data.args.receiverPlayerId].howManyCards = this.players[data.args.receiverPlayerId].howManyCards + data.args.numberOfCards;
+
+            this.refreshGameInfos();
         },
         notif_roundEnded: function (data) {
             this.players = data.args.players;

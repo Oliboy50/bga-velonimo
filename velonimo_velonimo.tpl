@@ -16,7 +16,7 @@
 </div>`;
 
     var jstpl_cards_stack = '<div id="cards-stack-${id}" class="cards-stack" style="width: ${width}px;"></div>';
-    var jstpl_card_in_stack = '<div id="card-in-stack-${id}" class="card-in-stack" style="background-position: -${x}px -${y}px;"></div>';
+    var jstpl_card_in_stack = '<div id="card-in-stack-${id}" class="velonimo-card front-side" style="background-position: -${x}px -${y}px;"></div>';
 </script>
 
 {OVERALL_GAME_FOOTER}

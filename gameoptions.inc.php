@@ -48,15 +48,13 @@
 
 $game_options = [
     100 => [
-        'name' => totranslate('How many rounds'),
+        'name' => totranslate('Number of rounds'),
         'values' => [
-            2 => ['name' => totranslate('2 rounds')],
             3 => ['name' => totranslate('3 rounds')],
             4 => ['name' => totranslate('4 rounds')],
             5 => ['name' => totranslate('5 rounds (Official rule)')],
             6 => ['name' => totranslate('6 rounds')],
             7 => ['name' => totranslate('7 rounds')],
-            8 => ['name' => totranslate('8 rounds')],
         ],
         'default' => 5,
     ],
