@@ -20,14 +20,3 @@
  */
 
 require_once('modules/constants.inc.php');
-
-$this->colorNames = [
-    COLOR_BLUE => clienttranslate('blue'),
-    COLOR_BROWN => clienttranslate('brown'),
-    COLOR_GRAY => clienttranslate('gray'),
-    COLOR_GREEN => clienttranslate('green'),
-    COLOR_PINK => clienttranslate('pink'),
-    COLOR_RED => clienttranslate('red'),
-    COLOR_YELLOW => clienttranslate('yellow'),
-    COLOR_ADVENTURER => clienttranslate('adventurer'),
-];

@@ -205,7 +205,6 @@ class Velonimo extends Table
         );
 
         // Cards
-        // @TODO: $result['colorNames'] = $this->colorNames;
         $result['playedCards'] = $this->formatCardsForClient(
             $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYED))
         );
@@ -386,7 +385,9 @@ class Velonimo extends Table
         $this->incStat(1, 'passTurnAction');
         $this->incStat(1, 'passTurnAction', (int) self::getCurrentPlayerId());
 
-        // @TODO: notify
+        self::notifyAllPlayers('turnPassed', clienttranslate('${playerName} passes'), [
+            'playerName' => self::getCurrentPlayerName(),
+        ]);
 
         $this->gamestate->nextState('nextPlayer');
     }
@@ -395,7 +396,8 @@ class Velonimo extends Table
         self::checkAction('selectNextPlayer');
 
         // make sure the player didn't select himself
-        if ($selectedPlayerId === (int) self::getCurrentPlayerId()) {
+        $currentPlayerId = (int) self::getCurrentPlayerId();
+        if ($selectedPlayerId === $currentPlayerId) {
             throw new BgaUserException(self::_('You cannot select yourself.'));
         }
 
@@ -406,6 +408,14 @@ class Velonimo extends Table
         if (empty($nextPlayerCards)) {
             throw new BgaUserException(self::_('This player cannot play. Please select a player who has cards.'));
         }
+
+        $players = $this->getPlayersFromDatabase();
+        $currentPlayer = $this->getPlayerById($currentPlayerId, $players);
+        $selectedPlayer = $this->getPlayerById($selectedPlayerId, $players);
+        self::notifyAllPlayers('nextPlayerSelected', clienttranslate('${playerName} chooses ${selectedPlayerName} as next player'), [
+            'playerName' => $currentPlayer->getName(),
+            'selectedPlayerName' => $selectedPlayer->getName(),
+        ]);
 
         // in order to change the active player during an "activeplayer" type state,
         // we have to use an intermediate global variable and an intermediate "game" type state
@@ -422,9 +432,6 @@ class Velonimo extends Table
             throw new BgaUserException(self::_('You cannot select yourself.'));
         }
 
-        // @TODO: shuffle before picking cards?
-        //        Note: it does not work if we use $this->deck->shuffle(), maybe we could try $this->cards->autoreshuffle_custom()?
-        //$this->deck->shuffle(self::CARD_LOCATION_PLAYER_HAND, $selectedPlayerId);
         $selectedPlayerCards = $this->fromBgaCardsToVelonimoCards(
             $this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYER_HAND, $selectedPlayerId)
         );
@@ -443,7 +450,12 @@ class Velonimo extends Table
             count($selectedPlayerCards)
         );
 
-        $pickedCards = array_slice($selectedPlayerCards, 0, $numberOfCardsToPick);
+        // pick cards randomly
+        $pickedCards = [];
+        foreach (array_rand($selectedPlayerCards, $numberOfCardsToPick) as $key) {
+            $pickedCards[] = $selectedPlayerCards[$key];
+        }
+        /** @var VelonimoCard[] $pickedCards */
         $this->deck->moveCards(
             array_map(fn (VelonimoCard $c) => $c->getId(), $pickedCards),
             self::CARD_LOCATION_PLAYER_HAND,
@@ -454,7 +466,7 @@ class Velonimo extends Table
 
         // notify players
         $formattedPickedCards = $this->formatCardsForClient($pickedCards);
-        $translatedMessage = clienttranslate('${receiverPlayerName} randomly picked ${numberOfCards} cards from ${senderPlayerName} hand');
+        $translatedMessage = clienttranslate('${receiverPlayerName} picks ${numberOfCards} cards from ${senderPlayerName} hand');
         foreach ($players as $player) {
             if ($player->getId() === $currentPlayer->getId()) {
                 self::notifyPlayer($currentPlayer->getId(), 'cardsReceivedFromAnotherPlayer', $translatedMessage, [
@@ -539,7 +551,7 @@ class Velonimo extends Table
 
         // notify players
         $formattedSelectedCards = $this->formatCardsForClient($selectedCards);
-        $translatedMessage = clienttranslate('${senderPlayerName} gave back ${numberOfCards} cards to ${receiverPlayerName}');
+        $translatedMessage = clienttranslate('${senderPlayerName} gives back ${numberOfCards} cards to ${receiverPlayerName}');
         foreach ($players as $player) {
             if ($player->getId() === $currentPlayer->getId()) {
                 self::notifyPlayer($currentPlayer->getId(), 'cardsSentToAnotherPlayer', $translatedMessage, [
@@ -716,8 +728,6 @@ class Velonimo extends Table
 
         self::giveExtraTime($nextPlayerId);
         $this->gamestate->changeActivePlayer($nextPlayerId);
-
-        // @TODO: notify
 
         $this->gamestate->nextState('firstPlayerTurn');
     }

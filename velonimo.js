@@ -184,8 +184,6 @@ function (dojo, declare) {
             this.playerHand = null; // https://en.doc.boardgamearena.com/Stock
         },
         setup: function (gamedatas) {
-            // @TODO: remove log
-            console.log(gamedatas);
             this.currentState = gamedatas.gamestate.name;
             this.currentRound = gamedatas.currentRound;
             this.jerseyHasBeenUsedInTheCurrentRound = gamedatas.jerseyHasBeenUsedInTheCurrentRound;
@@ -492,8 +490,6 @@ function (dojo, declare) {
                 dojo.toggleClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_HAS_USED_JERSEY, player.isWearingJersey && this.jerseyHasBeenUsedInTheCurrentRound);
                 dojo.toggleClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_IS_WEARING_JERSEY, player.isWearingJersey);
                 // @TODO: transition for jersey
-                // this.placeOnObject(`cards-stack-${topOfStackCardId}`, `player-table-${playerId}-hand`);
-                // this.slideToObject(`cards-stack-${topOfStackCardId}`, `player-table-${playerId}-cards`).play();
             });
 
             // display current round
@@ -1240,9 +1236,6 @@ function (dojo, declare) {
 
             this.unselectAllCards();
             this.setupPlayCardsActionButton();
-
-            // @TODO: turn back jersey to show that it cannot be used anymore
-            //        (using notification to be sure that the request is accepted on the backend side)
         },
         onPassTurn: function () {
             if (!this.checkAction('passTurn')) {
