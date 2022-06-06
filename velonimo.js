@@ -363,8 +363,8 @@ function (dojo, declare) {
                     this.addActionButton(DOM_ID_ACTION_BUTTON_PASS_TURN, _('Pass'), 'onPassTurn');
                     // check if player can play or auto-pass its turn
                     if (!this.currentPlayerCanPlayCards()) {
-                        // click on "Pass" after either 3, 4, 5, 6 or 7 seconds
-                        this.clickActionButtonAfterAFewSeconds(DOM_ID_ACTION_BUTTON_PASS_TURN, Math.floor((Math.random() * 5) + 3));
+                        // click on "Pass" after either 5, 6, 7, 8 or 9 seconds
+                        this.clickActionButtonAfterAFewSeconds(DOM_ID_ACTION_BUTTON_PASS_TURN, Math.floor((Math.random() * 5) + 5));
                     } else {
                         this.setupPlayCardsActionButton();
                     }
