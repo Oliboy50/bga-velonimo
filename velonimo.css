@@ -247,3 +247,19 @@ Cards
 /**
 END Cards
  */
+
+/**
+Animations
+ */
+.moving-jersey {
+    position: absolute;
+    width: 60px;
+    height: 83px;
+    background-size: 60px 83px;
+    background-image: url('img/jersey.png');
+    background-repeat: no-repeat;
+    z-index: 100;
+}
+/**
+END Animations
+ */

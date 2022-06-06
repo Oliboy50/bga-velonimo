@@ -61,6 +61,7 @@ const VALUE_50 = 50;
 const JERSEY_VALUE = 10;
 
 // DOM IDs
+const DOM_ID_BOARD = 'board';
 const DOM_ID_BOARD_CARPET = 'board-carpet';
 const DOM_ID_PLAYER_HAND = 'my-hand';
 const DOM_ID_CURRENT_ROUND = 'current-round';
@@ -195,7 +196,7 @@ function (dojo, declare) {
 <div id="game-info" class="player-board">
     <div id="${DOM_ID_CURRENT_ROUND}"></div>
 </div>`,
-                'board'
+                DOM_ID_BOARD
             );
 
             // Setup players
@@ -217,6 +218,7 @@ function (dojo, declare) {
                     cardsStyle: playerPosition.cardsStyle,
                 }), DOM_ID_BOARD_CARPET);
             });
+            this.setupNumberOfCardsInPlayersHand();
 
             // @TODO: support spectators (do not show "my hand" in this case)
             // Init playerHand "ebg.stock" component
@@ -279,8 +281,17 @@ function (dojo, declare) {
             this.playedCardsValue = gamedatas.playedCardsValue;
             this.moveCardsFromPlayerHandToTable(gamedatas.playedCardsPlayerId, gamedatas.playedCards);
 
-            // Setup game info
-            this.refreshGameInfos();
+            // Setup jersey
+            if (gamedatas.jerseyHasBeenUsedInTheCurrentRound) {
+                this.useJerseyForCurrentRound();
+            } else {
+                this.restoreJerseyForCurrentRound();
+            }
+            this.moveJerseyToCurrentWinner();
+
+            // Setup extra info
+            this.setupPlayersScore();
+            this.setupRoundsInfo();
 
             // Setup game notifications to handle
             this.setupNotifications();
@@ -352,8 +363,8 @@ function (dojo, declare) {
                     this.addActionButton(DOM_ID_ACTION_BUTTON_PASS_TURN, _('Pass'), 'onPassTurn');
                     // check if player can play or auto-pass its turn
                     if (!this.currentPlayerCanPlayCards()) {
-                        // click on "Pass" after either 3, 4 or 5 seconds
-                        this.clickActionButtonAfterAFewSeconds(DOM_ID_ACTION_BUTTON_PASS_TURN, Math.floor((Math.random() * 3) + 3));
+                        // click on "Pass" after either 3, 4, 5, 6 or 7 seconds
+                        this.clickActionButtonAfterAFewSeconds(DOM_ID_ACTION_BUTTON_PASS_TURN, Math.floor((Math.random() * 5) + 3));
                     } else {
                         this.setupPlayCardsActionButton();
                     }
@@ -400,7 +411,7 @@ function (dojo, declare) {
         ///////////////////////////////////////////////////
         /**
          * @param {string} action
-         * @param {object} data
+         * @param {Object} data
          */
         requestAction: function (action, data) {
             if (
@@ -429,7 +440,7 @@ function (dojo, declare) {
          *
          * @see https://en.doc.boardgamearena.com/Game_interface_logic:_yourgamename.js
          *
-         * @return {boolean}
+         * @returns {boolean}
          */
         isReadOnly() {
             return this.isSpectator || typeof g_replayFrom !== 'undefined' || g_archive_mode;
@@ -473,33 +484,100 @@ function (dojo, declare) {
                 delete this._actionTimerId;
             }
         },
-        refreshGameInfos: function () {
-            // display players data
+        setupRoundsInfo: function () {
+            $(DOM_ID_CURRENT_ROUND).innerHTML = `${this.currentRound} / ${this.howManyRounds}`;
+        },
+        setupNumberOfCardsInPlayersHand: function () {
             Object.entries(this.players).forEach((entry) => {
                 const player = entry[1];
-                // score
+
+                $(`player-table-${player.id}-number-of-cards`).innerHTML = player.howManyCards;
+            });
+        },
+        setupPlayersScore: function () {
+            Object.entries(this.players).forEach((entry) => {
+                const player = entry[1];
+
                 if (this.scoreCtrl.hasOwnProperty(player.id)) {
                     this.scoreCtrl[player.id].toValue(player.score);
                 }
-                // number of remaining cards in player hand
-                $(`player-table-${player.id}-number-of-cards`).innerHTML = player.howManyCards;
-                // setup jersey
+            });
+        },
+        /**
+         * @param {number?} currentJerseyWearerId
+         */
+        moveJerseyToCurrentWinner: function (currentJerseyWearerId) {
+            Object.entries(this.players).forEach((entry) => {
+                const player = entry[1];
+
                 if (player.isWearingJersey) {
                     this.currentPlayerHasJersey = this.player_id === player.id;
-                }
-                dojo.toggleClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_HAS_USED_JERSEY, player.isWearingJersey && this.jerseyHasBeenUsedInTheCurrentRound);
-                dojo.toggleClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_IS_WEARING_JERSEY, player.isWearingJersey);
-                // @TODO: transition for jersey
-            });
 
-            // display current round
-            $(DOM_ID_CURRENT_ROUND).innerHTML = `${this.currentRound} / ${this.howManyRounds}`;
+                    if (!dojo.hasClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_IS_WEARING_JERSEY)) {
+                        if (currentJerseyWearerId) {
+                            // move jersey from player A to player B,
+                            // then add isWearingJersey class to player B at the end of the animation
+                            const animation = this.slideTemporaryObject(
+                                `<div class="moving-jersey"></div>`,
+                                `player-table-${currentJerseyWearerId}-jersey`,
+                                DOM_ID_BOARD,
+                                `player-table-${player.id}-jersey`
+                            );
+                            dojo.connect(animation, 'onEnd', () => dojo.addClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_IS_WEARING_JERSEY));
+                            animation.play();
+                        } else {
+                            dojo.addClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_IS_WEARING_JERSEY);
+                        }
+                    }
+                } else {
+                    if (dojo.hasClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_IS_WEARING_JERSEY)) {
+                        dojo.removeClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_IS_WEARING_JERSEY);
+                    }
+                }
+            });
+        },
+        /**
+         * @returns {number|undefined}
+         */
+        getCurrentJerseyWearerIdIfExists: function () {
+            const players = Object.entries(this.players);
+            for (let i = 0; i < players.length; i++) {
+                const player = players[i][1];
+                if (player.isWearingJersey) {
+                    return player.id;
+                }
+            }
+
+            return undefined;
+        },
+        useJerseyForCurrentRound: function () {
+            this.jerseyHasBeenUsedInTheCurrentRound = true;
+
+            Object.entries(this.players).forEach((entry) => {
+                const player = entry[1];
+                if (
+                    player.isWearingJersey
+                    && !dojo.hasClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_HAS_USED_JERSEY)
+                ) {
+                    dojo.addClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_HAS_USED_JERSEY);
+                }
+            });
+        },
+        restoreJerseyForCurrentRound: function () {
+            this.jerseyHasBeenUsedInTheCurrentRound = false;
+
+            Object.entries(this.players).forEach((entry) => {
+                const player = entry[1];
+                if (dojo.hasClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_HAS_USED_JERSEY)) {
+                    dojo.removeClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_HAS_USED_JERSEY);
+                }
+            });
         },
         setupPlayCardsActionButton: function () {
             const selectedCards = this.getSelectedPlayerCards();
             const selectedCardsValue = this.getCardsValue(selectedCards, false);
 
-            // setup playCards without jersey
+            // setup play cards button without jersey
             if (!$(DOM_ID_ACTION_BUTTON_PLAY_CARDS)) {
                 this.addActionButton(DOM_ID_ACTION_BUTTON_PLAY_CARDS, _('Play selected cards'), () => this.onPlayCards(false));
                 dojo.place(`<span id="${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value"> (${selectedCardsValue})</span>`, DOM_ID_ACTION_BUTTON_PLAY_CARDS);
@@ -508,7 +586,7 @@ function (dojo, declare) {
             dojo.toggleClass(DOM_ID_ACTION_BUTTON_PLAY_CARDS, DOM_CLASS_DISABLED_ACTION_BUTTON, selectedCardsValue <= this.playedCardsValue);
             $(`${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value`).innerText = ` (${selectedCardsValue})`;
 
-            // setup playCards with jersey
+            // setup play cards button with jersey
             if (
                 this.currentPlayerHasJersey
                 && !this.jerseyHasBeenUsedInTheCurrentRound
@@ -526,7 +604,7 @@ function (dojo, declare) {
         /**
          *
          * @param {number} activePlayerId
-         * @param {object[]} selectablePlayers Indexed by playerId.
+         * @param {Object[]} selectablePlayers Indexed by playerId.
          * @param {function(number)} onClickOnActionButton The function arg is the selected playerId.
          */
         setupSelectPlayerAction: function (activePlayerId, selectablePlayers, onClickOnActionButton) {
@@ -606,14 +684,14 @@ function (dojo, declare) {
         },
         /**
          * @param {number} position
-         * @return {number}
+         * @returns {number}
          */
         getAbsoluteCardBackgroundPositionXFromCardPosition: function (position) {
             return (position % 7) * CARD_WIDTH;
         },
         /**
          * @param {number} position
-         * @return {number}
+         * @returns {number}
          */
         getAbsoluteCardBackgroundPositionYFromCardPosition: function (position) {
             return Math.floor(position / 7) * CARD_HEIGHT;
@@ -622,7 +700,7 @@ function (dojo, declare) {
          *
          * @param {number} position
          * @param {number} cardId
-         * @returns {object}
+         * @returns {Object}
          */
         getCardObjectFromPositionInSpriteAndId: function (position, cardId) {
             let color;
@@ -862,8 +940,8 @@ function (dojo, declare) {
         /**
          * @param {number} color
          * @param {number} value
-         * @param {object[]} cards
-         * @returns {object[]}
+         * @param {Object[]} cards
+         * @returns {Object[]}
          */
         getCardsThatCanBePlayedWithCard: function (color, value, cards) {
             return cards.filter((card) => {
@@ -879,8 +957,8 @@ function (dojo, declare) {
             });
         },
         /**
-         * @param {object[]} playerCards
-         * @returns {function (object[], object, number, object[]): object[]}
+         * @param {Object[]} playerCards
+         * @returns {function (Object[], Object, number, Object[]): Object[]}
          */
         getPlayerCardsThatCanBePlayedWithCardsReducer: function (playerCards) {
             return (acc, card, i, cards) => acc.concat(
@@ -891,8 +969,8 @@ function (dojo, declare) {
         /**
          * @param {number} color
          * @param {number} value
-         * @param {object[]} cards
-         * @returns {object[]}
+         * @param {Object[]} cards
+         * @returns {Object[]}
          */
         getCardsThatCannotBePlayedWithCard: function (color, value, cards) {
             return cards.filter((card) => {
@@ -908,8 +986,8 @@ function (dojo, declare) {
             });
         },
         /**
-         * @param {object[]} playerCards
-         * @returns {function (object[], object): object[]}
+         * @param {Object[]} playerCards
+         * @returns {function (Object[], Object): Object[]}
          */
         getPlayerCardsThatCannotBePlayedWithCardsReducer: function (playerCards) {
             return (acc, card) => acc.concat(
@@ -918,21 +996,21 @@ function (dojo, declare) {
             );
         },
         /**
-         * @returns {object[]}
+         * @returns {Object[]}
          */
         getAllPlayerCards: function () {
             return this.playerHand.getAllItems()
                 .map((item) => this.getCardObjectFromPositionInSpriteAndId(item.type, item.id));
         },
         /**
-         * @returns {object[]}
+         * @returns {Object[]}
          */
         getSelectedPlayerCards: function () {
             return this.playerHand.getSelectedItems()
                 .map((item) => this.getCardObjectFromPositionInSpriteAndId(item.type, item.id));
         },
         /**
-         * @returns {object[]}
+         * @returns {Object[]}
          */
         getPlayerCardsCombinationsSortedByHighestValue: function () {
             const playerCards = this.getAllPlayerCards();
@@ -979,7 +1057,7 @@ function (dojo, declare) {
                 });
         },
         /**
-         * @param {object[]} cards
+         * @param {Object[]} cards
          * @param {boolean} withJersey
          * @returns {number}
          */
@@ -1061,7 +1139,7 @@ function (dojo, declare) {
             );
         },
         /**
-         * @param {object[]} cards
+         * @param {Object[]} cards
          */
         displayCardsAsNonSelectable: function (cards) {
             this.getAllPlayerCards().forEach((playedCard) => {
@@ -1077,23 +1155,23 @@ function (dojo, declare) {
             this.displayCardsAsNonSelectable([]);
         },
         /**
-         * @param {object[]} cards
-         * @return {object[]}
+         * @param {Object[]} cards
+         * @returns {Object[]}
          */
         sortPlayedCards: function (cards) {
             return [...cards].sort((a, b) => b.value - a.value);
         },
         /**
-         * @param {object[]} players
-         * @return {object[]}
+         * @param {Object[]} players
+         * @returns {Object[]}
          */
         sortPlayersByTurnOrderPosition: function (players) {
             return [...players].sort((a, b) => a.position - b.position);
         },
         /**
-         * @param {object[]} players
+         * @param {Object[]} players
          * @param {number} currentPlayerId
-         * @return {object[]}
+         * @returns {Object[]}
          */
         sortPlayersToHaveTheCurrentPlayerFirstIfPresent: function (players, currentPlayerId) {
             const currentPlayerIndex = players.findIndex((player) => player.id === currentPlayerId);
@@ -1105,7 +1183,7 @@ function (dojo, declare) {
         },
         /**
          * @param {number} playerId
-         * @param {object[]} cards
+         * @param {Object[]} cards
          */
         moveCardsFromPlayerHandToTable: function (playerId, cards) {
             if (cards.length <= 0) {
@@ -1150,7 +1228,7 @@ function (dojo, declare) {
         },
         /**
          * @param {number} senderId
-         * @param {object[]} cards
+         * @param {Object[]} cards
          */
         receiveCardsFromAnotherPlayer: function (senderId, cards) {
             cards.forEach((card) => {
@@ -1168,7 +1246,7 @@ function (dojo, declare) {
         },
         /**
          * @param {number} receiverId
-         * @param {object[]} cards
+         * @param {Object[]} cards
          */
         sendCardsToAnotherPlayer: function (receiverId, cards) {
             cards.forEach((card) => {
@@ -1201,7 +1279,7 @@ function (dojo, declare) {
             }
         },
         /**
-         * @param {object[]} cards
+         * @param {Object[]} cards
          */
         addCardsToPlayerHand: function (cards) {
             cards.forEach((card) => {
@@ -1309,7 +1387,8 @@ function (dojo, declare) {
         notif_roundStarted: function (data) {
             this.currentRound = data.args.currentRound;
             this.players = data.args.players;
-            this.refreshGameInfos();
+            this.setupRoundsInfo();
+            this.setupNumberOfCardsInPlayersHand();
         },
         notif_cardsDealt: function (data) {
             this.playerHand.removeAll();
@@ -1324,15 +1403,14 @@ function (dojo, declare) {
             this.moveCardsFromPlayerHandToTable(data.args.playedCardsPlayerId, data.args.playedCards);
 
             // update number of cards in players hand
-            this.players[data.args.playedCardsPlayerId].howManyCards = data.args.remainingNumberOfCards;
+            this.players[data.args.playedCardsPlayerId].howManyCards = this.players[data.args.playedCardsPlayerId].howManyCards - data.args.playedCards.length;
 
             // update jersey state if it has been used
             if (data.args.withJersey) {
-                this.jerseyHasBeenUsedInTheCurrentRound = true;
+                this.useJerseyForCurrentRound();
             }
 
-            // refresh remaining game info
-            this.refreshGameInfos();
+            this.setupNumberOfCardsInPlayersHand();
         },
         notif_cardsDiscarded: function (data) {
             this.discardCards();
@@ -1344,7 +1422,7 @@ function (dojo, declare) {
 
             this.players[this.player_id].howManyCards = this.players[this.player_id].howManyCards + data.args.cards.length;
 
-            this.refreshGameInfos();
+            this.setupNumberOfCardsInPlayersHand();
         },
         notif_cardsSentToAnotherPlayer: function (data) {
             this.players[this.player_id].howManyCards = this.players[this.player_id].howManyCards - data.args.cards.length;
@@ -1353,7 +1431,7 @@ function (dojo, declare) {
 
             this.players[data.args.receiverPlayerId].howManyCards = this.players[data.args.receiverPlayerId].howManyCards + data.args.cards.length;
 
-            this.refreshGameInfos();
+            this.setupNumberOfCardsInPlayersHand();
         },
         notif_cardsMovedBetweenTwoOtherPlayers: function (data) {
             this.players[data.args.senderPlayerId].howManyCards = this.players[data.args.senderPlayerId].howManyCards - data.args.numberOfCards;
@@ -1362,12 +1440,18 @@ function (dojo, declare) {
 
             this.players[data.args.receiverPlayerId].howManyCards = this.players[data.args.receiverPlayerId].howManyCards + data.args.numberOfCards;
 
-            this.refreshGameInfos();
+            this.setupNumberOfCardsInPlayersHand();
         },
         notif_roundEnded: function (data) {
+            const currentJerseyWearerId = this.getCurrentJerseyWearerIdIfExists();
             this.players = data.args.players;
-            this.jerseyHasBeenUsedInTheCurrentRound = false;
-            this.refreshGameInfos();
+
+            this.setupPlayersScore();
+
+            // restore and move jersey before the next round begin,
+            // in order to have a beautiful jersey for the winner of the game (at the very end)
+            this.restoreJerseyForCurrentRound();
+            this.moveJerseyToCurrentWinner(currentJerseyWearerId);
         },
    });
 });

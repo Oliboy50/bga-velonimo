@@ -25,6 +25,8 @@ require_once('modules/VelonimoPlayer.php');
 
 class Velonimo extends Table
 {
+    private const NUMBER_OF_CARDS_TO_DEAL_TO_EACH_PLAYER = 11;
+
     private const GAME_STATE_CURRENT_ROUND = 'currentRound';
     private const GAME_STATE_JERSEY_HAS_BEEN_USED_IN_THE_CURRENT_ROUND = 'jerseyUsedInRound';
     private const GAME_STATE_LAST_PLAYED_CARDS_VALUE = 'valueToBeat';
@@ -131,6 +133,7 @@ class Velonimo extends Table
         // Player statistics (init for all players)
         self::initStat('player', 'playCardsAction', 0);
         self::initStat('player', 'passTurnAction', 0);
+        self::initStat('player', 'numberOfRoundsWon', 0);
 
         // Create cards
         $cards = [];
@@ -332,18 +335,20 @@ class Velonimo extends Table
         self::notifyAllPlayers('cardsPlayed', clienttranslate('${playerName} plays ${playedCardsValue}'), [
             'playedCardsPlayerId' => $currentPlayerId,
             'playedCards' => $this->formatCardsForClient($playedCards),
-            'remainingNumberOfCards' => $remainingNumberOfCards = count($currentPlayerCards) - $numberOfPlayedCards,
             'playerName' => self::getCurrentPlayerName(),
             'playedCardsValue' => $playedCardsValue,
             'withJersey' => $cardsPlayedWithJersey,
         ]);
 
         // if the player played his last card, set its rank for this round
-        if ($remainingNumberOfCards === 0) {
+        if ((count($currentPlayerCards) - $numberOfPlayedCards) === 0) {
             $currentRound = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
             $nextRankForRound = $this->getNextRankForRound($players, $currentRound);
             $currentPlayer->addRoundRanking($currentRound, $nextRankForRound);
             $this->updatePlayerRoundsRanking($currentPlayer);
+            if ($nextRankForRound === 1) {
+                $this->incStat(1, 'numberOfRoundsWon', $currentPlayerId);
+            }
 
             $playersWhoCanPlay = array_filter(
                 $this->getPlayersWhoCanPlayDuringRound($currentRound, $players),
@@ -452,7 +457,10 @@ class Velonimo extends Table
 
         // pick cards randomly
         $pickedCards = [];
-        foreach (array_rand($selectedPlayerCards, $numberOfCardsToPick) as $key) {
+        $randomizedCardKeys = $numberOfCardsToPick === 1 ? [
+            array_rand($selectedPlayerCards, $numberOfCardsToPick)
+        ] : array_rand($selectedPlayerCards, $numberOfCardsToPick);
+        foreach ($randomizedCardKeys as $key) {
             $pickedCards[] = $selectedPlayerCards[$key];
         }
         /** @var VelonimoCard[] $pickedCards */
@@ -597,9 +605,16 @@ class Velonimo extends Table
         game state.
     */
 
+    function argFirstPlayerTurn() {
+        return [
+            'activePlayerId' => (int) self::getActivePlayerId(),
+        ];
+    }
+
     function argPlayerTurn() {
         return [
             'activePlayerId' => (int) self::getActivePlayerId(),
+            'playedCardsValue' => (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE),
         ];
     }
 
@@ -663,12 +678,12 @@ class Velonimo extends Table
         $newRound = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND) + 1;
         self::setGameStateValue(self::GAME_STATE_CURRENT_ROUND, $newRound);
 
-        // deal 11 cards to each player
+        // deal cards to each player
         $players = $this->getPlayersFromDatabase();
         foreach($players as $player)
         {
             $cards = $this->fromBgaCardsToVelonimoCards(
-                $this->deck->pickCards(11, self::CARD_LOCATION_DECK, $player->getId())
+                $this->deck->pickCards(self::NUMBER_OF_CARDS_TO_DEAL_TO_EACH_PLAYER, self::CARD_LOCATION_DECK, $player->getId())
             );
 
             self::notifyPlayer($player->getId(), 'cardsDealt', '', [
@@ -683,7 +698,7 @@ class Velonimo extends Table
             self::activeNextPlayer();
         }
 
-        self::notifyAllPlayers('roundStarted', '', [
+        self::notifyAllPlayers('roundStarted', 'Round #${currentRound} starts', [
             'currentRound' => $newRound,
             'players' => $this->formatPlayersForClient($players),
         ]);
@@ -763,7 +778,8 @@ class Velonimo extends Table
         // re-allow the jersey to be used
         self::setGameStateValue(self::GAME_STATE_JERSEY_HAS_BEEN_USED_IN_THE_CURRENT_ROUND, 0);
 
-        self::notifyAllPlayers('roundEnded', '', [
+        self::notifyAllPlayers('roundEnded', 'Round #${currentRound} ends', [
+            'currentRound' => $currentRound,
             'players' => $this->formatPlayersForClient($players),
         ]);
 
