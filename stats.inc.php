@@ -47,18 +47,17 @@
 
 */
 
-// @TODO: more statistics
 $stats_type = [
     // Statistics global to table
     'table' => [
         'playCardsAction' => [
             'id' => 10,
-            'name' => totranslate('Number of time someone played one or more cards'),
+            'name' => totranslate('Played one or more cards'),
             'type' => 'int',
         ],
         'passTurnAction' => [
             'id' => 11,
-            'name' => totranslate('Number of time someone passed'),
+            'name' => totranslate('Turns passed'),
             'type' => 'int',
         ],
     ],
@@ -67,12 +66,17 @@ $stats_type = [
     'player' => [
         'playCardsAction' => [
             'id' => 10,
-            'name' => totranslate('Number of time this player played one or more cards'),
+            'name' => totranslate('Played one or more cards'),
             'type' => 'int',
         ],
         'passTurnAction' => [
             'id' => 11,
-            'name' => totranslate('Number of time this player passed'),
+            'name' => totranslate('Turns passed'),
+            'type' => 'int',
+        ],
+        'numberOfRoundsWon' => [
+            'id' => 12,
+            'name' => totranslate('Rounds won'),
             'type' => 'int',
         ],
     ],
