@@ -3,7 +3,10 @@
 <div id="board"></div>
 
 <div id="my-hand-wrapper" class="whiteblock">
-    <h3>{MY_HAND}</h3>
+    <div id="my-hand-title-wrapper">
+        <h3 id="my-hand-title">{MY_HAND}</h3>
+        <a href="javascript:void(0)" id="toggle-sort-button" class="bgabutton bgabutton_gray"><span id="toggle-sort-button-label"></span></a>
+    </div>
     <div id="my-hand"></div>
 </div>
 

@@ -64,6 +64,8 @@ const JERSEY_VALUE = 10;
 const DOM_ID_BOARD = 'board';
 const DOM_ID_BOARD_CARPET = 'board-carpet';
 const DOM_ID_PLAYER_HAND = 'my-hand';
+const DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON = 'toggle-sort-button';
+const DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL = 'toggle-sort-button-label';
 const DOM_ID_CURRENT_ROUND = 'current-round';
 const DOM_ID_ACTION_BUTTON_PLAY_CARDS = 'action-button-play-cards';
 const DOM_ID_ACTION_BUTTON_PLAY_CARDS_WITH_JERSEY = 'action-button-play-cards-with-jersey';
@@ -80,6 +82,10 @@ const DOM_CLASS_DISABLED_ACTION_BUTTON = 'disabled'
 const DOM_CLASS_ACTIVE_PLAYER = 'active'
 const DOM_CLASS_SELECTABLE_PLAYER = 'selectable'
 const DOM_CLASS_NON_SELECTABLE_CARD = 'non-selectable-player-card'
+
+// Player hand sorting modes
+const PLAYER_HAND_SORT_BY_COLOR = 'color';
+const PLAYER_HAND_SORT_BY_VALUE = 'value';
 
 // Style
 const BOARD_CARPET_WIDTH = 740;
@@ -123,6 +129,8 @@ const PLAYERS_PLACES_BY_NUMBER_OF_PLAYERS = {
             cardsStyle: CARDS_STYLE_BELOW_TABLE,
         },
     },
+    // @TODO: place player 1 and player 3 at the center left and the center right
+    //        and move their played cards to the right and the left respectively
     4: {
         0: {
             tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
@@ -141,6 +149,9 @@ const PLAYERS_PLACES_BY_NUMBER_OF_PLAYERS = {
             cardsStyle: CARDS_STYLE_BELOW_TABLE,
         },
     },
+    // @TODO: place player 1 and player 4 at the center left and the center right
+    //        and move their played cards to the right and the left respectively
+    //        + place player 2 and 3 at the top middle-left and top middle-right respectively
     5: {
         0: {
             tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_LEFT}`,
@@ -165,6 +176,10 @@ const PLAYERS_PLACES_BY_NUMBER_OF_PLAYERS = {
     },
 };
 
+// @TODO: improve current round display
+// @TODO: show cards in logs (especially the cards picked/gave for the impacted players)
+// @TODO: color player names (logs, action messages)
+// @TODO: support 2 players game
 define([
     'dojo','dojo/_base/declare',
     'ebg/core/gamegui',
@@ -272,6 +287,10 @@ function (dojo, declare) {
                     cardPositionInSprite // position in sprite
                 );
             });
+            // sort cards
+            this.onClickOnTogglePlayerHandSortButton();
+            dojo.connect($(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON), 'onclick', this, 'onClickOnTogglePlayerHandSortButton');
+
 
             // Setup currentPlayer cards
             dojo.connect(this.playerHand, 'onChangeSelection', this, 'onPlayerHandSelectionChanged');
@@ -681,6 +700,33 @@ function (dojo, declare) {
                 default:
                     return 55;
             }
+        },
+        sortPlayerCardsByColor: function () {
+            const cards = this.getAllPlayerCards();
+            const cardsWeightByPosition = {};
+            cards.forEach((card) => {
+                const cardPositionAndWeight = this.getCardPositionInSpriteByColorAndValue(card.color, card.value);
+                cardsWeightByPosition[cardPositionAndWeight] = cardPositionAndWeight;
+            });
+
+            this.playerHand.changeItemsWeight(cardsWeightByPosition);
+        },
+        /**
+         * @param {number} color
+         * @param {number} value
+         * @returns {number}
+         */
+        getCardWeightForColorAndValueToSortThemByValue: function (color, value) {
+            return (value * 100) + color;
+        },
+        sortPlayerCardsByValue: function () {
+            const cards = this.getAllPlayerCards();
+            const cardsWeightByPosition = {};
+            cards.forEach((card) => {
+                cardsWeightByPosition[this.getCardPositionInSpriteByColorAndValue(card.color, card.value)] = this.getCardWeightForColorAndValueToSortThemByValue(card.color, card.value);
+            });
+
+            this.playerHand.changeItemsWeight(cardsWeightByPosition);
         },
         /**
          * @param {number} position
@@ -1361,6 +1407,18 @@ function (dojo, declare) {
             });
 
             this.unselectAllCards();
+        },
+        onClickOnTogglePlayerHandSortButton: function () {
+            const currentSortingMode = dojo.attr(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, 'data-current-sort');
+            if (currentSortingMode === PLAYER_HAND_SORT_BY_COLOR) {
+                $(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL).innerHTML = _('Sort by color');
+                dojo.attr(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, 'data-current-sort', PLAYER_HAND_SORT_BY_VALUE);
+                this.sortPlayerCardsByValue();
+            } else {
+                $(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL).innerHTML = _('Sort by value');
+                dojo.attr(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, 'data-current-sort', PLAYER_HAND_SORT_BY_COLOR);
+                this.sortPlayerCardsByColor();
+            }
         },
 
         ///////////////////////////////////////////////////
