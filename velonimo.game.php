@@ -752,13 +752,15 @@ class Velonimo extends Table
         $players = $this->getPlayersFromDatabase();
         $numberOfPlayers = count($players);
         $currentRound = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
+        $numberOfPointsForRoundByPlayerId = [];
         foreach ($players as $k => $player) {
+            $numberOfPointsForRoundByPlayerId[$player->getId()] = $this->getNumberOfPointsAtRankForRound(
+                $player->getLastRoundRank(),
+                $currentRound,
+                $numberOfPlayers
+            );
             $players[$k] = $player->addPoints(
-                $this->getNumberOfPointsAtRankForRound(
-                    $player->getLastRoundRank(),
-                    $currentRound,
-                    $numberOfPlayers
-                )
+                $numberOfPointsForRoundByPlayerId[$player->getId()]
             );
         }
         $newWinner = $this->getCurrentWinner($players);
@@ -783,13 +785,54 @@ class Velonimo extends Table
             'players' => $this->formatPlayersForClient($players),
         ]);
 
-        // go to next round or end the game
         $howManyRounds = (int) self::getGameStateValue(self::GAME_OPTION_HOW_MANY_ROUNDS);
-        if ($currentRound < $howManyRounds) {
-            $this->gamestate->nextState('nextRound');
-        } else {
-            $this->gamestate->nextState('endGame');
+        $isGameOver = $currentRound >= $howManyRounds;
+
+        // use "Scoring dialogs" to recap scoring for end-users before moving forward
+        // @see https://en.doc.boardgamearena.com/Game_interface_logic:_yourgamename.js#Scoring_dialogs
+        $headers = [
+            '', // first column of headers line does not have content
+        ];
+        $roundPoints = [
+            [
+                'str' => clienttranslate('Round points'),
+                'args' => [],
+            ],
+        ];
+        $totalPoints = [
+            [
+                'str' => clienttranslate('Total points'),
+                'args' => [],
+            ],
+        ];
+        foreach ($players as $player) {
+            $headers[] = [
+                'str' => '${player_name}',
+                'args' => [
+                    'player_name' => $player->getName(),
+                ],
+                'type' => 'header'
+            ];
+            $roundPoints[] = $numberOfPointsForRoundByPlayerId[$player->getId()];
+            $totalPoints[] = $player->getScore();
         }
+        $this->notifyAllPlayers( 'tableWindow', '', array(
+            'id' => 'finalScoring',
+            'title' =>  sprintf(
+                clienttranslate('Result of round %s/%s'),
+                $currentRound,
+                $howManyRounds
+            ),
+            'table' => [
+                $headers,
+                $roundPoints,
+                $totalPoints
+            ],
+            'closing' => $isGameOver ? clienttranslate('End of game') : clienttranslate('Next round')
+        ));
+
+        // go to next round or end the game
+        $this->gamestate->nextState($isGameOver ? 'endGame' : 'nextRound');
     }
 
 ////////////////////////////////////////////////////////////////////////////

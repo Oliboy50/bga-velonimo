@@ -45,6 +45,13 @@
 /* Note: you must not use any @import directive */
 
 /**
+Override "tableWindow" style (BGA framework feature)
+ */
+.tableWindow table {
+    width: 100%;
+}
+
+/**
 Board
  */
 #game_play_area {
