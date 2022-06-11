@@ -61,6 +61,7 @@ const VALUE_50 = 50;
 const JERSEY_VALUE = 10;
 
 // DOM IDs
+const DOM_ID_APP = 'velonimo-game';
 const DOM_ID_BOARD = 'board';
 const DOM_ID_BOARD_CARPET = 'board-carpet';
 const DOM_ID_PLAYER_HAND = 'my-hand';
@@ -212,11 +213,20 @@ function (dojo, declare) {
 
             // Setup board
             dojo.place(
-                `<div id="${DOM_ID_BOARD_CARPET}"></div>
-<div id="game-info" class="player-board">
-    <div id="${DOM_ID_CURRENT_ROUND}"></div>
+                `<div id="${DOM_ID_BOARD}">
+    <div id="${DOM_ID_BOARD_CARPET}"></div>
+    <div id="game-info" class="player-board">
+        <div id="${DOM_ID_CURRENT_ROUND}"></div>
+    </div>
+</div>
+<div id="my-hand-wrapper" class="whiteblock">
+    <div id="my-hand-title-wrapper">
+        <h3 id="my-hand-title">${_('My hand')}</h3>
+        <a href="javascript:void(0)" id="${DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON}" class="bgabutton bgabutton_gray"><span id="${DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL}"></span></a>
+    </div>
+    <div id="${DOM_ID_PLAYER_HAND}"></div>
 </div>`,
-                DOM_ID_BOARD
+                DOM_ID_APP
             );
 
             // Setup players
@@ -229,14 +239,14 @@ function (dojo, declare) {
             ).forEach((player, index) => {
                 const playerPosition = playersPlace[index];
 
-                dojo.place(this.format_block('jstpl_player_table', {
-                    id: player.id,
-                    color: player.color,
-                    name: (player.name.length > 10 ? (player.name.substr(0,10) + '...') : player.name),
-                    numberOfCardsInHand: player.howManyCards,
-                    tableStyle: playerPosition.tableStyle,
-                    cardsStyle: playerPosition.cardsStyle,
-                }), DOM_ID_BOARD_CARPET);
+                dojo.place(
+                    `<div id="player-table-${player.id}" class="player-table" style="${playerPosition.tableStyle}">
+    <div id="player-table-${player.id}-name" class="player-table-name" style="color:#${player.color}">${(player.name.length > 10 ? (player.name.substr(0,10) + '...') : player.name)}</div>
+    <div id="player-table-${player.id}-hand" class="player-table-hand"><span id="player-table-${player.id}-number-of-cards" class="number-of-cards">${player.howManyCards}</span></div>
+    <div id="player-table-${player.id}-cards" class="player-table-cards" style="${playerPosition.cardsStyle}"></div>
+    <div id="player-table-${player.id}-jersey" class="player-table-jersey"><span class="jersey-overlay"></span></div>
+</div>`,
+                    DOM_ID_BOARD_CARPET);
             });
             this.setupNumberOfCardsInPlayersHand();
 
@@ -246,45 +256,10 @@ function (dojo, declare) {
             this.playerHand.create(this, $(DOM_ID_PLAYER_HAND), CARD_WIDTH, CARD_HEIGHT);
             this.playerHand.setSelectionAppearance('class');
             this.playerHand.image_items_per_row = 7;
+            // create cards
             const cardsImageUrl = g_gamethemeurl+'img/cards.png';
-            // colored cards
-            [
-                COLOR_BLUE,
-                COLOR_BROWN,
-                COLOR_GRAY,
-                COLOR_GREEN,
-                COLOR_PINK,
-                COLOR_RED,
-                COLOR_YELLOW,
-            ].forEach((color) => {
-                [
-                    VALUE_1,
-                    VALUE_2,
-                    VALUE_3,
-                    VALUE_4,
-                    VALUE_5,
-                    VALUE_6,
-                    VALUE_7,
-                ].forEach((value) => {
-                    const cardPositionInSprite = this.getCardPositionInSpriteByColorAndValue(color, value);
-                    this.playerHand.addItemType(
-                        cardPositionInSprite, // stock item ID
-                        cardPositionInSprite, // card weight (used for sorting)
-                        cardsImageUrl, // sprite URL
-                        cardPositionInSprite // position in sprite
-                    );
-                });
-            });
-            // adventurer cards
-            [
-                VALUE_25,
-                VALUE_30,
-                VALUE_35,
-                VALUE_40,
-                VALUE_45,
-                VALUE_50,
-            ].forEach((value) => {
-                const cardPositionInSprite = this.getCardPositionInSpriteByColorAndValue(COLOR_ADVENTURER, value);
+            this.execFnForEachCardsInGame((color, value) => {
+                const cardPositionInSprite = this.getCardPositionInSpriteByColorAndValue(color, value);
                 this.playerHand.addItemType(
                     cardPositionInSprite, // stock item ID
                     cardPositionInSprite, // card weight (used for sorting)
@@ -660,6 +635,41 @@ function (dojo, declare) {
             dojo.toggleClass(DOM_ID_ACTION_BUTTON_GIVE_CARDS, DOM_CLASS_DISABLED_ACTION_BUTTON, selectedCards.length !== this.howManyCardsToGiveBack);
         },
         /**
+         * @param {function (number, number)} fn such as (color, value) => {...}
+         */
+        execFnForEachCardsInGame: function (fn) {
+            // colored cards
+            [
+                COLOR_BLUE,
+                COLOR_BROWN,
+                COLOR_GRAY,
+                COLOR_GREEN,
+                COLOR_PINK,
+                COLOR_RED,
+                COLOR_YELLOW,
+            ].forEach((color) => {
+                [
+                    VALUE_1,
+                    VALUE_2,
+                    VALUE_3,
+                    VALUE_4,
+                    VALUE_5,
+                    VALUE_6,
+                    VALUE_7,
+                ].forEach((value) => fn.bind(this)(color, value));
+            });
+
+            // adventurer cards
+            [
+                VALUE_25,
+                VALUE_30,
+                VALUE_35,
+                VALUE_40,
+                VALUE_45,
+                VALUE_50,
+            ].forEach((value) => fn.bind(this)(COLOR_ADVENTURER, value));
+        },
+        /**
          * This function gives the position of the card in the sprite "cards.png",
          * it also gives weight to cards to sort them by color (blue-1, blue-2, ...) just like in the sprite,
          * it also gives the type ID for the stock component.
@@ -707,10 +717,9 @@ function (dojo, declare) {
             }
         },
         sortPlayerCardsByColor: function () {
-            const cards = this.getAllPlayerCards();
             const cardsWeightByPosition = {};
-            cards.forEach((card) => {
-                const cardPositionAndWeight = this.getCardPositionInSpriteByColorAndValue(card.color, card.value);
+            this.execFnForEachCardsInGame((color, value) => {
+                const cardPositionAndWeight = this.getCardPositionInSpriteByColorAndValue(color, value);
                 cardsWeightByPosition[cardPositionAndWeight] = cardPositionAndWeight;
             });
 
@@ -725,10 +734,9 @@ function (dojo, declare) {
             return (value * 100) + color;
         },
         sortPlayerCardsByValue: function () {
-            const cards = this.getAllPlayerCards();
             const cardsWeightByPosition = {};
-            cards.forEach((card) => {
-                cardsWeightByPosition[this.getCardPositionInSpriteByColorAndValue(card.color, card.value)] = this.getCardWeightForColorAndValueToSortThemByValue(card.color, card.value);
+            this.execFnForEachCardsInGame((color, value) => {
+                cardsWeightByPosition[this.getCardPositionInSpriteByColorAndValue(color, value)] = this.getCardWeightForColorAndValueToSortThemByValue(color, value);
             });
 
             this.playerHand.changeItemsWeight(cardsWeightByPosition);
@@ -1245,21 +1253,17 @@ function (dojo, declare) {
             const topOfStackCardId = stackedCards[stackedCards.length - 1].id;
 
             // create played cards
+            const stackWith = ((stackedCards.length - 1) * (CARD_WIDTH / 3)) + CARD_WIDTH;
             dojo.place(
-                this.format_block('jstpl_cards_stack', {
-                    id: topOfStackCardId,
-                    width: ((stackedCards.length - 1) * (CARD_WIDTH / 3)) + CARD_WIDTH,
-                }),
+                `<div id="cards-stack-${topOfStackCardId}" class="cards-stack" style="width: ${stackWith}px;"></div>`,
                 `player-table-${playerId}-cards`
             );
             stackedCards.forEach((card) => {
                 const position = this.getCardPositionInSpriteByColorAndValue(card.color, card.value);
+                const x = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position);
+                const y = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position);
                 dojo.place(
-                    this.format_block('jstpl_card_in_stack', {
-                        id: card.id,
-                        x: this.getAbsoluteCardBackgroundPositionXFromCardPosition(position),
-                        y: this.getAbsoluteCardBackgroundPositionYFromCardPosition(position),
-                    }),
+                    `<div id="card-in-stack-${card.id}" class="velonimo-card front-side" style="background-position: -${x}px -${y}px;"></div>`,
                     `cards-stack-${topOfStackCardId}`
                 );
             });

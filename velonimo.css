@@ -84,11 +84,10 @@ Board
     box-shadow: 2px 2px 5px black;
     border: 1px solid #3b3119;
 }
-/*
+/* @TODO: remove if unused */
 #board-carpet.yellow {
     background-color: #e9c646;
 }
-*/
 
 .player-table {
     position: absolute; /* position is dynamically computed */
