@@ -18,6 +18,8 @@ class VelonimoPlayer
      */
     private array $roundsRanking;
     private bool $isWearingJersey;
+    private int $minValuePlayedInGame;
+    private int $maxValuePlayedInGame;
 
     public function __construct(
         int $bgaId,
@@ -26,7 +28,9 @@ class VelonimoPlayer
         string $color,
         int $score,
         array $roundsRanking,
-        bool $isWearingJersey
+        bool $isWearingJersey,
+        int $minValuePlayedInGame,
+        int $maxValuePlayedInGame
     ) {
         $this->bgaId = $bgaId;
         $this->naturalOrderPosition = $naturalOrderPosition;
@@ -35,6 +39,8 @@ class VelonimoPlayer
         $this->score = $score;
         $this->roundsRanking = $roundsRanking;
         $this->isWearingJersey = $isWearingJersey;
+        $this->minValuePlayedInGame = $minValuePlayedInGame;
+        $this->maxValuePlayedInGame = $maxValuePlayedInGame;
     }
 
     /*
@@ -102,6 +108,14 @@ class VelonimoPlayer
     {
         return $this->score;
     }
+    public function getMinValuePlayedInGame(): int
+    {
+        return $this->minValuePlayedInGame;
+    }
+    public function getMaxValuePlayedInGame(): int
+    {
+        return $this->maxValuePlayedInGame;
+    }
     public function isWearingJersey(): bool
     {
         return $this->isWearingJersey;
@@ -143,6 +157,18 @@ class VelonimoPlayer
         }
 
         $this->roundsRanking[$round] = $rank;
+
+        return $this;
+    }
+    public function setMinValuePlayedInGame(int $minValuePlayedInGame): self
+    {
+        $this->minValuePlayedInGame = $minValuePlayedInGame;
+
+        return $this;
+    }
+    public function setMaxValuePlayedInGame(int $maxValuePlayedInGame): self
+    {
+        $this->maxValuePlayedInGame = $maxValuePlayedInGame;
 
         return $this;
     }

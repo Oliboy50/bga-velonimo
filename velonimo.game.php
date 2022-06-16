@@ -42,6 +42,7 @@ class Velonimo extends Table
     private const CARD_LOCATION_PLAYER_HAND = 'hand';
     private const CARD_LOCATION_DISCARD = 'discard';
     private const CARD_LOCATION_PLAYED = 'played';
+    private const CARD_LOCATION_PREVIOUS_PLAYED = 'previousPlayed';
 
     /** @var Deck (BGA framework component to manage cards) */
     private $deck;
@@ -117,7 +118,7 @@ class Velonimo extends Table
 
         // Init global values with their initial values
         self::setGameStateValue(self::GAME_STATE_CURRENT_ROUND, 0);
-        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, -1);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_SELECTED_NEXT_PLAYER_ID, 0);
         self::setGameStateValue(self::GAME_STATE_JERSEY_HAS_BEEN_USED_IN_THE_CURRENT_ROUND, 0);
@@ -128,11 +129,11 @@ class Velonimo extends Table
         // Init game statistics
         // (note: statistics used in this file must be defined in your stats.inc.php file)
         // Table statistics
-        self::initStat('table', 'playCardsAction', 0);
-        self::initStat('table', 'passTurnAction', 0);
+        self::initStat('table', 'minValue', 0);
+        self::initStat('table', 'maxValue', 0);
         // Player statistics (init for all players)
-        self::initStat('player', 'playCardsAction', 0);
-        self::initStat('player', 'passTurnAction', 0);
+        self::initStat('player', 'minValue', 0);
+        self::initStat('player', 'maxValue', 0);
         self::initStat('player', 'numberOfRoundsWon', 0);
 
         // Create cards
@@ -213,6 +214,9 @@ class Velonimo extends Table
         );
         $result['playedCardsValue'] = (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE);
         $result['playedCardsPlayerId'] = (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID);
+        $result['previousPlayedCards'] = $this->formatCardsForClient(
+            $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PREVIOUS_PLAYED))
+        );
 
         return $result;
     }
@@ -323,15 +327,14 @@ class Velonimo extends Table
         }
 
         // discard table cards and play cards
-        $this->deck->moveAllCardsInLocation(self::CARD_LOCATION_PLAYED, self::CARD_LOCATION_DISCARD);
+        $this->deck->moveAllCardsInLocation(self::CARD_LOCATION_PREVIOUS_PLAYED, self::CARD_LOCATION_DISCARD);
+        $this->deck->moveAllCardsInLocation(self::CARD_LOCATION_PLAYED, self::CARD_LOCATION_PREVIOUS_PLAYED);
         $this->deck->moveCards($playedCardIds, self::CARD_LOCATION_PLAYED, $currentPlayerId);
         if ($cardsPlayedWithJersey) {
             self::setGameStateValue(self::GAME_STATE_JERSEY_HAS_BEEN_USED_IN_THE_CURRENT_ROUND, 1);
         }
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, $currentPlayerId);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, $playedCardsValue);
-        self::incStat(1, 'playCardsAction');
-        self::incStat(1, 'playCardsAction', $currentPlayerId);
         self::notifyAllPlayers('cardsPlayed', clienttranslate('${playerName} plays ${playedCardsValue}'), [
             'playedCardsPlayerId' => $currentPlayerId,
             'playedCards' => $this->formatCardsForClient($playedCards),
@@ -339,6 +342,22 @@ class Velonimo extends Table
             'playedCardsValue' => $playedCardsValue,
             'withJersey' => $cardsPlayedWithJersey,
         ]);
+
+        // update player's min/max value played
+        $minOrMaxValuePlayedHasChanged = false;
+        if ($currentPlayer->getMinValuePlayedInGame() > $playedCardsValue) {
+            $this->setStat($playedCardsValue, 'minValue', $currentPlayerId);
+            $currentPlayer->setMinValuePlayedInGame($playedCardsValue);
+            $minOrMaxValuePlayedHasChanged = true;
+        }
+        if ($currentPlayer->getMaxValuePlayedInGame() < $playedCardsValue) {
+            $this->setStat($playedCardsValue, 'maxValue', $currentPlayerId);
+            $currentPlayer->setMaxValuePlayedInGame($playedCardsValue);
+            $minOrMaxValuePlayedHasChanged = true;
+        }
+        if ($minOrMaxValuePlayedHasChanged) {
+            $this->updatePlayerMinAndMaxValuePlayedInGame($currentPlayer);
+        }
 
         // if the player played his last card, set its rank for this round
         if ((count($currentPlayerCards) - $numberOfPlayedCards) === 0) {
@@ -386,9 +405,6 @@ class Velonimo extends Table
 
     function passTurn() {
         self::checkAction('passTurn');
-
-        $this->incStat(1, 'passTurnAction');
-        $this->incStat(1, 'passTurnAction', (int) self::getCurrentPlayerId());
 
         self::notifyAllPlayers('turnPassed', clienttranslate('${playerName} passes'), [
             'playerName' => self::getCurrentPlayerName(),
@@ -831,6 +847,22 @@ class Velonimo extends Table
             'closing' => $isGameOver ? clienttranslate('End of game') : clienttranslate('Next round')
         ));
 
+        // update global min/max value played stats
+        if ($isGameOver) {
+            $minValuePlayedGlobally = 1000;
+            $maxValuePlayedGlobally = 0;
+            foreach ($players as $player) {
+                if ($player->getMinValuePlayedInGame() < $minValuePlayedGlobally) {
+                    $minValuePlayedGlobally = $player->getMinValuePlayedInGame();
+                }
+                if ($player->getMaxValuePlayedInGame() > $maxValuePlayedGlobally) {
+                    $maxValuePlayedGlobally = $player->getMaxValuePlayedInGame();
+                }
+            }
+            $this->setStat($minValuePlayedGlobally, 'minValue');
+            $this->setStat($maxValuePlayedGlobally, 'maxValue');
+        }
+
         // go to next round or end the game
         $this->gamestate->nextState($isGameOver ? 'endGame' : 'nextRound');
     }
@@ -973,7 +1005,9 @@ class Velonimo extends Table
      * @return VelonimoPlayer[]
      */
     private function getPlayersFromDatabase(): array {
-        $players = array_values(self::getCollectionFromDB('SELECT player_id, player_no, player_name, player_color, player_score, rounds_ranking, is_wearing_jersey FROM player'));
+        $players = array_values(self::getCollectionFromDB(
+            'SELECT player_id, player_no, player_name, player_color, player_score, rounds_ranking, is_wearing_jersey, min_value_in_game, max_value_in_game FROM player'
+        ));
 
         return array_map(
             fn (array $player) => new VelonimoPlayer(
@@ -984,6 +1018,8 @@ class Velonimo extends Table
                 (int) $player['player_score'],
                 VelonimoPlayer::deserializeRoundsRanking($player['rounds_ranking']),
                 ((int) $player['is_wearing_jersey']) === 1,
+                (int) $player['min_value_in_game'],
+                (int) $player['max_value_in_game']
             ),
             $players
         );
@@ -1148,8 +1184,9 @@ class Velonimo extends Table
     }
 
     private function discardLastPlayedCards(): void {
+        $this->deck->moveAllCardsInLocation(self::CARD_LOCATION_PREVIOUS_PLAYED, self::CARD_LOCATION_DISCARD);
         $this->deck->moveAllCardsInLocation(self::CARD_LOCATION_PLAYED, self::CARD_LOCATION_DISCARD);
-        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, -1);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, 0);
         self::notifyAllPlayers('cardsDiscarded', '', []);
     }
@@ -1158,6 +1195,15 @@ class Velonimo extends Table
         self::DbQuery(sprintf(
             'UPDATE player SET rounds_ranking="%s" WHERE player_id=%s',
             VelonimoPlayer::serializeRoundsRanking($player->getRoundsRanking()),
+            $player->getId()
+        ));
+    }
+
+    private function updatePlayerMinAndMaxValuePlayedInGame(VelonimoPlayer $player): void {
+        self::DbQuery(sprintf(
+            'UPDATE player SET min_value_in_game=%s, max_value_in_game=%s WHERE player_id=%s',
+            $player->getMinValuePlayedInGame(),
+            $player->getMaxValuePlayedInGame(),
             $player->getId()
         ));
     }
