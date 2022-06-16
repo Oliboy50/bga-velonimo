@@ -233,7 +233,7 @@ class Velonimo extends Table
     */
     function getGameProgression() {
         $howManyRounds = (int) self::getGameStateValue(self::GAME_OPTION_HOW_MANY_ROUNDS);
-        $currentRound = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
+        $currentRound = ((int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND)) ?: 1;
 
         return ((int) floor(($currentRound - 1) / $howManyRounds)) * 100;
     }
@@ -344,19 +344,11 @@ class Velonimo extends Table
         ]);
 
         // update player's min/max value played
-        $minOrMaxValuePlayedHasChanged = false;
-        if ($currentPlayer->getMinValuePlayedInGame() > $playedCardsValue) {
+        if ($playedCardsValue < (int) $this->getStat('minValue', $currentPlayerId)) {
             $this->setStat($playedCardsValue, 'minValue', $currentPlayerId);
-            $currentPlayer->setMinValuePlayedInGame($playedCardsValue);
-            $minOrMaxValuePlayedHasChanged = true;
         }
-        if ($currentPlayer->getMaxValuePlayedInGame() < $playedCardsValue) {
+        if ($playedCardsValue > (int) $this->getStat('maxValue', $currentPlayerId)) {
             $this->setStat($playedCardsValue, 'maxValue', $currentPlayerId);
-            $currentPlayer->setMaxValuePlayedInGame($playedCardsValue);
-            $minOrMaxValuePlayedHasChanged = true;
-        }
-        if ($minOrMaxValuePlayedHasChanged) {
-            $this->updatePlayerMinAndMaxValuePlayedInGame($currentPlayer);
         }
 
         // if the player played his last card, set its rank for this round
@@ -769,9 +761,14 @@ class Velonimo extends Table
         $numberOfPlayers = count($players);
         $currentRound = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
         $numberOfPointsForRoundByPlayerId = [];
+        $winnerOfCurrentRound = null;
         foreach ($players as $k => $player) {
+            $playerCurrentRoundRank = $player->getLastRoundRank();
+            if ($playerCurrentRoundRank === 1) {
+                $winnerOfCurrentRound = $player;
+            }
             $numberOfPointsForRoundByPlayerId[$player->getId()] = $this->getNumberOfPointsAtRankForRound(
-                $player->getLastRoundRank(),
+                $playerCurrentRoundRank,
                 $currentRound,
                 $numberOfPlayers
             );
@@ -796,10 +793,22 @@ class Velonimo extends Table
         // re-allow the jersey to be used
         self::setGameStateValue(self::GAME_STATE_JERSEY_HAS_BEEN_USED_IN_THE_CURRENT_ROUND, 0);
 
-        self::notifyAllPlayers('roundEnded', 'Round #${currentRound} ends', [
+        self::notifyAllPlayers('roundEnded', 'Round #${currentRound} has been won by ${playerName}', [
             'currentRound' => $currentRound,
+            'playerName' => $winnerOfCurrentRound ? $winnerOfCurrentRound->getName() : 'N/A',
             'players' => $this->formatPlayersForClient($players),
         ]);
+
+        // notify points earned by each player
+        foreach ($players as $player) {
+            $translatedMessage = ($numberOfPointsForRoundByPlayerId[$player->getId()] > 0)
+                ? clienttranslate('${playerName} does not get any point')
+                : clienttranslate('${playerName} wins ${points} points');
+            self::notifyAllPlayers('pointsWon', $translatedMessage, [
+                'playerName' => $player->getName(),
+                'points' => $numberOfPointsForRoundByPlayerId[$player->getId()],
+            ]);
+        }
 
         $howManyRounds = (int) self::getGameStateValue(self::GAME_OPTION_HOW_MANY_ROUNDS);
         $isGameOver = $currentRound >= $howManyRounds;
@@ -852,11 +861,13 @@ class Velonimo extends Table
             $minValuePlayedGlobally = 1000;
             $maxValuePlayedGlobally = 0;
             foreach ($players as $player) {
-                if ($player->getMinValuePlayedInGame() < $minValuePlayedGlobally) {
-                    $minValuePlayedGlobally = $player->getMinValuePlayedInGame();
+                $minValuePlayedByPlayer = (int) $this->getStat('minValue', $player->getId());
+                if ($minValuePlayedByPlayer < $minValuePlayedGlobally) {
+                    $minValuePlayedGlobally = $minValuePlayedByPlayer;
                 }
-                if ($player->getMaxValuePlayedInGame() > $maxValuePlayedGlobally) {
-                    $maxValuePlayedGlobally = $player->getMaxValuePlayedInGame();
+                $maxValuePlayedByPlayer = (int) $this->getStat('maxValue', $player->getId());
+                if ($maxValuePlayedByPlayer > $maxValuePlayedGlobally) {
+                    $maxValuePlayedGlobally = $maxValuePlayedByPlayer;
                 }
             }
             $this->setStat($minValuePlayedGlobally, 'minValue');
@@ -1195,15 +1206,6 @@ class Velonimo extends Table
         self::DbQuery(sprintf(
             'UPDATE player SET rounds_ranking="%s" WHERE player_id=%s',
             VelonimoPlayer::serializeRoundsRanking($player->getRoundsRanking()),
-            $player->getId()
-        ));
-    }
-
-    private function updatePlayerMinAndMaxValuePlayedInGame(VelonimoPlayer $player): void {
-        self::DbQuery(sprintf(
-            'UPDATE player SET min_value_in_game=%s, max_value_in_game=%s WHERE player_id=%s',
-            $player->getMinValuePlayedInGame(),
-            $player->getMaxValuePlayedInGame(),
             $player->getId()
         ));
     }

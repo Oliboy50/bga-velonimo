@@ -181,7 +181,6 @@ const PLAYERS_PLACES_BY_NUMBER_OF_PLAYERS = {
 // @TODO: support 2 players game
 // @TODO: ? game rounds topology instead of choosing number of rounds
 // @TODO: ? be able to move cards individually in your hand
-// @TODO: ? add the winner in the end of round log
 // @TODO: ? be able to click on the jersey to play it instead of having a 2nd button
 // @TODO: ? improve the visibility of the jersey that has been played with the combination on the table
 define([
