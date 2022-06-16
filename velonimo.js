@@ -62,8 +62,10 @@ const JERSEY_VALUE = 10;
 
 // DOM IDs
 const DOM_ID_APP = 'velonimo-game';
-const DOM_ID_BOARD = 'board';
 const DOM_ID_BOARD_CARPET = 'board-carpet';
+const DOM_ID_PLAYED_CARDS_WRAPPER = 'played-cards';
+const DOM_ID_LAST_PLAYED_CARDS = 'last-played-cards';
+const DOM_ID_PREVIOUS_LAST_PLAYED_CARDS = 'previous-last-played-cards';
 const DOM_ID_PLAYER_HAND = 'my-hand';
 const DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON = 'toggle-sort-button';
 const DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL = 'toggle-sort-button-label';
@@ -75,14 +77,18 @@ const DOM_ID_ACTION_BUTTON_SELECT_PLAYER = 'action-button-select-player';
 const DOM_ID_ACTION_BUTTON_GIVE_CARDS = 'action-button-give-cards';
 
 // DOM classes
-const DOM_CLASS_PLAYER_TABLE = 'player-table'
-const DOM_CLASS_PLAYER_IS_WEARING_JERSEY = 'is-wearing-jersey'
-const DOM_CLASS_PLAYER_HAS_USED_JERSEY = 'has-used-jersey'
-const DOM_CLASS_CARDS_STACK = 'cards-stack'
-const DOM_CLASS_DISABLED_ACTION_BUTTON = 'disabled'
-const DOM_CLASS_ACTIVE_PLAYER = 'active'
-const DOM_CLASS_SELECTABLE_PLAYER = 'selectable'
-const DOM_CLASS_NON_SELECTABLE_CARD = 'non-selectable-player-card'
+const DOM_CLASS_PLAYER_TABLE = 'player-table';
+const DOM_CLASS_PLAYER_IS_WEARING_JERSEY = 'is-wearing-jersey';
+const DOM_CLASS_PLAYER_HAS_USED_JERSEY = 'has-used-jersey';
+const DOM_CLASS_CARDS_STACK = 'cards-stack';
+const DOM_CLASS_CARDS_STACK_PREVIOUS_PLAYED = 'previous-last-played-cards';
+const DOM_CLASS_DISABLED_ACTION_BUTTON = 'disabled';
+const DOM_CLASS_ACTIVE_PLAYER = 'active';
+const DOM_CLASS_SELECTABLE_PLAYER = 'selectable';
+const DOM_CLASS_NON_SELECTABLE_CARD = 'non-selectable-player-card';
+const DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW = 'show-bubble';
+const DOM_CLASS_SPEECH_BUBBLE_LEFT = 'speech-bubble-on-left';
+const DOM_CLASS_SPEECH_BUBBLE_RIGHT = 'speech-bubble-on-right';
 
 // Player hand sorting modes
 const PLAYER_HAND_SORT_BY_COLOR = 'color';
@@ -96,94 +102,87 @@ const CARD_HEIGHT = 126;
 const PLAYER_TABLE_WIDTH = 130;
 const PLAYER_TABLE_HEIGHT = 130;
 const PLAYER_TABLE_BORDER_SIZE = 2;
-const MARGIN_BETWEEN_PLAYERS = 20;
-const TABLE_STYLE_HORIZONTAL_LEFT = `left: ${MARGIN_BETWEEN_PLAYERS}px;`;
-const TABLE_STYLE_HORIZONTAL_CENTER = `left: ${(BOARD_CARPET_WIDTH / 2) - (PLAYER_TABLE_WIDTH / 2) - (MARGIN_BETWEEN_PLAYERS / 2)}px;`;
-const TABLE_STYLE_HORIZONTAL_RIGHT = `right: ${MARGIN_BETWEEN_PLAYERS}px;`;
-const TABLE_STYLE_VERTICAL_TOP = `top: ${MARGIN_BETWEEN_PLAYERS}px;`;
-const TABLE_STYLE_VERTICAL_BOTTOM = `bottom: ${MARGIN_BETWEEN_PLAYERS}px;`;
-const CARDS_STYLE_ABOVE_TABLE = `top: -${CARD_HEIGHT + PLAYER_TABLE_BORDER_SIZE}px; left: -${PLAYER_TABLE_BORDER_SIZE}px;`;
-const CARDS_STYLE_BELOW_TABLE = `bottom: -${CARD_HEIGHT + PLAYER_TABLE_BORDER_SIZE}px; left: -${PLAYER_TABLE_BORDER_SIZE}px;`;
+const BOARD_MARGIN = 10;
+const TABLE_STYLE_HORIZONTAL_LEFT = `left: ${BOARD_MARGIN}px;`;
+const TABLE_STYLE_HORIZONTAL_MIDDLE_LEFT = `left: ${BOARD_MARGIN + PLAYER_TABLE_WIDTH}px;`;
+const TABLE_STYLE_HORIZONTAL_CENTER = `left: ${(BOARD_CARPET_WIDTH / 2) - (PLAYER_TABLE_WIDTH / 2)}px;`;
+const TABLE_STYLE_HORIZONTAL_MIDDLE_RIGHT = `right: ${BOARD_MARGIN + PLAYER_TABLE_WIDTH}px;`;
+const TABLE_STYLE_HORIZONTAL_RIGHT = `right: ${BOARD_MARGIN}px;`;
+const TABLE_STYLE_VERTICAL_TOP = `top: ${BOARD_MARGIN}px;`;
+const TABLE_STYLE_VERTICAL_BOTTOM = `bottom: ${BOARD_MARGIN}px;`;
 // the current player (index 0 == current player) place is always at the bottom of the board, in a way that players always stay closed to their hand
 const PLAYERS_PLACES_BY_NUMBER_OF_PLAYERS = {
     2: {
         0: {
             tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-            cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
         },
         1: {
             tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-            cardsStyle: CARDS_STYLE_BELOW_TABLE,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
     },
     3: {
         0: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-            cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_MIDDLE_LEFT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
         },
         1: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_LEFT}`,
-            cardsStyle: CARDS_STYLE_BELOW_TABLE,
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
         2: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
-            cardsStyle: CARDS_STYLE_BELOW_TABLE,
+            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_MIDDLE_RIGHT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
     },
-    // @TODO: place player 1 and player 3 at the center left and the center right
-    //        and move their played cards to the right and the left respectively
     4: {
         0: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-            cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_MIDDLE_LEFT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
         },
         1: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_LEFT}`,
-            cardsStyle: CARDS_STYLE_BELOW_TABLE,
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_MIDDLE_LEFT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
         },
         2: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-            cardsStyle: CARDS_STYLE_BELOW_TABLE,
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_MIDDLE_RIGHT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
         3: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
-            cardsStyle: CARDS_STYLE_BELOW_TABLE,
+            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_MIDDLE_RIGHT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
     },
-    // @TODO: place player 1 and player 4 at the center left and the center right
-    //        and move their played cards to the right and the left respectively
-    //        + place player 2 and 3 at the top middle-left and top middle-right respectively
     5: {
         0: {
             tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_LEFT}`,
-            cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
         1: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-            cardsStyle: CARDS_STYLE_BELOW_TABLE,
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_MIDDLE_LEFT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
         },
         2: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
-            cardsStyle: CARDS_STYLE_BELOW_TABLE,
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_MIDDLE_RIGHT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
         3: {
             tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
-            cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
         },
         4: {
             tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-            cardsStyle: CARDS_STYLE_ABOVE_TABLE,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
         },
     },
 };
 
-// @TODO: improve current round display
 // @TODO: show cards in logs (especially the cards picked/gave for the impacted players)
 // @TODO: color player names (logs, action messages)
 // @TODO: support 2 players game
 // @TODO: ? game rounds topology instead of choosing number of rounds
 // @TODO: ? be able to move cards individually in your hand
-// @TODO: ? add the winner in the end of round log
 // @TODO: ? be able to click on the jersey to play it instead of having a 2nd button
 // @TODO: ? improve the visibility of the jersey that has been played with the combination on the table
 define([
@@ -196,12 +195,12 @@ function (dojo, declare) {
     return declare('bgagame.velonimo', ebg.core.gamegui, {
         constructor: function () {
             this.currentState = null;
-            this.currentRound = -1;
+            this.currentRound = 0;
             this.currentPlayerHasJersey = false;
             this.jerseyHasBeenUsedInTheCurrentRound = false;
-            this.howManyRounds = -1;
-            this.playedCardsValue = -1;
-            this.howManyCardsToGiveBack = -1;
+            this.howManyRounds = 0;
+            this.playedCardsValue = 0;
+            this.howManyCardsToGiveBack = 0;
             this.players = [];
             this.playerHand = null; // https://en.doc.boardgamearena.com/Stock
         },
@@ -213,9 +212,15 @@ function (dojo, declare) {
 
             // Setup board
             dojo.place(
-                `<div id="${DOM_ID_BOARD}">
-    <div id="${DOM_ID_BOARD_CARPET}"></div>
+                `<div id="board">
+    <div id="${DOM_ID_BOARD_CARPET}">
+        <div id="${DOM_ID_PLAYED_CARDS_WRAPPER}">
+            <div id="${DOM_ID_PREVIOUS_LAST_PLAYED_CARDS}"></div>
+            <div id="${DOM_ID_LAST_PLAYED_CARDS}"></div>
+        </div>
+    </div>
     <div id="game-info" class="player-board">
+        ${_('Round')}
         <div id="${DOM_ID_CURRENT_ROUND}"></div>
     </div>
 </div>
@@ -238,13 +243,14 @@ function (dojo, declare) {
                 gamedatas.currentPlayerId
             ).forEach((player, index) => {
                 const playerPosition = playersPlace[index];
+                const playerColorRGB = `#${player.color}`;
 
                 dojo.place(
                     `<div id="player-table-${player.id}" class="player-table" style="${playerPosition.tableStyle}">
-    <div id="player-table-${player.id}-name" class="player-table-name" style="color:#${player.color}">${(player.name.length > 10 ? (player.name.substr(0,10) + '...') : player.name)}</div>
+    <div class="player-table-name" style="color: ${playerColorRGB};">${(player.name.length > 10 ? (player.name.substr(0,10) + '...') : player.name)}</div>
     <div id="player-table-${player.id}-hand" class="player-table-hand"><span id="player-table-${player.id}-number-of-cards" class="number-of-cards">${player.howManyCards}</span></div>
-    <div id="player-table-${player.id}-cards" class="player-table-cards" style="${playerPosition.cardsStyle}"></div>
     <div id="player-table-${player.id}-jersey" class="player-table-jersey"><span class="jersey-overlay"></span></div>
+    <div id="player-table-${player.id}-speech-bubble" class="player-table-speech-bubble ${playerPosition.bubbleClass}" style="color: ${playerColorRGB};"></div>
 </div>`,
                     DOM_ID_BOARD_CARPET);
             });
@@ -278,6 +284,7 @@ function (dojo, declare) {
 
             // Setup cards played on table
             this.playedCardsValue = gamedatas.playedCardsValue;
+            this.setupPreviousPlayedCards(gamedatas.previousPlayedCards);
             this.moveCardsFromPlayerHandToTable(gamedatas.playedCardsPlayerId, gamedatas.playedCards);
 
             // Setup jersey
@@ -340,7 +347,7 @@ function (dojo, declare) {
                     });
                     break;
                 case 'playerGiveCardsBackAfterPicking':
-                    this.howManyCardsToGiveBack = -1;
+                    this.howManyCardsToGiveBack = 0;
                     break;
             }
 
@@ -519,7 +526,7 @@ function (dojo, declare) {
                             const animation = this.slideTemporaryObject(
                                 `<div class="moving-jersey"></div>`,
                                 `player-table-${currentJerseyWearerId}-jersey`,
-                                DOM_ID_BOARD,
+                                `player-table-${currentJerseyWearerId}-jersey`,
                                 `player-table-${player.id}-jersey`
                             );
                             dojo.connect(animation, 'onEnd', () => dojo.addClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_IS_WEARING_JERSEY));
@@ -1241,11 +1248,15 @@ function (dojo, declare) {
             return [...players.slice(currentPlayerIndex), ...players.slice(0, currentPlayerIndex)];
         },
         /**
-         * @param {number} playerId
          * @param {Object[]} cards
+         * @param {string} placeDomId
+         * @returns {number} Top of stack card ID
          */
-        moveCardsFromPlayerHandToTable: function (playerId, cards) {
-            if (cards.length <= 0) {
+        buildAndPlacePlayedStackOfCards: function (cards, placeDomId) {
+            if (
+                cards.length <= 0
+                || !placeDomId
+            ) {
                 return;
             }
 
@@ -1256,7 +1267,7 @@ function (dojo, declare) {
             const stackWith = ((stackedCards.length - 1) * (CARD_WIDTH / 3)) + CARD_WIDTH;
             dojo.place(
                 `<div id="cards-stack-${topOfStackCardId}" class="cards-stack" style="width: ${stackWith}px;"></div>`,
-                `player-table-${playerId}-cards`
+                placeDomId
             );
             stackedCards.forEach((card) => {
                 const position = this.getCardPositionInSpriteByColorAndValue(card.color, card.value);
@@ -1268,18 +1279,52 @@ function (dojo, declare) {
                 );
             });
 
+            return topOfStackCardId;
+        },
+        /**
+         * @param {Object[]} cards
+         */
+        setupPreviousPlayedCards: function (cards) {
+            if (cards.length <= 0) {
+                return;
+            }
+
+            const topOfStackCardId = this.buildAndPlacePlayedStackOfCards(cards, DOM_ID_PREVIOUS_LAST_PLAYED_CARDS);
+
+            // place cards from where the animation will start
+            this.placeOnObject(`cards-stack-${topOfStackCardId}`, DOM_ID_LAST_PLAYED_CARDS);
+
+            // move cards to their destination
+            dojo.addClass(`cards-stack-${topOfStackCardId}`, DOM_CLASS_CARDS_STACK_PREVIOUS_PLAYED);
+            this.slideToObject(`cards-stack-${topOfStackCardId}`, DOM_ID_PREVIOUS_LAST_PLAYED_CARDS).play();
+        },
+        /**
+         * @param {number} playerId
+         * @param {Object[]} cards
+         */
+        moveCardsFromPlayerHandToTable: function (playerId, cards) {
+            if (cards.length <= 0) {
+                return;
+            }
+
+            const topOfStackCardId = this.buildAndPlacePlayedStackOfCards(cards, DOM_ID_LAST_PLAYED_CARDS);
+
             // place cards from where the animation will start
             if (playerId !== this.player_id) {
                 this.placeOnObject(`cards-stack-${topOfStackCardId}`, `player-table-${playerId}-hand`);
             } else if ($(`${DOM_ID_PLAYER_HAND}_item_${topOfStackCardId}`)) {
                 this.placeOnObject(`cards-stack-${topOfStackCardId}`, `${DOM_ID_PLAYER_HAND}_item_${topOfStackCardId}`);
-                stackedCards.forEach((card) => {
+                cards.forEach((card) => {
                     this.playerHand.removeFromStockById(card.id);
                 });
             }
 
             // move cards to their destination
-            this.slideToObject(`cards-stack-${topOfStackCardId}`, `player-table-${playerId}-cards`).play();
+            this.slideToObject(`cards-stack-${topOfStackCardId}`, DOM_ID_LAST_PLAYED_CARDS).play();
+
+            // show speech bubble
+            $(`player-table-${playerId}-speech-bubble`).innerHTML = `${this.playedCardsValue}`;
+            dojo.addClass(`player-table-${playerId}-speech-bubble`, DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW);
         },
         /**
          * @param {number} senderId
@@ -1341,9 +1386,23 @@ function (dojo, declare) {
                 this.playerHand.addToStockWithId(this.getCardPositionInSpriteByColorAndValue(card.color, card.value), card.id);
             });
         },
+        movePlayedCardsToPreviousPlayedCards: function () {
+            dojo.query(`.${DOM_CLASS_CARDS_STACK_PREVIOUS_PLAYED}`).forEach(dojo.destroy);
+            dojo.query(`#${DOM_ID_LAST_PLAYED_CARDS} .${DOM_CLASS_CARDS_STACK}`).forEach((elementDomId) => {
+                dojo.addClass(elementDomId, DOM_CLASS_CARDS_STACK_PREVIOUS_PLAYED);
+                const animation = this.slideToObject(elementDomId, DOM_ID_PREVIOUS_LAST_PLAYED_CARDS);
+                dojo.connect(animation, 'onEnd', () => this.attachToNewParent(elementDomId, DOM_ID_PREVIOUS_LAST_PLAYED_CARDS));
+                animation.play();
+            });
+        },
         discardCards: function () {
-            this.playedCardsValue = -1;
+            this.playedCardsValue = 0;
             dojo.query(`.${DOM_CLASS_CARDS_STACK}`).forEach(dojo.destroy);
+        },
+        discardPlayerSpeechBubbles: function () {
+            dojo.query(`.${DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW}`).forEach((elementDomId) => {
+                dojo.removeClass(elementDomId, DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW);
+            });
         },
 
         ///////////////////////////////////////////////////
@@ -1462,8 +1521,8 @@ function (dojo, declare) {
             this.addCardsToPlayerHand(data.args.cards);
         },
         notif_cardsPlayed: function (data) {
-            // remove last played cards
-            this.discardCards();
+            this.discardPlayerSpeechBubbles();
+            this.movePlayedCardsToPreviousPlayedCards();
 
             // place new played cards
             this.playedCardsValue = data.args.playedCardsValue;
@@ -1480,6 +1539,7 @@ function (dojo, declare) {
             this.setupNumberOfCardsInPlayersHand();
         },
         notif_cardsDiscarded: function (data) {
+            this.discardPlayerSpeechBubbles();
             this.discardCards();
         },
         notif_cardsReceivedFromAnotherPlayer: function (data) {

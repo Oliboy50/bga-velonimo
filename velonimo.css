@@ -69,6 +69,7 @@ Board
     position: absolute;
     top: 0;
     left: 2px;
+    text-align: center;
     border: 1px solid black;
     border-radius: 8px;
 }
@@ -79,7 +80,7 @@ Board
 #board-carpet {
     position: relative;
     width: 740px;
-    height: 450px;
+    height: 480px;
     background-color: #35714a;
     box-shadow: 2px 2px 5px black;
     border: 1px solid #3b3119;
@@ -99,6 +100,7 @@ Board
     box-sizing: border-box;
     background-color: rgba(255,255,255,0.7);
     padding: 5px;
+    z-index: 2;
 }
 .player-table.active {
     border: 2px solid #ff0000;
@@ -141,11 +143,49 @@ Board
     width: 1em;
     pointer-events: none;
 }
-.player-table-cards {
-    position: absolute; /* position is dynamically computed */
-    width: 130px; /* player table width */
-    height: 126px; /* card height */
+.player-table-speech-bubble {
+    position: absolute;
+    top: 0;
+    width: 50px;
+    height: 40px;
+    border-radius: 5px;
+    background-color: #ffffff;
+    font-size: 2.2em;
+    text-align: center;
+    font-weight: bold;
+    opacity: 0;
     pointer-events: none;
+    transition-property: opacity;
+    transition-duration: 0.4s;
+}
+.player-table-speech-bubble::after {
+    content: "";
+    position: absolute;
+    top: 30px;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 20px solid #ffffff;
+}
+.player-table-speech-bubble.show-bubble {
+    opacity: 1;
+}
+.speech-bubble-on-left {
+    left: -70px;
+    box-shadow: -2px 2px 5px 0 black;
+}
+.speech-bubble-on-left::after {
+    right: -10px;
+    transform: rotate(-60deg);
+}
+.speech-bubble-on-right {
+    right: -70px;
+    box-shadow: 2px 2px 5px 0 black;
+}
+.speech-bubble-on-right::after {
+    left: -10px;
+    transform: rotate(60deg);
 }
 .player-table.is-wearing-jersey .player-table-jersey {
     position: absolute;
@@ -175,7 +215,7 @@ Board
     background: black;
     transform: rotate(45deg);
 }
-.player-table.is-wearing-jersey.has-used-jersey .jersey-overlay:after {
+.player-table.is-wearing-jersey.has-used-jersey .jersey-overlay::after {
     content: "";
     position: absolute;
     left: -20px;
@@ -189,7 +229,37 @@ END Board
  */
 
 /**
-Current player
+Board cards
+ */
+#played-cards {
+    position: relative;
+    top: 166px; /* (containerHeight / 2) - (selfHeight / 2) */
+    left: 235px; /* (containerWidth / 2) - (selfWidth / 2) */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 270px; /* cardWidth + (6 * (cardWidth / 3)) */
+    height: 148px; /* cardHeight + (cardHeight / 6) */
+    z-index: 4;
+}
+#last-played-cards {
+    position: absolute;
+    bottom: 0;
+    height: 126px; /* cardHeight */
+    z-index: 10;
+}
+#previous-last-played-cards {
+    position: absolute;
+    top: 0;
+    height: 126px; /* cardHeight */
+    z-index: 8;
+}
+/**
+END Board cards
+ */
+
+/**
+Current player hand
  */
 .spectatorMode #my-hand-wrapper {
     display: none;
@@ -227,7 +297,7 @@ Current player
     border: 1px solid gray !important;
 }
 /**
-END Current player
+END Current player hand
  */
 
 /**
@@ -252,6 +322,12 @@ Cards
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: 0.5s;
+}
+.cards-stack.previous-last-played-cards {
+    opacity: 0.2;
 }
 .cards-stack .velonimo-card {
     margin-right: -60px; /* 2/3 of card width */

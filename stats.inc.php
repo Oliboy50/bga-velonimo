@@ -50,33 +50,33 @@
 $stats_type = [
     // Statistics global to table
     'table' => [
-        'playCardsAction' => [
-            'id' => 10,
-            'name' => totranslate('Played one or more cards'),
+        'minValue' => [
+            'id' => 13,
+            'name' => totranslate('Minimum value played'),
             'type' => 'int',
         ],
-        'passTurnAction' => [
-            'id' => 11,
-            'name' => totranslate('Turns passed'),
+        'maxValue' => [
+            'id' => 14,
+            'name' => totranslate('Maximum value played'),
             'type' => 'int',
         ],
     ],
 
     // Statistics existing for each player
     'player' => [
-        'playCardsAction' => [
-            'id' => 10,
-            'name' => totranslate('Played one or more cards'),
-            'type' => 'int',
-        ],
-        'passTurnAction' => [
-            'id' => 11,
-            'name' => totranslate('Turns passed'),
-            'type' => 'int',
-        ],
         'numberOfRoundsWon' => [
             'id' => 12,
             'name' => totranslate('Rounds won'),
+            'type' => 'int',
+        ],
+        'minValue' => [
+            'id' => 13,
+            'name' => totranslate('Minimum value played'),
+            'type' => 'int',
+        ],
+        'maxValue' => [
+            'id' => 14,
+            'name' => totranslate('Maximum value played'),
             'type' => 'int',
         ],
     ],

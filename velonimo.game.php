@@ -42,6 +42,7 @@ class Velonimo extends Table
     private const CARD_LOCATION_PLAYER_HAND = 'hand';
     private const CARD_LOCATION_DISCARD = 'discard';
     private const CARD_LOCATION_PLAYED = 'played';
+    private const CARD_LOCATION_PREVIOUS_PLAYED = 'previousPlayed';
 
     /** @var Deck (BGA framework component to manage cards) */
     private $deck;
@@ -128,11 +129,11 @@ class Velonimo extends Table
         // Init game statistics
         // (note: statistics used in this file must be defined in your stats.inc.php file)
         // Table statistics
-        self::initStat('table', 'playCardsAction', 0);
-        self::initStat('table', 'passTurnAction', 0);
+        self::initStat('table', 'minValue', 0);
+        self::initStat('table', 'maxValue', 0);
         // Player statistics (init for all players)
-        self::initStat('player', 'playCardsAction', 0);
-        self::initStat('player', 'passTurnAction', 0);
+        self::initStat('player', 'minValue', 0);
+        self::initStat('player', 'maxValue', 0);
         self::initStat('player', 'numberOfRoundsWon', 0);
 
         // Create cards
@@ -213,6 +214,9 @@ class Velonimo extends Table
         );
         $result['playedCardsValue'] = (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE);
         $result['playedCardsPlayerId'] = (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID);
+        $result['previousPlayedCards'] = $this->formatCardsForClient(
+            $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PREVIOUS_PLAYED))
+        );
 
         return $result;
     }
@@ -229,7 +233,7 @@ class Velonimo extends Table
     */
     function getGameProgression() {
         $howManyRounds = (int) self::getGameStateValue(self::GAME_OPTION_HOW_MANY_ROUNDS);
-        $currentRound = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
+        $currentRound = ((int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND)) ?: 1;
 
         return ((int) floor(($currentRound - 1) / $howManyRounds)) * 100;
     }
@@ -323,15 +327,14 @@ class Velonimo extends Table
         }
 
         // discard table cards and play cards
-        $this->deck->moveAllCardsInLocation(self::CARD_LOCATION_PLAYED, self::CARD_LOCATION_DISCARD);
+        $this->deck->moveAllCardsInLocation(self::CARD_LOCATION_PREVIOUS_PLAYED, self::CARD_LOCATION_DISCARD);
+        $this->deck->moveAllCardsInLocation(self::CARD_LOCATION_PLAYED, self::CARD_LOCATION_PREVIOUS_PLAYED);
         $this->deck->moveCards($playedCardIds, self::CARD_LOCATION_PLAYED, $currentPlayerId);
         if ($cardsPlayedWithJersey) {
             self::setGameStateValue(self::GAME_STATE_JERSEY_HAS_BEEN_USED_IN_THE_CURRENT_ROUND, 1);
         }
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, $currentPlayerId);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, $playedCardsValue);
-        self::incStat(1, 'playCardsAction');
-        self::incStat(1, 'playCardsAction', $currentPlayerId);
         self::notifyAllPlayers('cardsPlayed', clienttranslate('${playerName} plays ${playedCardsValue}'), [
             'playedCardsPlayerId' => $currentPlayerId,
             'playedCards' => $this->formatCardsForClient($playedCards),
@@ -339,6 +342,18 @@ class Velonimo extends Table
             'playedCardsValue' => $playedCardsValue,
             'withJersey' => $cardsPlayedWithJersey,
         ]);
+
+        // update player's min/max value played
+        $previousMinValuePlayedByPlayer = (int) $this->getStat('minValue', $currentPlayerId);
+        if (
+            $previousMinValuePlayedByPlayer === 0
+            || $playedCardsValue < $previousMinValuePlayedByPlayer
+        ) {
+            $this->setStat($playedCardsValue, 'minValue', $currentPlayerId);
+        }
+        if ($playedCardsValue > (int) $this->getStat('maxValue', $currentPlayerId)) {
+            $this->setStat($playedCardsValue, 'maxValue', $currentPlayerId);
+        }
 
         // if the player played his last card, set its rank for this round
         if ((count($currentPlayerCards) - $numberOfPlayedCards) === 0) {
@@ -386,9 +401,6 @@ class Velonimo extends Table
 
     function passTurn() {
         self::checkAction('passTurn');
-
-        $this->incStat(1, 'passTurnAction');
-        $this->incStat(1, 'passTurnAction', (int) self::getCurrentPlayerId());
 
         self::notifyAllPlayers('turnPassed', clienttranslate('${playerName} passes'), [
             'playerName' => self::getCurrentPlayerName(),
@@ -753,9 +765,14 @@ class Velonimo extends Table
         $numberOfPlayers = count($players);
         $currentRound = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
         $numberOfPointsForRoundByPlayerId = [];
+        $winnerOfCurrentRound = null;
         foreach ($players as $k => $player) {
+            $playerCurrentRoundRank = $player->getLastRoundRank();
+            if ($playerCurrentRoundRank === 1) {
+                $winnerOfCurrentRound = $player;
+            }
             $numberOfPointsForRoundByPlayerId[$player->getId()] = $this->getNumberOfPointsAtRankForRound(
-                $player->getLastRoundRank(),
+                $playerCurrentRoundRank,
                 $currentRound,
                 $numberOfPlayers
             );
@@ -780,10 +797,22 @@ class Velonimo extends Table
         // re-allow the jersey to be used
         self::setGameStateValue(self::GAME_STATE_JERSEY_HAS_BEEN_USED_IN_THE_CURRENT_ROUND, 0);
 
-        self::notifyAllPlayers('roundEnded', 'Round #${currentRound} ends', [
+        self::notifyAllPlayers('roundEnded', 'Round #${currentRound} has been won by ${playerName}', [
             'currentRound' => $currentRound,
+            'playerName' => $winnerOfCurrentRound ? $winnerOfCurrentRound->getName() : 'N/A',
             'players' => $this->formatPlayersForClient($players),
         ]);
+
+        // notify points earned by each player
+        foreach ($players as $player) {
+            $translatedMessage = ($numberOfPointsForRoundByPlayerId[$player->getId()] > 0)
+                ? clienttranslate('${playerName} does not get any point')
+                : clienttranslate('${playerName} wins ${points} points');
+            self::notifyAllPlayers('pointsWon', $translatedMessage, [
+                'playerName' => $player->getName(),
+                'points' => $numberOfPointsForRoundByPlayerId[$player->getId()],
+            ]);
+        }
 
         $howManyRounds = (int) self::getGameStateValue(self::GAME_OPTION_HOW_MANY_ROUNDS);
         $isGameOver = $currentRound >= $howManyRounds;
@@ -830,6 +859,24 @@ class Velonimo extends Table
             ],
             'closing' => $isGameOver ? clienttranslate('End of game') : clienttranslate('Next round')
         ));
+
+        // update global min/max value played stats
+        if ($isGameOver) {
+            $minValuePlayedGlobally = 1000;
+            $maxValuePlayedGlobally = 0;
+            foreach ($players as $player) {
+                $minValuePlayedByPlayer = (int) $this->getStat('minValue', $player->getId());
+                if ($minValuePlayedByPlayer < $minValuePlayedGlobally) {
+                    $minValuePlayedGlobally = $minValuePlayedByPlayer;
+                }
+                $maxValuePlayedByPlayer = (int) $this->getStat('maxValue', $player->getId());
+                if ($maxValuePlayedByPlayer > $maxValuePlayedGlobally) {
+                    $maxValuePlayedGlobally = $maxValuePlayedByPlayer;
+                }
+            }
+            $this->setStat($minValuePlayedGlobally, 'minValue');
+            $this->setStat($maxValuePlayedGlobally, 'maxValue');
+        }
 
         // go to next round or end the game
         $this->gamestate->nextState($isGameOver ? 'endGame' : 'nextRound');
@@ -973,7 +1020,9 @@ class Velonimo extends Table
      * @return VelonimoPlayer[]
      */
     private function getPlayersFromDatabase(): array {
-        $players = array_values(self::getCollectionFromDB('SELECT player_id, player_no, player_name, player_color, player_score, rounds_ranking, is_wearing_jersey FROM player'));
+        $players = array_values(self::getCollectionFromDB(
+            'SELECT player_id, player_no, player_name, player_color, player_score, rounds_ranking, is_wearing_jersey FROM player'
+        ));
 
         return array_map(
             fn (array $player) => new VelonimoPlayer(
@@ -983,7 +1032,7 @@ class Velonimo extends Table
                 $player['player_color'],
                 (int) $player['player_score'],
                 VelonimoPlayer::deserializeRoundsRanking($player['rounds_ranking']),
-                ((int) $player['is_wearing_jersey']) === 1,
+                ((int) $player['is_wearing_jersey']) === 1
             ),
             $players
         );
@@ -1148,6 +1197,7 @@ class Velonimo extends Table
     }
 
     private function discardLastPlayedCards(): void {
+        $this->deck->moveAllCardsInLocation(self::CARD_LOCATION_PREVIOUS_PLAYED, self::CARD_LOCATION_DISCARD);
         $this->deck->moveAllCardsInLocation(self::CARD_LOCATION_PLAYED, self::CARD_LOCATION_DISCARD);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, 0);
