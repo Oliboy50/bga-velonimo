@@ -81,11 +81,12 @@ const DOM_CLASS_PLAYER_TABLE = 'player-table';
 const DOM_CLASS_PLAYER_IS_WEARING_JERSEY = 'is-wearing-jersey';
 const DOM_CLASS_PLAYER_HAS_USED_JERSEY = 'has-used-jersey';
 const DOM_CLASS_CARDS_STACK = 'cards-stack';
+const DOM_CLASS_CARDS_STACK_PREVIOUS_PLAYED = 'previous-last-played-cards';
 const DOM_CLASS_DISABLED_ACTION_BUTTON = 'disabled';
 const DOM_CLASS_ACTIVE_PLAYER = 'active';
 const DOM_CLASS_SELECTABLE_PLAYER = 'selectable';
 const DOM_CLASS_NON_SELECTABLE_CARD = 'non-selectable-player-card';
-const DOM_CLASS_PLAYER_SPEECH_BUBBLE = 'player-table-speech-bubble';
+const DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW = 'show-bubble';
 const DOM_CLASS_SPEECH_BUBBLE_LEFT = 'speech-bubble-on-left';
 const DOM_CLASS_SPEECH_BUBBLE_RIGHT = 'speech-bubble-on-right';
 
@@ -103,7 +104,9 @@ const PLAYER_TABLE_HEIGHT = 130;
 const PLAYER_TABLE_BORDER_SIZE = 2;
 const BOARD_MARGIN = 10;
 const TABLE_STYLE_HORIZONTAL_LEFT = `left: ${BOARD_MARGIN}px;`;
+const TABLE_STYLE_HORIZONTAL_MIDDLE_LEFT = `left: ${BOARD_MARGIN + PLAYER_TABLE_WIDTH}px;`;
 const TABLE_STYLE_HORIZONTAL_CENTER = `left: ${(BOARD_CARPET_WIDTH / 2) - (PLAYER_TABLE_WIDTH / 2)}px;`;
+const TABLE_STYLE_HORIZONTAL_MIDDLE_RIGHT = `right: ${BOARD_MARGIN + PLAYER_TABLE_WIDTH}px;`;
 const TABLE_STYLE_HORIZONTAL_RIGHT = `right: ${BOARD_MARGIN}px;`;
 const TABLE_STYLE_VERTICAL_TOP = `top: ${BOARD_MARGIN}px;`;
 const TABLE_STYLE_VERTICAL_BOTTOM = `bottom: ${BOARD_MARGIN}px;`;
@@ -112,43 +115,43 @@ const PLAYERS_PLACES_BY_NUMBER_OF_PLAYERS = {
     2: {
         0: {
             tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
         },
         1: {
             tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
     },
     3: {
         0: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_LEFT}`,
-            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
+            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_MIDDLE_LEFT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
         },
         1: {
             tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
         2: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
-            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
+            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_MIDDLE_RIGHT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
     },
     4: {
         0: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_LEFT}`,
-            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
+            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_MIDDLE_LEFT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
         },
         1: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_LEFT}`,
-            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_MIDDLE_LEFT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
         },
         2: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
-            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_MIDDLE_RIGHT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
         3: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
-            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
+            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_MIDDLE_RIGHT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
     },
     5: {
@@ -157,12 +160,12 @@ const PLAYERS_PLACES_BY_NUMBER_OF_PLAYERS = {
             bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
         1: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_LEFT}`,
-            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_MIDDLE_LEFT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
         },
         2: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
-            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_MIDDLE_RIGHT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
         3: {
             tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
@@ -175,7 +178,6 @@ const PLAYERS_PLACES_BY_NUMBER_OF_PLAYERS = {
     },
 };
 
-// @TODO: improve current round display
 // @TODO: show cards in logs (especially the cards picked/gave for the impacted players)
 // @TODO: color player names (logs, action messages)
 // @TODO: support 2 players game
@@ -193,12 +195,12 @@ function (dojo, declare) {
     return declare('bgagame.velonimo', ebg.core.gamegui, {
         constructor: function () {
             this.currentState = null;
-            this.currentRound = -1;
+            this.currentRound = 0;
             this.currentPlayerHasJersey = false;
             this.jerseyHasBeenUsedInTheCurrentRound = false;
-            this.howManyRounds = -1;
-            this.playedCardsValue = -1;
-            this.howManyCardsToGiveBack = -1;
+            this.howManyRounds = 0;
+            this.playedCardsValue = 0;
+            this.howManyCardsToGiveBack = 0;
             this.players = [];
             this.playerHand = null; // https://en.doc.boardgamearena.com/Stock
         },
@@ -213,11 +215,12 @@ function (dojo, declare) {
                 `<div id="board">
     <div id="${DOM_ID_BOARD_CARPET}">
         <div id="${DOM_ID_PLAYED_CARDS_WRAPPER}">
-            <div id="${DOM_ID_LAST_PLAYED_CARDS}"></div>
             <div id="${DOM_ID_PREVIOUS_LAST_PLAYED_CARDS}"></div>
+            <div id="${DOM_ID_LAST_PLAYED_CARDS}"></div>
         </div>
     </div>
     <div id="game-info" class="player-board">
+        ${_('Round')}
         <div id="${DOM_ID_CURRENT_ROUND}"></div>
     </div>
 </div>
@@ -247,7 +250,7 @@ function (dojo, declare) {
     <div class="player-table-name" style="color: ${playerColorRGB};">${(player.name.length > 10 ? (player.name.substr(0,10) + '...') : player.name)}</div>
     <div id="player-table-${player.id}-hand" class="player-table-hand"><span id="player-table-${player.id}-number-of-cards" class="number-of-cards">${player.howManyCards}</span></div>
     <div id="player-table-${player.id}-jersey" class="player-table-jersey"><span class="jersey-overlay"></span></div>
-    <div id="player-table-${player.id}-speech-bubble" class="${playerPosition.bubbleClass}" style="color: ${playerColorRGB};"></div>
+    <div id="player-table-${player.id}-speech-bubble" class="player-table-speech-bubble ${playerPosition.bubbleClass}" style="color: ${playerColorRGB};"></div>
 </div>`,
                     DOM_ID_BOARD_CARPET);
             });
@@ -344,7 +347,7 @@ function (dojo, declare) {
                     });
                     break;
                 case 'playerGiveCardsBackAfterPicking':
-                    this.howManyCardsToGiveBack = -1;
+                    this.howManyCardsToGiveBack = 0;
                     break;
             }
 
@@ -1292,6 +1295,7 @@ function (dojo, declare) {
             this.placeOnObject(`cards-stack-${topOfStackCardId}`, DOM_ID_LAST_PLAYED_CARDS);
 
             // move cards to their destination
+            dojo.addClass(`cards-stack-${topOfStackCardId}`, DOM_CLASS_CARDS_STACK_PREVIOUS_PLAYED);
             this.slideToObject(`cards-stack-${topOfStackCardId}`, DOM_ID_PREVIOUS_LAST_PLAYED_CARDS).play();
         },
         /**
@@ -1320,7 +1324,7 @@ function (dojo, declare) {
 
             // show speech bubble
             $(`player-table-${playerId}-speech-bubble`).innerHTML = `${this.playedCardsValue}`;
-            dojo.addClass(`player-table-${playerId}-speech-bubble`, DOM_CLASS_PLAYER_SPEECH_BUBBLE);
+            dojo.addClass(`player-table-${playerId}-speech-bubble`, DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW);
         },
         /**
          * @param {number} senderId
@@ -1383,19 +1387,21 @@ function (dojo, declare) {
             });
         },
         movePlayedCardsToPreviousPlayedCards: function () {
+            dojo.query(`.${DOM_CLASS_CARDS_STACK_PREVIOUS_PLAYED}`).forEach(dojo.destroy);
             dojo.query(`#${DOM_ID_LAST_PLAYED_CARDS} .${DOM_CLASS_CARDS_STACK}`).forEach((elementDomId) => {
-                this.slideToObject(elementDomId, DOM_ID_PREVIOUS_LAST_PLAYED_CARDS).play();
-                this.attachToNewParent(elementDomId, DOM_ID_PREVIOUS_LAST_PLAYED_CARDS);
+                dojo.addClass(elementDomId, DOM_CLASS_CARDS_STACK_PREVIOUS_PLAYED);
+                const animation = this.slideToObject(elementDomId, DOM_ID_PREVIOUS_LAST_PLAYED_CARDS);
+                dojo.connect(animation, 'onEnd', () => this.attachToNewParent(elementDomId, DOM_ID_PREVIOUS_LAST_PLAYED_CARDS));
+                animation.play();
             });
         },
         discardCards: function () {
-            this.playedCardsValue = -1;
+            this.playedCardsValue = 0;
             dojo.query(`.${DOM_CLASS_CARDS_STACK}`).forEach(dojo.destroy);
         },
         discardPlayerSpeechBubbles: function () {
-            dojo.query(`.${DOM_CLASS_PLAYER_SPEECH_BUBBLE}`).forEach((elementDomId) => {
-                dojo.removeClass(elementDomId, DOM_CLASS_PLAYER_SPEECH_BUBBLE);
-                $(elementDomId).innerHTML = '';
+            dojo.query(`.${DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW}`).forEach((elementDomId) => {
+                dojo.removeClass(elementDomId, DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW);
             });
         },
 

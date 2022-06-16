@@ -118,7 +118,7 @@ class Velonimo extends Table
 
         // Init global values with their initial values
         self::setGameStateValue(self::GAME_STATE_CURRENT_ROUND, 0);
-        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, -1);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_SELECTED_NEXT_PLAYER_ID, 0);
         self::setGameStateValue(self::GAME_STATE_JERSEY_HAS_BEEN_USED_IN_THE_CURRENT_ROUND, 0);
@@ -344,7 +344,11 @@ class Velonimo extends Table
         ]);
 
         // update player's min/max value played
-        if ($playedCardsValue < (int) $this->getStat('minValue', $currentPlayerId)) {
+        $previousMinValuePlayedByPlayer = (int) $this->getStat('minValue', $currentPlayerId);
+        if (
+            $previousMinValuePlayedByPlayer === 0
+            || $playedCardsValue < $previousMinValuePlayedByPlayer
+        ) {
             $this->setStat($playedCardsValue, 'minValue', $currentPlayerId);
         }
         if ($playedCardsValue > (int) $this->getStat('maxValue', $currentPlayerId)) {
@@ -1017,7 +1021,7 @@ class Velonimo extends Table
      */
     private function getPlayersFromDatabase(): array {
         $players = array_values(self::getCollectionFromDB(
-            'SELECT player_id, player_no, player_name, player_color, player_score, rounds_ranking, is_wearing_jersey, min_value_in_game, max_value_in_game FROM player'
+            'SELECT player_id, player_no, player_name, player_color, player_score, rounds_ranking, is_wearing_jersey FROM player'
         ));
 
         return array_map(
@@ -1028,9 +1032,7 @@ class Velonimo extends Table
                 $player['player_color'],
                 (int) $player['player_score'],
                 VelonimoPlayer::deserializeRoundsRanking($player['rounds_ranking']),
-                ((int) $player['is_wearing_jersey']) === 1,
-                (int) $player['min_value_in_game'],
-                (int) $player['max_value_in_game']
+                ((int) $player['is_wearing_jersey']) === 1
             ),
             $players
         );
@@ -1197,7 +1199,7 @@ class Velonimo extends Table
     private function discardLastPlayedCards(): void {
         $this->deck->moveAllCardsInLocation(self::CARD_LOCATION_PREVIOUS_PLAYED, self::CARD_LOCATION_DISCARD);
         $this->deck->moveAllCardsInLocation(self::CARD_LOCATION_PLAYED, self::CARD_LOCATION_DISCARD);
-        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, -1);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, 0);
         self::notifyAllPlayers('cardsDiscarded', '', []);
     }

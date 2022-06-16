@@ -69,6 +69,7 @@ Board
     position: absolute;
     top: 0;
     left: 2px;
+    text-align: center;
     border: 1px solid black;
     border-radius: 8px;
 }
@@ -152,6 +153,10 @@ Board
     font-size: 2.2em;
     text-align: center;
     font-weight: bold;
+    opacity: 0;
+    pointer-events: none;
+    transition-property: opacity;
+    transition-duration: 0.4s;
 }
 .player-table-speech-bubble::after {
     content: "";
@@ -162,6 +167,9 @@ Board
     border-left: 5px solid transparent;
     border-right: 5px solid transparent;
     border-top: 20px solid #ffffff;
+}
+.player-table-speech-bubble.show-bubble {
+    opacity: 1;
 }
 .speech-bubble-on-left {
     left: -70px;
@@ -236,15 +244,14 @@ Board cards
 }
 #last-played-cards {
     position: absolute;
-    top: 0;
+    bottom: 0;
     height: 126px; /* cardHeight */
     z-index: 10;
 }
 #previous-last-played-cards {
     position: absolute;
-    bottom: 0;
+    top: 0;
     height: 126px; /* cardHeight */
-    opacity: 0.2;
     z-index: 8;
 }
 /**
@@ -315,6 +322,12 @@ Cards
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: 0.5s;
+}
+.cards-stack.previous-last-played-cards {
+    opacity: 0.2;
 }
 .cards-stack .velonimo-card {
     margin-right: -60px; /* 2/3 of card width */
