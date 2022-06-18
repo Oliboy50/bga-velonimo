@@ -74,8 +74,8 @@ $machinestates = [
     // The first player of a round must play cards
     ST_FIRST_PLAYER_TURN => [
         'name' => 'firstPlayerTurn',
-        'description' => clienttranslate('${actplayer} must play one or more cards'),
-        'descriptionmyturn' => clienttranslate('${you} must play one or more cards'),
+        'description' => clienttranslate('${actplayer} must play card(s)'),
+        'descriptionmyturn' => clienttranslate('${you} must play card(s)'),
         'type' => 'activeplayer',
         'args' => 'argFirstPlayerTurn',
         'possibleactions' => ['playCards'],
@@ -89,8 +89,8 @@ $machinestates = [
     // The next player must choose to play cards or pass
     ST_PLAYER_TURN => [
         'name' => 'playerTurn',
-        'description' => clienttranslate('${actplayer} must play cards to beat ${playedCardsValue} or pass'),
-        'descriptionmyturn' => clienttranslate('${you} must play cards to beat ${playedCardsValue} or pass'),
+        'description' => clienttranslate('${actplayer} must play card(s) to beat ${playedCardsValue} or pass'),
+        'descriptionmyturn' => clienttranslate('${you} must play card(s) to beat ${playedCardsValue} or pass'),
         'type' => 'activeplayer',
         'args' => 'argPlayerTurn',
         'possibleactions' => ['playCards', 'passTurn'],
@@ -135,8 +135,8 @@ $machinestates = [
     // this player has to pick one or more cards from another player of its choice
     ST_PLAYER_PICK_CARDS_FROM_PLAYER => [
         'name' => 'playerSelectPlayerToPickCards',
-        'description' => clienttranslate('${actplayer} must randomly pick ${numberOfCards} cards from another player\'s hand'),
-        'descriptionmyturn' => clienttranslate('${you} must randomly pick ${numberOfCards} cards from another player\'s hand'),
+        'description' => clienttranslate('${actplayer} must pick ${numberOfCards} card(s) from another player\'s hand'),
+        'descriptionmyturn' => clienttranslate('${you} must pick ${numberOfCards} card(s) from another player\'s hand'),
         'type' => 'activeplayer',
         'args' => 'argPlayerSelectPlayerToPickCards',
         'possibleactions' => ['selectPlayerToPickCards'],
@@ -147,8 +147,8 @@ $machinestates = [
     // the player who picked cards must give back the same number of cards of its choice
     ST_PLAYER_GIVE_CARDS_BACK_TO_PLAYER_AFTER_PICKING => [
         'name' => 'playerGiveCardsBackAfterPicking',
-        'description' => clienttranslate('${actplayer} must choose ${numberOfCards} cards for ${selectedPlayerName}'),
-        'descriptionmyturn' => clienttranslate('${you} must choose ${numberOfCards} cards for ${selectedPlayerName}'),
+        'description' => clienttranslate('${actplayer} must choose ${numberOfCards} card(s) for ${otherplayer}'),
+        'descriptionmyturn' => clienttranslate('${you} must choose ${numberOfCards} card(s) for ${otherplayer}'),
         'type' => 'activeplayer',
         'args' => 'argPlayerGiveCardsBackAfterPicking',
         'possibleactions' => ['selectCardsToGiveBack'],

@@ -205,7 +205,6 @@ class Velonimo extends Table
 
         // Players
         $result['players'] = $this->formatPlayersForClient($this->getPlayersFromDatabase());
-        // @TODO: support spectator
         $result['currentPlayerId'] = $currentPlayerId;
         $result['currentPlayerCards'] = $this->formatCardsForClient(
             $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYER_HAND, $currentPlayerId))
@@ -340,10 +339,10 @@ class Velonimo extends Table
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, $currentPlayerId);
         self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_VALUE, $lastPlayedCardsValue);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, $playedCardsValue);
-        self::notifyAllPlayers('cardsPlayed', clienttranslate('${playerName} plays ${playedCardsValue}'), [
+        self::notifyAllPlayers('cardsPlayed', clienttranslate('${player_name} plays ${playedCardsValue}'), [
             'playedCardsPlayerId' => $currentPlayerId,
             'playedCards' => $this->formatCardsForClient($playedCards),
-            'playerName' => self::getCurrentPlayerName(),
+            'player_name' => self::getCurrentPlayerName(),
             'playedCardsValue' => $playedCardsValue,
             'withJersey' => $cardsPlayedWithJersey,
         ]);
@@ -407,8 +406,8 @@ class Velonimo extends Table
     function passTurn() {
         self::checkAction('passTurn');
 
-        self::notifyAllPlayers('turnPassed', clienttranslate('${playerName} passes'), [
-            'playerName' => self::getCurrentPlayerName(),
+        self::notifyAllPlayers('turnPassed', clienttranslate('${player_name} passes'), [
+            'player_name' => self::getCurrentPlayerName(),
         ]);
 
         $this->gamestate->nextState('nextPlayer');
@@ -434,9 +433,9 @@ class Velonimo extends Table
         $players = $this->getPlayersFromDatabase();
         $currentPlayer = $this->getPlayerById($currentPlayerId, $players);
         $selectedPlayer = $this->getPlayerById($selectedPlayerId, $players);
-        self::notifyAllPlayers('nextPlayerSelected', clienttranslate('${playerName} chooses ${selectedPlayerName} as next player'), [
-            'playerName' => $currentPlayer->getName(),
-            'selectedPlayerName' => $selectedPlayer->getName(),
+        self::notifyAllPlayers('nextPlayerSelected', clienttranslate('${player_name} chooses ${player_name2} as next player'), [
+            'player_name' => $currentPlayer->getName(),
+            'player_name2' => $selectedPlayer->getName(),
         ]);
 
         // in order to change the active player during an "activeplayer" type state,
@@ -491,31 +490,31 @@ class Velonimo extends Table
 
         // notify players
         $formattedPickedCards = $this->formatCardsForClient($pickedCards);
-        $translatedMessage = clienttranslate('${receiverPlayerName} picks ${numberOfCards} cards from ${senderPlayerName} hand');
+        $translatedMessage = clienttranslate('${player_name} picks ${numberOfCards} card(s) from ${player_name2} hand');
         foreach ($players as $player) {
             if ($player->getId() === $currentPlayer->getId()) {
                 self::notifyPlayer($currentPlayer->getId(), 'cardsReceivedFromAnotherPlayer', $translatedMessage, [
                     'cards' => $formattedPickedCards,
                     'senderPlayerId' => $selectedPlayer->getId(),
                     'numberOfCards' => $numberOfCardsToPick,
-                    'receiverPlayerName' => $currentPlayer->getName(),
-                    'senderPlayerName' => $selectedPlayer->getName(),
+                    'player_name' => $currentPlayer->getName(),
+                    'player_name2' => $selectedPlayer->getName(),
                 ]);
             } elseif ($player->getId() === $selectedPlayer->getId()) {
                 self::notifyPlayer($selectedPlayer->getId(), 'cardsSentToAnotherPlayer', $translatedMessage, [
                     'cards' => $formattedPickedCards,
                     'receiverPlayerId' => $currentPlayer->getId(),
                     'numberOfCards' => $numberOfCardsToPick,
-                    'receiverPlayerName' => $currentPlayer->getName(),
-                    'senderPlayerName' => $selectedPlayer->getName(),
+                    'player_name' => $currentPlayer->getName(),
+                    'player_name2' => $selectedPlayer->getName(),
                 ]);
             } else {
                 self::notifyPlayer($player->getId(), 'cardsMovedBetweenTwoOtherPlayers', $translatedMessage, [
                     'receiverPlayerId' => $currentPlayer->getId(),
                     'senderPlayerId' => $selectedPlayer->getId(),
                     'numberOfCards' => $numberOfCardsToPick,
-                    'receiverPlayerName' => $currentPlayer->getName(),
-                    'senderPlayerName' => $selectedPlayer->getName(),
+                    'player_name' => $currentPlayer->getName(),
+                    'player_name2' => $selectedPlayer->getName(),
                 ]);
             }
         }
@@ -576,31 +575,31 @@ class Velonimo extends Table
 
         // notify players
         $formattedSelectedCards = $this->formatCardsForClient($selectedCards);
-        $translatedMessage = clienttranslate('${senderPlayerName} gives back ${numberOfCards} cards to ${receiverPlayerName}');
+        $translatedMessage = clienttranslate('${player_name} gives back ${numberOfCards} card(s) to ${player_name2}');
         foreach ($players as $player) {
             if ($player->getId() === $currentPlayer->getId()) {
                 self::notifyPlayer($currentPlayer->getId(), 'cardsSentToAnotherPlayer', $translatedMessage, [
                     'cards' => $formattedSelectedCards,
                     'receiverPlayerId' => $receiverPlayer->getId(),
                     'numberOfCards' => $numberOfCardsToGiveBack,
-                    'receiverPlayerName' => $receiverPlayer->getName(),
-                    'senderPlayerName' => $currentPlayer->getName(),
+                    'player_name2' => $receiverPlayer->getName(),
+                    'player_name' => $currentPlayer->getName(),
                 ]);
             } elseif ($player->getId() === $receiverPlayer->getId()) {
                 self::notifyPlayer($receiverPlayer->getId(), 'cardsReceivedFromAnotherPlayer', $translatedMessage, [
                     'cards' => $formattedSelectedCards,
                     'senderPlayerId' => $currentPlayer->getId(),
                     'numberOfCards' => $numberOfCardsToGiveBack,
-                    'receiverPlayerName' => $receiverPlayer->getName(),
-                    'senderPlayerName' => $currentPlayer->getName(),
+                    'player_name2' => $receiverPlayer->getName(),
+                    'player_name' => $currentPlayer->getName(),
                 ]);
             } else {
                 self::notifyPlayer($player->getId(), 'cardsMovedBetweenTwoOtherPlayers', $translatedMessage, [
                     'receiverPlayerId' => $receiverPlayer->getId(),
                     'senderPlayerId' => $currentPlayer->getId(),
                     'numberOfCards' => $numberOfCardsToGiveBack,
-                    'receiverPlayerName' => $receiverPlayer->getName(),
-                    'senderPlayerName' => $currentPlayer->getName(),
+                    'player_name2' => $receiverPlayer->getName(),
+                    'player_name' => $currentPlayer->getName(),
                 ]);
             }
         }
@@ -672,7 +671,8 @@ class Velonimo extends Table
         return [
             'activePlayerId' => (int) self::getActivePlayerId(),
             'numberOfCards' => (int) self::getGameStateValue(self::GAME_STATE_LAST_NUMBER_OF_CARDS_TO_GIVE_BACK),
-            'selectedPlayerName' => $playerToGiveCardsBack->getName(),
+            'otherplayer' => $playerToGiveCardsBack->getName(),
+            'otherplayer_id' => $playerToGiveCardsBack->getId(),
         ];
     }
 
@@ -802,19 +802,19 @@ class Velonimo extends Table
         // re-allow the jersey to be used
         self::setGameStateValue(self::GAME_STATE_JERSEY_HAS_BEEN_USED_IN_THE_CURRENT_ROUND, 0);
 
-        self::notifyAllPlayers('roundEnded', 'Round #${currentRound} has been won by ${playerName}', [
+        self::notifyAllPlayers('roundEnded', 'Round #${currentRound} has been won by ${player_name}', [
             'currentRound' => $currentRound,
-            'playerName' => $winnerOfCurrentRound ? $winnerOfCurrentRound->getName() : 'N/A',
+            'player_name' => $winnerOfCurrentRound ? $winnerOfCurrentRound->getName() : 'N/A',
             'players' => $this->formatPlayersForClient($players),
         ]);
 
         // notify points earned by each player
         foreach ($players as $player) {
             $translatedMessage = ($numberOfPointsForRoundByPlayerId[$player->getId()] > 0)
-                ? clienttranslate('${playerName} wins ${points} points')
-                : clienttranslate('${playerName} does not get any point');
+                ? clienttranslate('${player_name} wins ${points} point(s)')
+                : clienttranslate('${player_name} does not get any point');
             self::notifyAllPlayers('pointsWon', $translatedMessage, [
-                'playerName' => $player->getName(),
+                'player_name' => $player->getName(),
                 'points' => $numberOfPointsForRoundByPlayerId[$player->getId()],
             ]);
         }
@@ -905,7 +905,6 @@ class Velonimo extends Table
     */
 
     function zombieTurn($state, $activePlayer) {
-        // @TODO: zombie
     	$statename = $state['name'];
 
         if ($state['type'] === 'activeplayer') {

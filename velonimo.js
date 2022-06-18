@@ -179,11 +179,12 @@ const PLAYERS_PLACES_BY_NUMBER_OF_PLAYERS = {
     },
 };
 
+// @TODO: the cards picked/gave for the impacted players should be picked/gave consecutively (dojo.queue?)
 // @TODO: show cards in logs (especially the cards picked/gave for the impacted players)
-// @TODO: color player names (logs, action messages)
 // @TODO: support 2 players game
+// @TODO: support "spectators"
+// @TODO: support "zombie mode"
 // @TODO: ? game rounds topology instead of choosing number of rounds
-// @TODO: ? be able to move cards individually in your hand
 define([
     'dojo','dojo/_base/declare',
     'ebg/core/gamegui',
@@ -643,7 +644,7 @@ function (dojo, declare) {
             if (!$(DOM_ID_ACTION_BUTTON_GIVE_CARDS)) {
                 this.addActionButton(DOM_ID_ACTION_BUTTON_GIVE_CARDS, _('Give selected cards'), () => this.onSelectCardsToGiveBack());
             }
-            dojo.toggleClass(DOM_ID_ACTION_BUTTON_GIVE_CARDS, DOM_CLASS_DISABLED_ACTION_BUTTON, selectedCards.length !== this.howManyCardsToGiveBack);
+            dojo.toggleClass(DOM_ID_ACTION_BUTTON_GIVE_CARDS, DOM_CLASS_DISABLED_ACTION_BUTTON, (selectedCards.length === 0) || (selectedCards.length !== this.howManyCardsToGiveBack));
         },
         /**
          * @param {function (number, number)} fn such as (color, value) => {...}
