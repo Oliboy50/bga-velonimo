@@ -132,7 +132,7 @@ Board
     transition-duration: 0.4s;
 }
 .player-table.is-wearing-jersey .player-table-hand {
-    margin: 5px 0 0 -5px;
+    margin: 5px 0 0 -6px;
 }
 .player-table-hand .number-of-cards {
     position: absolute;
@@ -189,11 +189,11 @@ Board
 }
 .player-table.is-wearing-jersey .player-table-jersey {
     position: absolute;
-    bottom: 10px;
-    right: 0;
-    width: 60px;
-    height: 83px;
-    background-size: 60px 83px;
+    bottom: 7px;
+    right: -1px;
+    width: 65px;
+    height: 90px;
+    background-size: 65px 90px;
     background-image: url('img/jersey.png');
     background-repeat: no-repeat;
     background-position: center center;
@@ -203,26 +203,6 @@ Board
 }
 .player-table.is-wearing-jersey.has-used-jersey .player-table-jersey {
     opacity: 0.2;
-}
-/* @TODO: try to only reduce opacity of jersey instead of using a cross overlay */
-.player-table.is-wearing-jersey.has-used-jersey .jersey-overlay {
-    display: block;
-    position: relative;
-    top: 20px;
-    height: 50px;
-    width: 10px;
-    margin: 0 auto;
-    background: black;
-    transform: rotate(45deg);
-}
-.player-table.is-wearing-jersey.has-used-jersey .jersey-overlay::after {
-    content: "";
-    position: absolute;
-    left: -20px;
-    top: 20px;
-    width: 50px;
-    height: 10px;
-    background: black;
 }
 /**
 END Board
@@ -341,9 +321,9 @@ Animations
  */
 .moving-jersey {
     position: absolute;
-    width: 60px;
-    height: 83px;
-    background-size: 60px 83px;
+    width: 65px;
+    height: 90px;
+    background-size: 65px 90px;
     background-image: url('img/jersey.png');
     background-repeat: no-repeat;
     z-index: 100;

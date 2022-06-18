@@ -28,6 +28,7 @@ define('COLOR_PINK', 50);
 define('COLOR_RED', 60);
 define('COLOR_YELLOW', 70);
 define('COLOR_ADVENTURER', 80);
+define('COLOR_JERSEY', 90);
 
 // Cards value
 define('VALUE_1', 1);
@@ -43,6 +44,4 @@ define('VALUE_35', 35);
 define('VALUE_40', 40);
 define('VALUE_45', 45);
 define('VALUE_50', 50);
-
-// Jersey value
-define('JERSEY_VALUE', 10);
+define('VALUE_JERSEY', 10);
