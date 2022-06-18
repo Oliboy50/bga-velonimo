@@ -238,7 +238,7 @@ class Velonimo extends Table
         $howManyRounds = (int) self::getGameStateValue(self::GAME_OPTION_HOW_MANY_ROUNDS);
         $currentRound = ((int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND)) ?: 1;
 
-        return ((int) floor(($currentRound - 1) / $howManyRounds)) * 100;
+        return floor((($currentRound - 1) * 100) / $howManyRounds);
     }
 
 ////////////////////////////////////////////////////////////////////////////

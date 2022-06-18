@@ -181,6 +181,7 @@ const PLAYERS_PLACES_BY_NUMBER_OF_PLAYERS = {
 
 // @TODO: the cards picked/gave for the impacted players should be picked/gave consecutively (dojo.queue?)
 // @TODO: show cards in logs (especially the cards picked/gave for the impacted players)
+// @TODO: update text when player cannot play (i.e. you have to pass)
 // @TODO: support 2 players game
 // @TODO: support "spectators"
 // @TODO: support "zombie mode"
@@ -340,10 +341,6 @@ function (dojo, declare) {
                     dojo.addClass(`player-table-${data.args.activePlayerId}`, DOM_CLASS_ACTIVE_PLAYER);
 
                     this.howManyCardsToGiveBack = data.args.numberOfCards;
-
-                    if (this.isCurrentPlayerActive()) {
-                        this.unselectAllCards();
-                    }
                     break;
             }
         },
@@ -382,15 +379,15 @@ function (dojo, declare) {
                     break;
                 case 'playerTurn':
                     this.addActionButton(DOM_ID_ACTION_BUTTON_PASS_TURN, _('Pass'), 'onPassTurn');
-                    // check if player can play or auto-pass its turn
-                    if (!this.currentPlayerCanPlayCards()) {
-                        // click on "Pass" after either 5, 6, 7, 8 or 9 seconds
-                        this.clickActionButtonAfterAFewSeconds(DOM_ID_ACTION_BUTTON_PASS_TURN, Math.floor((Math.random() * 5) + 5));
-                    } else {
+                    // add "play cards" button if player can play
+                    if (this.currentPlayerCanPlayCards()) {
                         this.setupPlayCardsActionButton();
                     }
                     break;
                 case 'playerGiveCardsBackAfterPicking':
+                    if (this.isCurrentPlayerActive()) {
+                        this.unselectAllCards();
+                    }
                     this.setupGiveCardsBackAfterPickingActionButton();
                     break;
             }
@@ -420,7 +417,7 @@ function (dojo, declare) {
             switch (this.currentState) {
                 case 'firstPlayerTurn':
                 case 'playerTurn':
-                    if (isCurrentPlayerActive) {
+                    if (isCurrentPlayerActive && this.currentPlayerCanPlayCards()) {
                         this.setupPlayCardsActionButton();
                     }
                     break;
@@ -640,6 +637,11 @@ function (dojo, declare) {
             }
         },
         setupGiveCardsBackAfterPickingActionButton: function () {
+            if (this.playerHand.isSelected(CARD_ID_JERSEY)) {
+                this.playerHand.unselectItem(CARD_ID_JERSEY);
+            }
+            this.displayCardsAsNonSelectable(this.addJerseyToCards([]));
+
             const selectedCards = this.getSelectedPlayerCards();
             if (!$(DOM_ID_ACTION_BUTTON_GIVE_CARDS)) {
                 this.addActionButton(DOM_ID_ACTION_BUTTON_GIVE_CARDS, _('Give selected cards'), () => this.onSelectCardsToGiveBack());
@@ -1481,7 +1483,6 @@ function (dojo, declare) {
             });
 
             this.unselectAllCards();
-            this.setupPlayCardsActionButton();
         },
         onPassTurn: function () {
             if (!this.checkAction('passTurn')) {
@@ -1518,9 +1519,8 @@ function (dojo, declare) {
             if (!this.checkAction('selectCardsToGiveBack')) {
                 return;
             }
-
-            const selectedCards = this.getSelectedPlayerCards().filter((c) => c.id !== CARD_ID_JERSEY);
-            if (selectedCards.length <= 0) {
+            const selectedCards = this.getSelectedPlayerCards();
+            if (selectedCards.length !== this.howManyCardsToGiveBack) {
                 return;
             }
 
