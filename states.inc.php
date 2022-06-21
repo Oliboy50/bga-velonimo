@@ -71,7 +71,7 @@ $machinestates = [
         'transitions' => ['firstPlayerTurn' => ST_FIRST_PLAYER_TURN],
     ],
 
-    // The first player of a round must play cards
+    // The first player must play cards
     ST_FIRST_PLAYER_TURN => [
         'name' => 'firstPlayerTurn',
         'description' => clienttranslate('${actplayer} must play card(s)'),
@@ -83,10 +83,11 @@ $machinestates = [
             'pickCardsFromAnotherPlayer' => ST_PLAYER_PICK_CARDS_FROM_PLAYER,
             'nextPlayer' => ST_ACTIVATE_NEXT_PLAYER,
             'endRound' => ST_END_ROUND,
+            'zombiePass' => ST_ACTIVATE_NEXT_PLAYER,
         ],
     ],
 
-    // The next player must choose to play cards or pass
+    // The next players must choose to play cards or pass
     ST_PLAYER_TURN => [
         'name' => 'playerTurn',
         'description' => clienttranslate('${actplayer} must play card(s) to beat ${playedCardsValue} or pass'),
@@ -98,6 +99,7 @@ $machinestates = [
             'pickCardsFromAnotherPlayer' => ST_PLAYER_PICK_CARDS_FROM_PLAYER,
             'nextPlayer' => ST_ACTIVATE_NEXT_PLAYER,
             'endRound' => ST_END_ROUND,
+            'zombiePass' => ST_ACTIVATE_NEXT_PLAYER,
         ],
     ],
 
@@ -119,7 +121,10 @@ $machinestates = [
         'type' => 'activeplayer',
         'args' => 'argPlayerSelectNextPlayer',
         'possibleactions' => ['selectNextPlayer'],
-        'transitions' => ['applySelectedNextPlayer' => ST_APPLY_SELECTED_NEXT_PLAYER],
+        'transitions' => [
+            'applySelectedNextPlayer' => ST_APPLY_SELECTED_NEXT_PLAYER,
+            'zombiePass' => ST_ACTIVATE_NEXT_PLAYER,
+        ],
     ],
 
     // Intermediate state to change the active player
@@ -140,7 +145,10 @@ $machinestates = [
         'type' => 'activeplayer',
         'args' => 'argPlayerSelectPlayerToPickCards',
         'possibleactions' => ['selectPlayerToPickCards'],
-        'transitions' => ['giveCardsBack' => ST_PLAYER_GIVE_CARDS_BACK_TO_PLAYER_AFTER_PICKING],
+        'transitions' => [
+            'giveCardsBack' => ST_PLAYER_GIVE_CARDS_BACK_TO_PLAYER_AFTER_PICKING,
+            'zombiePass' => ST_ACTIVATE_NEXT_PLAYER,
+        ],
     ],
 
     // After picking cards from another player's hand,
@@ -152,7 +160,10 @@ $machinestates = [
         'type' => 'activeplayer',
         'args' => 'argPlayerGiveCardsBackAfterPicking',
         'possibleactions' => ['selectCardsToGiveBack'],
-        'transitions' => ['nextPlayer' => ST_ACTIVATE_NEXT_PLAYER],
+        'transitions' => [
+            'nextPlayer' => ST_ACTIVATE_NEXT_PLAYER,
+            'zombiePass' => ST_ACTIVATE_NEXT_PLAYER,
+        ],
     ],
 
     // End round, count round points and give yellow jersey to the current winner

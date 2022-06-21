@@ -245,11 +245,6 @@ class Velonimo extends Table
 //////////// Player actions
 ////////////////////////////////////////////////////////////////////////////
 
-    /*
-        Each time a player is doing some game action, one of the methods below is called.
-        (note: each method below must match an input method in velonimo.action.php)
-    */
-
     /**
      * @param int[] $playedCardIds
      */
@@ -615,12 +610,6 @@ class Velonimo extends Table
 //////////// Game state arguments
 ////////////////////////////////////////////////////////////////////////////
 
-    /*
-        Here, you can create methods defined as "game state arguments" (see "args" property in states.inc.php).
-        These methods function is to return some additional information that is specific to the current
-        game state.
-    */
-
     function argFirstPlayerTurn() {
         return [
             'activePlayerId' => (int) self::getActivePlayerId(),
@@ -679,11 +668,6 @@ class Velonimo extends Table
 ////////////////////////////////////////////////////////////////////////////
 //////////// Game state actions
 ////////////////////////////////////////////////////////////////////////////
-
-    /*
-        Here, you can create methods defined as "game state actions" (see "action" property in states.inc.php).
-        The action method of state X is called everytime the current game state is set to X.
-    */
 
     function stStartRound() {
         $this->discardPlayedCards();
@@ -891,33 +875,15 @@ class Velonimo extends Table
 //////////// Zombie
 ////////////////////////////////////////////////////////////////////////////
 
-    /*
-        zombieTurn:
-
-        This method is called each time it is the turn of a player who has quit the game (= "zombie" player).
-        You can do whatever you want in order to make sure the turn of this player ends appropriately
-        (ex: pass).
-
-        Important: your zombie code will be called when the player leaves the game. This action is triggered
-        from the main site and propagated to the gameserver from a server, not from a browser.
-        As a consequence, there is no current player associated to this action. In your zombieTurn function,
-        you must _never_ use getCurrentPlayerId() or getCurrentPlayerName(), otherwise it will fail with a "Not logged" error message.
-    */
-
-    function zombieTurn($state, $activePlayer) {
-    	$statename = $state['name'];
+    function zombieTurn($state, $activePlayerId) {
+    	$stateName = $state['name'];
 
         if ($state['type'] === 'activeplayer') {
-            switch ($statename) {
-                default:
-                    $this->gamestate->nextState('zombiePass');
-                	break;
-            }
-
+            $this->gamestate->nextState('zombiePass');
             return;
         }
 
-        throw new feException('Zombie mode not supported at this game state: '.$statename);
+        throw new BgaVisibleSystemException('Zombie mode not supported at this game state: '.$stateName);
     }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1055,7 +1021,7 @@ class Velonimo extends Table
             }
         }
 
-        throw new BgaVisibleSystemException(self::_('Player not found.'));
+        throw new BgaVisibleSystemException('Player not found.');
     }
 
     /**

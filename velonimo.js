@@ -69,6 +69,7 @@ const DOM_ID_PLAYED_CARDS_WRAPPER = 'played-cards';
 const DOM_ID_LAST_PLAYED_CARDS = 'last-played-cards';
 const DOM_ID_PREVIOUS_LAST_PLAYED_CARDS = 'previous-last-played-cards';
 const DOM_ID_PLAYER_HAND = 'my-hand';
+const DOM_ID_PLAYER_HAND_TITLE = 'my-hand-title';
 const DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON = 'toggle-sort-button';
 const DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL = 'toggle-sort-button-label';
 const DOM_ID_CURRENT_ROUND = 'current-round';
@@ -107,8 +108,8 @@ const BOARD_MARGIN = 10;
 const TABLE_STYLE_HORIZONTAL_LEFT = `left: ${BOARD_MARGIN}px;`;
 const TABLE_STYLE_HORIZONTAL_MIDDLE_LEFT = `left: ${BOARD_MARGIN + PLAYER_TABLE_WIDTH}px;`;
 const TABLE_STYLE_HORIZONTAL_CENTER = `left: ${(BOARD_CARPET_WIDTH / 2) - (PLAYER_TABLE_WIDTH / 2)}px;`;
-const TABLE_STYLE_HORIZONTAL_MIDDLE_RIGHT = `right: ${BOARD_MARGIN + PLAYER_TABLE_WIDTH}px;`;
-const TABLE_STYLE_HORIZONTAL_RIGHT = `right: ${BOARD_MARGIN}px;`;
+const TABLE_STYLE_HORIZONTAL_MIDDLE_RIGHT = `left: ${BOARD_CARPET_WIDTH - (BOARD_MARGIN + (PLAYER_TABLE_WIDTH * 2))}px;`;
+const TABLE_STYLE_HORIZONTAL_RIGHT = `left: ${BOARD_CARPET_WIDTH - (BOARD_MARGIN + PLAYER_TABLE_WIDTH)}px;`;
 const TABLE_STYLE_VERTICAL_TOP = `top: ${BOARD_MARGIN}px;`;
 const TABLE_STYLE_VERTICAL_BOTTOM = `bottom: ${BOARD_MARGIN}px;`;
 // the current player (index 0 == current player) place is always at the bottom of the board, in a way that players always stay closed to their hand
@@ -179,12 +180,10 @@ const PLAYERS_PLACES_BY_NUMBER_OF_PLAYERS = {
     },
 };
 
-// @TODO: the cards picked/gave for the impacted players should be picked/gave consecutively (dojo.queue?)
 // @TODO: show cards in logs (especially the cards picked/gave for the impacted players)
-// @TODO: update text when player cannot play (i.e. you have to pass)
 // @TODO: support 2 players game
 // @TODO: support "spectators"
-// @TODO: support "zombie mode"
+// @TODO: ? be more explicit when the player cannot beat the last played value (idea: disable its cards?)
 // @TODO: ? game rounds topology instead of choosing number of rounds
 define([
     'dojo','dojo/_base/declare',
@@ -227,7 +226,7 @@ function (dojo, declare) {
 </div>
 <div id="my-hand-wrapper" class="whiteblock">
     <div id="my-hand-title-wrapper">
-        <h3 id="my-hand-title">${_('My hand')}</h3>
+        <h3 id="${DOM_ID_PLAYER_HAND_TITLE}">${_('My hand')}</h3>
         <a href="javascript:void(0)" id="${DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON}" class="bgabutton bgabutton_gray"><span id="${DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL}"></span></a>
     </div>
     <div id="${DOM_ID_PLAYER_HAND}"></div>
@@ -1361,37 +1360,65 @@ function (dojo, declare) {
          * @param {Object[]} cards
          */
         receiveCardsFromAnotherPlayer: function (senderId, cards) {
-            cards.forEach((card) => {
-                const position = this.getCardPositionInSpriteByColorAndValue(card.color, card.value);
+            if (cards.length <= 0) {
+                return;
+            }
+
+            let animations = [];
+            for (let i = 0; i < cards.length; i++) {
+                const position = this.getCardPositionInSpriteByColorAndValue(cards[i].color, cards[i].value);
                 const backgroundPositionX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position);
                 const backgroundPositionY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position);
-                this.slideTemporaryObject(
+                animations[i] = this.slideTemporaryObject(
                     `<div class="velonimo-card front-side" style="position: absolute; background-position: -${backgroundPositionX}px -${backgroundPositionY}px;"></div>`,
                     `player-table-${senderId}-hand`,
                     `player-table-${senderId}-hand`,
-                    DOM_ID_PLAYER_HAND
-                ).play();
-                this.playerHand.addToStockWithId(position, card.id);
-            });
+                    `player-table-${this.player_id}-hand`,
+                    1000
+                );
+
+                dojo.connect(animations[i], 'onEnd', () => {
+                    this.playerHand.addToStockWithId(position, cards[i].id);
+
+                    if (animations[i + 1]) {
+                        animations[i + 1].play();
+                    }
+                });
+            }
+            animations[0].play();
         },
         /**
          * @param {number} receiverId
          * @param {Object[]} cards
          */
         sendCardsToAnotherPlayer: function (receiverId, cards) {
-            cards.forEach((card) => {
-                const position = this.getCardPositionInSpriteByColorAndValue(card.color, card.value);
+            if (cards.length <= 0) {
+                return;
+            }
+
+            let animations = [];
+            for (let i = 0; i < cards.length; i++) {
+                const position = this.getCardPositionInSpriteByColorAndValue(cards[i].color, cards[i].value);
                 const backgroundPositionX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position);
                 const backgroundPositionY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position);
-                const animationStartDomId = $(`${DOM_ID_PLAYER_HAND}_item_${card.id}`) ? `${DOM_ID_PLAYER_HAND}_item_${card.id}` : DOM_ID_PLAYER_HAND;
-                this.slideTemporaryObject(
+                const animationStartDomId = $(`${DOM_ID_PLAYER_HAND}_item_${cards[i].id}`) ? `${DOM_ID_PLAYER_HAND}_item_${cards[i].id}` : DOM_ID_PLAYER_HAND;
+                animations[i] = this.slideTemporaryObject(
                     `<div class="velonimo-card front-side" style="position: absolute; background-position: -${backgroundPositionX}px -${backgroundPositionY}px;"></div>`,
                     animationStartDomId,
                     animationStartDomId,
-                    `player-table-${receiverId}-hand`
-                ).play();
-                this.playerHand.removeFromStockById(card.id);
-            });
+                    `player-table-${receiverId}-hand`,
+                    1000
+                );
+
+                dojo.connect(animations[i], 'onEnd', () => {
+                    if (animations[i + 1]) {
+                        animations[i + 1].play();
+                        this.playerHand.removeFromStockById(cards[i + 1].id);
+                    }
+                });
+            }
+            animations[0].play();
+            this.playerHand.removeFromStockById(cards[0].id);
         },
         /**
          * @param {number} senderId

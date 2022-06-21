@@ -62,6 +62,7 @@ Board
     display: flex;
     align-items: center;
     justify-content: center;
+    min-width: 740px;
 }
 
 #game-info {
