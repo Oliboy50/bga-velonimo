@@ -463,43 +463,10 @@ function (dojo, declare) {
             return this.isSpectator || typeof g_replayFrom !== 'undefined' || g_archive_mode;
         },
         /**
-         * Setup a countdown to automatically click on an action button after a few seconds.
-         *
-         * @see https://github.com/bga-devs/tisaac-boilerplate/blob/master/modules/js/Core/game.js#L251-L297
-         *
-         * @param {string} buttonId
-         * @param {number} howManySeconds
+         * @returns {boolean}
          */
-        clickActionButtonAfterAFewSeconds: function (buttonId, howManySeconds) {
-            const button = $(buttonId);
-            if (!button || this.isReadOnly()) {
-                return;
-            }
-
-            this._actionTimerLabel = button.innerHTML;
-            this._actionTimerSeconds = howManySeconds;
-            this._actionTimerFunction = () => {
-                const button = $(buttonId);
-                if (!button) {
-                    this.clearTimerForClickActionButtonAfterAFewSeconds();
-                    return;
-                }
-                if (this._actionTimerSeconds-- > 1) {
-                    button.innerHTML = `${this._actionTimerLabel} (${this._actionTimerSeconds})`;
-                    return;
-                }
-
-                button.click();
-                this.clearTimerForClickActionButtonAfterAFewSeconds();
-            };
-            this._actionTimerFunction();
-            this._actionTimerId = setInterval(this._actionTimerFunction, 1000);
-        },
-        clearTimerForClickActionButtonAfterAFewSeconds: function () {
-            if (this._actionTimerId) {
-                clearInterval(this._actionTimerId);
-                delete this._actionTimerId;
-            }
+        is2PlayersMode: function () {
+            return Object.keys(this.players).length === 2;
         },
         setupRoundsInfo: function () {
             $(DOM_ID_CURRENT_ROUND).innerHTML = `${this.currentRound} / ${this.howManyRounds}`;
@@ -1370,22 +1337,18 @@ function (dojo, declare) {
                 const backgroundPositionX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position);
                 const backgroundPositionY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position);
                 animations[i] = this.slideTemporaryObject(
-                    `<div class="velonimo-card front-side" style="position: absolute; background-position: -${backgroundPositionX}px -${backgroundPositionY}px;"></div>`,
+                    `<div class="velonimo-card front-side" style="position: absolute; background-position: -${backgroundPositionX}px -${backgroundPositionY}px; z-index: ${100 - i};"></div>`,
                     `player-table-${senderId}-hand`,
                     `player-table-${senderId}-hand`,
                     `player-table-${this.player_id}-hand`,
-                    1000
+                    1000,
+                    i * 1000
                 );
-
                 dojo.connect(animations[i], 'onEnd', () => {
                     this.playerHand.addToStockWithId(position, cards[i].id);
-
-                    if (animations[i + 1]) {
-                        animations[i + 1].play();
-                    }
                 });
+                animations[i].play();
             }
-            animations[0].play();
         },
         /**
          * @param {number} receiverId
@@ -1396,29 +1359,41 @@ function (dojo, declare) {
                 return;
             }
 
+            // sort cards to always send them from right to left (to avoid a visual bug in player hand)
+            const currentSortingMode = this.getCurrentPlayerCardsSortingMode();
+            const sortedCards = [...cards].sort((a, b) => {
+                switch (currentSortingMode) {
+                    case PLAYER_HAND_SORT_BY_COLOR:
+                        return this.getCardPositionInSpriteByColorAndValue(b.color, b.value) - this.getCardPositionInSpriteByColorAndValue(a.color, a.value);
+                    case PLAYER_HAND_SORT_BY_VALUE:
+                        return this.getCardWeightForColorAndValueToSortThemByValue(b.color, b.value) - this.getCardWeightForColorAndValueToSortThemByValue(a.color, a.value);
+                    default:
+                        return 0;
+                }
+            });
+
             let animations = [];
-            for (let i = 0; i < cards.length; i++) {
-                const position = this.getCardPositionInSpriteByColorAndValue(cards[i].color, cards[i].value);
+            for (let i = 0; i < sortedCards.length; i++) {
+                const position = this.getCardPositionInSpriteByColorAndValue(sortedCards[i].color, sortedCards[i].value);
                 const backgroundPositionX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position);
                 const backgroundPositionY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position);
-                const animationStartDomId = $(`${DOM_ID_PLAYER_HAND}_item_${cards[i].id}`) ? `${DOM_ID_PLAYER_HAND}_item_${cards[i].id}` : DOM_ID_PLAYER_HAND;
+                const animationStartDomId = $(`${DOM_ID_PLAYER_HAND}_item_${sortedCards[i].id}`) ? `${DOM_ID_PLAYER_HAND}_item_${sortedCards[i].id}` : `player-table-${this.player_id}-hand`;
                 animations[i] = this.slideTemporaryObject(
-                    `<div class="velonimo-card front-side" style="position: absolute; background-position: -${backgroundPositionX}px -${backgroundPositionY}px;"></div>`,
-                    animationStartDomId,
+                    `<div class="velonimo-card front-side" style="position: absolute; background-position: -${backgroundPositionX}px -${backgroundPositionY}px; z-index: ${100 - i};"></div>`,
+                    `player-table-${this.player_id}-hand`,
                     animationStartDomId,
                     `player-table-${receiverId}-hand`,
-                    1000
+                    1000,
+                    i * 1000
                 );
-
                 dojo.connect(animations[i], 'onEnd', () => {
-                    if (animations[i + 1]) {
-                        animations[i + 1].play();
-                        this.playerHand.removeFromStockById(cards[i + 1].id);
+                    if (sortedCards[i + 1]) {
+                        this.playerHand.removeFromStockById(sortedCards[i + 1].id);
                     }
                 });
+                animations[i].play();
             }
-            animations[0].play();
-            this.playerHand.removeFromStockById(cards[0].id);
+            this.playerHand.removeFromStockById(sortedCards[0].id);
         },
         /**
          * @param {number} senderId
@@ -1428,10 +1403,12 @@ function (dojo, declare) {
         moveCardsBetweenTwoOtherPlayers: function (senderId, receiverId, numberOfCards) {
             for (let i = 0; i < numberOfCards; i++) {
                 this.slideTemporaryObject(
-                    `<div class="velonimo-card back-side" style="position: absolute;"></div>`,
+                    `<div class="velonimo-card back-side" style="position: absolute; z-index: ${100 - i};"></div>`,
                     `player-table-${senderId}-hand`,
                     `player-table-${senderId}-hand`,
-                    `player-table-${receiverId}-hand`
+                    `player-table-${receiverId}-hand`,
+                    1000,
+                    i * 1000
                 ).play();
             }
         },
@@ -1557,8 +1534,14 @@ function (dojo, declare) {
 
             this.unselectAllCards();
         },
+        /**
+         * @returns {string}
+         */
+        getCurrentPlayerCardsSortingMode: function () {
+            return dojo.attr(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, 'data-current-sort');
+        },
         onClickOnTogglePlayerHandSortButton: function () {
-            const currentSortingMode = dojo.attr(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, 'data-current-sort');
+            const currentSortingMode = this.getCurrentPlayerCardsSortingMode();
             if (currentSortingMode === PLAYER_HAND_SORT_BY_COLOR) {
                 $(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL).innerHTML = _('Sort by color');
                 dojo.attr(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, 'data-current-sort', PLAYER_HAND_SORT_BY_VALUE);
@@ -1583,6 +1566,12 @@ function (dojo, declare) {
                 ['cardsSentToAnotherPlayer', 1000],
                 ['cardsMovedBetweenTwoOtherPlayers', 1000],
                 ['roundEnded', 1],
+                /* START 2P */
+                ['attackRewardCardsRevealed', 1000],
+                ['attackRewardCardsMovedToPlayer', 1000],
+                ['cardsReceivedFromDeck', 1000],
+                ['cardsMovedFromDeckToAnotherPlayer', 1000],
+                /* END 2P */
             ].forEach((notif) => {
                 const name = notif[0];
                 const lockDurationInMs = notif[1];
@@ -1669,6 +1658,30 @@ function (dojo, declare) {
             // in order to have a beautiful jersey for the winner of the game (at the very end)
             this.restoreJerseyForCurrentRound();
             this.moveJerseyToCurrentWinner(currentJerseyWearerId);
+        },
+        /**
+         * 2P mode
+         */
+        notif_attackRewardCardsRevealed: function (data) {
+            // @TODO
+        },
+        /**
+         * 2P mode
+         */
+        notif_attackRewardCardsMovedToPlayer: function (data) {
+            // @TODO
+        },
+        /**
+         * 2P mode
+         */
+        notif_cardsReceivedFromDeck: function (data) {
+            // @TODO
+        },
+        /**
+         * 2P mode
+         */
+        notif_cardsMovedFromDeckToAnotherPlayer: function (data) {
+            // @TODO
         },
    });
 });

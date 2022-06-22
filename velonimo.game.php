@@ -36,6 +36,9 @@ class Velonimo extends Table
     private const GAME_STATE_LAST_NUMBER_OF_CARDS_TO_PICK = 'numberOfCardsToPick';
     private const GAME_STATE_LAST_NUMBER_OF_CARDS_TO_GIVE_BACK = 'numberOfCardsToGiveBack';
     private const GAME_STATE_LAST_PLAYER_ID_TO_GIVE_CARDS_BACK = 'playerIdToGiveCardsBack';
+    /* START 2P */
+    private const GAME_STATE_LAST_NUMBER_OF_CARDS_TO_PICK_FROM_DECK = 'numberOfCardsToPickFromDeck';
+    /* END 2P */
 
     private const GAME_OPTION_HOW_MANY_ROUNDS = 'howManyRounds';
 
@@ -44,6 +47,9 @@ class Velonimo extends Table
     private const CARD_LOCATION_DISCARD = 'discard';
     private const CARD_LOCATION_PLAYED = 'played';
     private const CARD_LOCATION_PREVIOUS_PLAYED = 'previousPlayed';
+    /* START 2P */
+    private const CARD_LOCATION_ATTACK_WINNER_REWARD = 'attackReward';
+    /* END 2P */
 
     /** @var Deck (BGA framework component to manage cards) */
     private $deck;
@@ -67,6 +73,7 @@ class Velonimo extends Table
             self::GAME_STATE_LAST_NUMBER_OF_CARDS_TO_GIVE_BACK => 16,
             self::GAME_STATE_LAST_PLAYER_ID_TO_GIVE_CARDS_BACK => 17,
             self::GAME_STATE_PREVIOUS_PLAYED_CARDS_VALUE => 18,
+            self::GAME_STATE_LAST_NUMBER_OF_CARDS_TO_PICK_FROM_DECK => 19,
             self::GAME_OPTION_HOW_MANY_ROUNDS => 100,
         ]);
 
@@ -128,6 +135,7 @@ class Velonimo extends Table
         self::setGameStateValue(self::GAME_STATE_LAST_NUMBER_OF_CARDS_TO_PICK, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_NUMBER_OF_CARDS_TO_GIVE_BACK, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYER_ID_TO_GIVE_CARDS_BACK, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_NUMBER_OF_CARDS_TO_PICK_FROM_DECK, 0);
 
         // Init game statistics
         // (note: statistics used in this file must be defined in your stats.inc.php file)
@@ -197,6 +205,7 @@ class Velonimo extends Table
     protected function getAllDatas() {
         $result = [];
         $currentPlayerId = (int) self::getCurrentPlayerId();
+        $players = $this->getPlayersFromDatabase();
 
         // Rounds
         $result['currentRound'] = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
@@ -204,13 +213,13 @@ class Velonimo extends Table
         $result['howManyRounds'] = (int) self::getGameStateValue(self::GAME_OPTION_HOW_MANY_ROUNDS);
 
         // Players
-        $result['players'] = $this->formatPlayersForClient($this->getPlayersFromDatabase());
+        $result['players'] = $this->formatPlayersForClient($players);
         $result['currentPlayerId'] = $currentPlayerId;
+
+        // Cards
         $result['currentPlayerCards'] = $this->formatCardsForClient(
             $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYER_HAND, $currentPlayerId))
         );
-
-        // Cards
         $result['playedCards'] = $this->formatCardsForClient(
             $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYED))
         );
@@ -220,6 +229,12 @@ class Velonimo extends Table
             $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PREVIOUS_PLAYED))
         );
         $result['previousPlayedCardsValue'] = (int) self::getGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_VALUE);
+        if ($this->is2PlayersMode($players)) {
+            $result['numberOfCardsInDeck'] = count($this->deck->getCardsInLocation(self::CARD_LOCATION_DECK));
+            $result['attackRewardCards'] = $this->formatCardsForClient(
+                $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_ATTACK_WINNER_REWARD))
+            );
+        }
 
         return $result;
     }
@@ -383,7 +398,36 @@ class Velonimo extends Table
             return;
         }
 
-        // if the player played cards of value "1", he has to pick cards from another player
+        if ($this->is2PlayersMode($players)) {
+            // if the player played cards of value "2", he has to pick as many cards from deck
+            $numberOfPlayedCardsOfValueTwo = count(
+                array_filter($playedCards, fn (VelonimoCard $c) => $c->getValue() === VALUE_2)
+            );
+            if ($numberOfPlayedCardsOfValueTwo > 0) {
+                $cardsPickedFromDeck = $this->fromBgaCardsToVelonimoCards(
+                    $this->deck->pickCards($numberOfPlayedCardsOfValueTwo, self::CARD_LOCATION_DECK, $currentPlayer->getId())
+                );
+                $numberOfCardsToPickFromDeck = count($cardsPickedFromDeck);
+                $translatedMessage = clienttranslate('${player_name} picks ${numberOfCards} card(s) from the top of the deck');
+                foreach ($players as $player) {
+                    if ($player->getId() === $currentPlayer->getId()) {
+                        self::notifyPlayer($currentPlayer->getId(), 'cardsReceivedFromDeck', $translatedMessage, [
+                            'cards' => $this->formatCardsForClient($cardsPickedFromDeck),
+                            'numberOfCards' => $numberOfCardsToPickFromDeck,
+                            'player_name' => $currentPlayer->getName(),
+                        ]);
+                    } else {
+                        self::notifyPlayer($player->getId(), 'cardsMovedFromDeckToAnotherPlayer', $translatedMessage, [
+                            'receiverPlayerId' => $currentPlayer->getId(),
+                            'numberOfCards' => $numberOfCardsToPickFromDeck,
+                            'player_name' => $currentPlayer->getName(),
+                        ]);
+                    }
+                }
+            }
+        }
+
+        // if the player played cards of value "1", he has to pick as many cards from another player
         $numberOfPlayedCardsOfValueOne = count(
             array_filter($playedCards, fn (VelonimoCard $c) => $c->getValue() === VALUE_1)
         );
@@ -681,7 +725,7 @@ class Velonimo extends Table
 
         // deal cards to each player
         $players = $this->getPlayersFromDatabase();
-        foreach($players as $player)
+        foreach ($players as $player)
         {
             $cards = $this->fromBgaCardsToVelonimoCards(
                 $this->deck->pickCards(self::NUMBER_OF_CARDS_TO_DEAL_TO_EACH_PLAYER, self::CARD_LOCATION_DECK, $player->getId())
@@ -703,6 +747,16 @@ class Velonimo extends Table
             'currentRound' => $newRound,
             'players' => $this->formatPlayersForClient($players),
         ]);
+
+        if ($this->is2PlayersMode($players)) {
+            $this->deck->pickCardForLocation(self::CARD_LOCATION_DECK, self::CARD_LOCATION_ATTACK_WINNER_REWARD);
+
+            self::notifyAllPlayers('attackRewardCardsRevealed', 'A new attack reward card is revealed', [
+                'attackRewardCards' => $this->formatCardsForClient(
+                    $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_ATTACK_WINNER_REWARD))
+                ),
+            ]);
+        }
 
         $this->gamestate->nextState('firstPlayerTurn');
     }
@@ -809,7 +863,7 @@ class Velonimo extends Table
         // use "Scoring dialogs" to recap scoring for end-users before moving forward
         // @see https://en.doc.boardgamearena.com/Game_interface_logic:_yourgamename.js#Scoring_dialogs
         $headers = [
-            '', // first column of headers line does not have content
+            '', // the first column of headers is empty
         ];
         $roundPoints = [
             [
@@ -1022,6 +1076,17 @@ class Velonimo extends Table
         }
 
         throw new BgaVisibleSystemException('Player not found.');
+    }
+
+    /**
+     * @param VelonimoPlayer[] $players
+     */
+    private function is2PlayersMode(array $players = null): bool {
+        if ($players === null) {
+            $players = $this->getPlayersFromDatabase();
+        }
+
+        return count($players) === 2;
     }
 
     /**
