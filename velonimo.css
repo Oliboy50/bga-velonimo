@@ -135,15 +135,6 @@ Board
 .player-table.is-wearing-jersey .player-table-hand {
     margin: 5px 0 0 -6px;
 }
-.player-table-hand .number-of-cards {
-    position: absolute;
-    left: 8px;
-    top: 20px;
-    font-size: 2em;
-    text-align: center;
-    width: 1em;
-    pointer-events: none;
-}
 .player-table-speech-bubble {
     position: absolute;
     top: 0;
@@ -235,6 +226,26 @@ Board cards
     height: 126px; /* cardHeight */
     z-index: 8;
 }
+/* /!\ 2P mode only */
+#cards-deck {
+    position: absolute;
+    display: inline-block;
+    top: 177px; /* (containerHeight / 2) - (selfHeight / 2) */
+    left: 10px; /* boardMargin */
+    width: 90px; /* cardWidth */
+    height: 126px; /* cardHeight */
+    background-image: url('img/remaining_cards.png');
+    background-size: 90px 126px;
+}
+/* /!\ 2P mode only */
+#attack-reward-card {
+    position: absolute;
+    display: inline-block;
+    top: 177px; /* (containerHeight / 2) - (selfHeight / 2) */
+    left: 110px; /* cardWidth + (2 * boardMargin) */
+    width: 90px; /* cardWidth */
+    height: 126px; /* cardHeight */
+}
 /**
 END Board cards
  */
@@ -312,6 +323,15 @@ Cards
 }
 .cards-stack .velonimo-card {
     margin-right: -60px; /* 2/3 of card width */
+}
+.text-on-cards {
+    position: absolute;
+    left: 8px;
+    top: 20px;
+    font-size: 2em;
+    text-align: center;
+    width: 1em;
+    pointer-events: none;
 }
 /**
 END Cards

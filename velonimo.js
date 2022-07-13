@@ -65,6 +65,8 @@ const CARD_ID_JERSEY = 0;
 // DOM IDs
 const DOM_ID_APP = 'velonimo-game';
 const DOM_ID_BOARD_CARPET = 'board-carpet';
+const DOM_ID_CARDS_DECK = 'cards-deck';
+const DOM_ID_ATTACK_REWARD_CARD = 'attack-reward-card';
 const DOM_ID_PLAYED_CARDS_WRAPPER = 'played-cards';
 const DOM_ID_LAST_PLAYED_CARDS = 'last-played-cards';
 const DOM_ID_PREVIOUS_LAST_PLAYED_CARDS = 'previous-last-played-cards';
@@ -83,6 +85,7 @@ const DOM_CLASS_PLAYER_TABLE = 'player-table';
 const DOM_CLASS_PLAYER_IS_WEARING_JERSEY = 'is-wearing-jersey';
 const DOM_CLASS_PLAYER_HAS_USED_JERSEY = 'has-used-jersey';
 const DOM_CLASS_CARDS_STACK = 'cards-stack';
+const DOM_CLASS_TEXT_ON_CARDS = 'text-on-cards';
 const DOM_CLASS_CARDS_STACK_PREVIOUS_PLAYED = 'previous-last-played-cards';
 const DOM_CLASS_DISABLED_ACTION_BUTTON = 'disabled';
 const DOM_CLASS_ACTIVE_PLAYER = 'active';
@@ -248,13 +251,24 @@ function (dojo, declare) {
                 dojo.place(
                     `<div id="player-table-${player.id}" class="player-table" style="${playerPosition.tableStyle}">
     <div class="player-table-name" style="color: ${playerColorRGB};">${(player.name.length > 10 ? (player.name.substr(0,10) + '...') : player.name)}</div>
-    <div id="player-table-${player.id}-hand" class="player-table-hand"><span id="player-table-${player.id}-number-of-cards" class="number-of-cards">${player.howManyCards}</span></div>
+    <div id="player-table-${player.id}-hand" class="player-table-hand"><span id="player-table-${player.id}-number-of-cards" class="${DOM_CLASS_TEXT_ON_CARDS}"></span></div>
     <div id="player-table-${player.id}-jersey" class="player-table-jersey"></div>
     <div id="player-table-${player.id}-speech-bubble" class="player-table-speech-bubble ${playerPosition.bubbleClass}" style="color: ${playerColorRGB};"></div>
 </div>`,
                     DOM_ID_BOARD_CARPET);
             });
             this.setupNumberOfCardsInPlayersHand();
+
+            // show 2P mode items
+            if (this.is2PlayersMode()) {
+                dojo.place(
+                    `<div id="${DOM_ID_CARDS_DECK}"><span class="${DOM_CLASS_TEXT_ON_CARDS}">DE<br/>CK</span></div>
+<div id="${DOM_ID_ATTACK_REWARD_CARD}"></div>`,
+                    DOM_ID_BOARD_CARPET
+                );
+
+                this.setupAttackRewardCards(gamedatas.attackRewardCards);
+            }
 
             // @TODO: support spectators (do not show "my hand" in this case)
             // Init playerHand "ebg.stock" component
@@ -332,6 +346,9 @@ function (dojo, declare) {
                 case 'playerSelectNextPlayer':
                     this.setupSelectPlayerAction(data.args.activePlayerId, data.args.selectablePlayers, this.onSelectNextPlayer);
                     break;
+                case 'playerSelectWhoTakeAttackReward':
+                    this.setupSelectPlayerAction(data.args.activePlayerId, data.args.selectablePlayers, this.onSelectWhoTakeAttackReward);
+                    break;
                 case 'playerSelectPlayerToPickCards':
                     this.setupSelectPlayerAction(data.args.activePlayerId, data.args.selectablePlayers, this.onSelectPlayerToPickCards);
                     break;
@@ -350,6 +367,7 @@ function (dojo, declare) {
             // do special things for state
             switch (state) {
                 case 'playerSelectNextPlayer':
+                case 'playerSelectWhoTakeAttackReward':
                 case 'playerSelectPlayerToPickCards':
                     Object.entries(this.players).forEach((entry) => {
                         const player = entry[1];
@@ -1262,7 +1280,7 @@ function (dojo, declare) {
             // create played cards
             const stackWith = ((stackedCards.length - 1) * (CARD_WIDTH / 3)) + CARD_WIDTH;
             dojo.place(
-                `<div id="cards-stack-${topOfStackCardId}" class="cards-stack" style="width: ${stackWith}px;"></div>`,
+                `<div id="cards-stack-${topOfStackCardId}" class="${DOM_CLASS_CARDS_STACK}" style="width: ${stackWith}px;"></div>`,
                 placeDomId
             );
             stackedCards.forEach((card) => {
@@ -1276,6 +1294,110 @@ function (dojo, declare) {
             });
 
             return topOfStackCardId;
+        },
+        /**
+         * @param {Object[]} cards
+         * @param {string} domId
+         */
+        moveTemporaryCardsFromDomIdToPlayerHand: function (cards, domId) {
+            if (cards.length <= 0) {
+                return;
+            }
+
+            let animations = [];
+            for (let i = 0; i < cards.length; i++) {
+                const position = this.getCardPositionInSpriteByColorAndValue(cards[i].color, cards[i].value);
+                const backgroundPositionX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position);
+                const backgroundPositionY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position);
+                animations[i] = this.slideTemporaryObject(
+                    `<div class="velonimo-card front-side" style="position: absolute; background-position: -${backgroundPositionX}px -${backgroundPositionY}px; z-index: ${100 - i};"></div>`,
+                    domId,
+                    domId,
+                    `player-table-${this.player_id}-hand`,
+                    1000,
+                    i * 1000
+                );
+                dojo.connect(animations[i], 'onEnd', () => {
+                    this.playerHand.addToStockWithId(position, cards[i].id);
+                });
+                animations[i].play();
+            }
+        },
+        /**
+         * @param {string} fromDomId
+         * @param {string} toDomId
+         * @param {number} numberOfCards
+         */
+        moveHiddenTemporaryCardsFromDomIdToDomId: function (fromDomId, toDomId, numberOfCards) {
+            for (let i = 0; i < numberOfCards; i++) {
+                this.slideTemporaryObject(
+                    `<div class="velonimo-card back-side" style="position: absolute; z-index: ${100 - i};"></div>`,
+                    fromDomId,
+                    fromDomId,
+                    toDomId,
+                    1000,
+                    i * 1000
+                ).play();
+            }
+        },
+        /**
+         * /!\ 2P mode only
+         *
+         * @param {Object[]} cards
+         */
+        moveCardsFromDeckToPlayerHand: function (cards) {
+            this.moveTemporaryCardsFromDomIdToPlayerHand(cards, DOM_ID_CARDS_DECK);
+        },
+        /**
+         * /!\ 2P mode only
+         *
+         * @param {number} receiverId
+         * @param {number} numberOfCards
+         */
+        moveCardsFromDeckToAnotherPlayer: function (receiverId, numberOfCards) {
+            this.moveHiddenTemporaryCardsFromDomIdToDomId(DOM_ID_CARDS_DECK, `player-table-${receiverId}-hand`, numberOfCards);
+        },
+        /**
+         * /!\ 2P mode only
+         *
+         * @param {Object[]} cards
+         */
+        setupAttackRewardCards: function (cards) {
+            if (cards.length <= 0) {
+                return;
+            }
+
+            const topOfStackCardId = this.buildAndPlacePlayedStackOfCards(cards, DOM_ID_ATTACK_REWARD_CARD);
+
+            // place cards from where the animation will start
+            this.placeOnObject(`cards-stack-${topOfStackCardId}`, DOM_ID_CARDS_DECK);
+
+            // move cards to their destination
+            this.slideToObject(`cards-stack-${topOfStackCardId}`, DOM_ID_ATTACK_REWARD_CARD).play();
+        },
+        /**
+         * /!\ 2P mode only
+         *
+         * @param {number} receiverPlayerId
+         * @param {Object[]} cards
+         */
+        moveAttackRewardCardsToPlayer: function (receiverPlayerId, cards) {
+            if (cards.length <= 0) {
+                return;
+            }
+
+            const rewardCardDomId = `cards-stack-${cards[0].id}`;
+            const animation = this.slideToObject(
+                rewardCardDomId,
+                `player-table-${receiverPlayerId}-hand`
+            );
+            dojo.connect(animation, 'onEnd', () => {
+                if (receiverPlayerId === this.player_id) {
+                    this.addCardsToPlayerHand(cards);
+                }
+                this.fadeOutAndDestroy(rewardCardDomId);
+            });
+            animation.play();
         },
         /**
          * @param {Object[]} cards
@@ -1327,28 +1449,7 @@ function (dojo, declare) {
          * @param {Object[]} cards
          */
         receiveCardsFromAnotherPlayer: function (senderId, cards) {
-            if (cards.length <= 0) {
-                return;
-            }
-
-            let animations = [];
-            for (let i = 0; i < cards.length; i++) {
-                const position = this.getCardPositionInSpriteByColorAndValue(cards[i].color, cards[i].value);
-                const backgroundPositionX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position);
-                const backgroundPositionY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position);
-                animations[i] = this.slideTemporaryObject(
-                    `<div class="velonimo-card front-side" style="position: absolute; background-position: -${backgroundPositionX}px -${backgroundPositionY}px; z-index: ${100 - i};"></div>`,
-                    `player-table-${senderId}-hand`,
-                    `player-table-${senderId}-hand`,
-                    `player-table-${this.player_id}-hand`,
-                    1000,
-                    i * 1000
-                );
-                dojo.connect(animations[i], 'onEnd', () => {
-                    this.playerHand.addToStockWithId(position, cards[i].id);
-                });
-                animations[i].play();
-            }
+            this.moveTemporaryCardsFromDomIdToPlayerHand(cards, `player-table-${senderId}-hand`);
         },
         /**
          * @param {number} receiverId
@@ -1401,16 +1502,25 @@ function (dojo, declare) {
          * @param {number} numberOfCards
          */
         moveCardsBetweenTwoOtherPlayers: function (senderId, receiverId, numberOfCards) {
-            for (let i = 0; i < numberOfCards; i++) {
-                this.slideTemporaryObject(
-                    `<div class="velonimo-card back-side" style="position: absolute; z-index: ${100 - i};"></div>`,
-                    `player-table-${senderId}-hand`,
-                    `player-table-${senderId}-hand`,
-                    `player-table-${receiverId}-hand`,
-                    1000,
-                    i * 1000
-                ).play();
-            }
+            this.moveHiddenTemporaryCardsFromDomIdToDomId(`player-table-${senderId}-hand`, `player-table-${receiverId}-hand`, numberOfCards);
+        },
+        /**
+         * @param {number} playerId
+         * @param {number} numberOfCards
+         */
+        increaseNumberOfCardsOfPlayer: function (playerId, numberOfCards) {
+            this.players[playerId].howManyCards = this.players[playerId].howManyCards + numberOfCards;
+
+            this.setupNumberOfCardsInPlayersHand();
+        },
+        /**
+         * @param {number} playerId
+         * @param {number} numberOfCards
+         */
+        decreaseNumberOfCardsOfPlayer: function (playerId, numberOfCards) {
+            this.players[playerId].howManyCards = this.players[playerId].howManyCards - numberOfCards;
+
+            this.setupNumberOfCardsInPlayersHand();
         },
         /**
          * @param {Object[]} cards
@@ -1456,9 +1566,10 @@ function (dojo, declare) {
                 animation.play();
             });
         },
-        discardCards: function () {
+        discardPlayedCards: function () {
             this.playedCardsValue = 0;
-            dojo.query(`.${DOM_CLASS_CARDS_STACK}`).forEach(dojo.destroy);
+            // @TODO: move to discarded cards stack
+            dojo.query(`#${DOM_ID_PLAYED_CARDS_WRAPPER} .${DOM_CLASS_CARDS_STACK}`).forEach(dojo.destroy);
         },
         discardPlayerSpeechBubbles: function () {
             dojo.query(`.${DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW}`).forEach((elementDomId) => {
@@ -1504,6 +1615,21 @@ function (dojo, declare) {
             }
 
             this.requestAction('selectNextPlayer', {
+                selectedPlayerId: selectedPlayerId,
+            });
+        },
+        /**
+         * @param {number} selectedPlayerId
+         */
+        onSelectWhoTakeAttackReward: function (selectedPlayerId) {
+            if (
+                !this.is2PlayersMode()
+                || !this.checkAction('selectWhoTakeAttackReward')
+            ) {
+                return;
+            }
+
+            this.requestAction('selectWhoTakeAttackReward', {
                 selectedPlayerId: selectedPlayerId,
             });
         },
@@ -1558,8 +1684,8 @@ function (dojo, declare) {
         ///////////////////////////////////////////////////
         setupNotifications: function () {
             [
-                ['roundStarted', 1],
                 ['cardsDealt', 1],
+                ['roundStarted', 1],
                 ['cardsPlayed', 1000],
                 ['cardsDiscarded', 1],
                 ['cardsReceivedFromAnotherPlayer', 1000],
@@ -1567,8 +1693,8 @@ function (dojo, declare) {
                 ['cardsMovedBetweenTwoOtherPlayers', 1000],
                 ['roundEnded', 1],
                 /* START 2P */
-                ['attackRewardCardsRevealed', 1000],
                 ['attackRewardCardsMovedToPlayer', 1000],
+                ['attackRewardCardsRevealed', 1000],
                 ['cardsReceivedFromDeck', 1000],
                 ['cardsMovedFromDeckToAnotherPlayer', 1000],
                 /* END 2P */
@@ -1580,12 +1706,6 @@ function (dojo, declare) {
                 this.notifqueue.setSynchronous(name, lockDurationInMs);
             });
         },
-        notif_roundStarted: function (data) {
-            this.currentRound = data.args.currentRound;
-            this.players = data.args.players;
-            this.setupRoundsInfo();
-            this.setupNumberOfCardsInPlayersHand();
-        },
         notif_cardsDealt: function (data) {
             this.playerHand.removeAll();
             this.addCardsToPlayerHand(data.args.cards);
@@ -1595,6 +1715,12 @@ function (dojo, declare) {
             ) {
                 this.addJerseyToPlayerHand();
             }
+        },
+        notif_roundStarted: function (data) {
+            this.currentRound = data.args.currentRound;
+            this.players = data.args.players;
+            this.setupRoundsInfo();
+            this.setupNumberOfCardsInPlayersHand();
         },
         notif_cardsPlayed: function (data) {
             this.discardPlayerSpeechBubbles();
@@ -1608,45 +1734,37 @@ function (dojo, declare) {
             this.moveCardsFromPlayerHandToTable(data.args.playedCardsPlayerId, playedCardsWithJersey);
 
             // update number of cards in players hand
-            this.players[data.args.playedCardsPlayerId].howManyCards = this.players[data.args.playedCardsPlayerId].howManyCards - data.args.playedCards.length;
+            this.decreaseNumberOfCardsOfPlayer(data.args.playedCardsPlayerId, data.args.playedCards.length)
 
             // update jersey state if it has been used
             if (data.args.withJersey) {
                 this.useJerseyForCurrentRound();
             }
-
-            this.setupNumberOfCardsInPlayersHand();
         },
         notif_cardsDiscarded: function (data) {
             this.discardPlayerSpeechBubbles();
-            this.discardCards();
+            this.discardPlayedCards();
         },
         notif_cardsReceivedFromAnotherPlayer: function (data) {
-            this.players[data.args.senderPlayerId].howManyCards = this.players[data.args.senderPlayerId].howManyCards - data.args.cards.length;
+            this.decreaseNumberOfCardsOfPlayer(data.args.senderPlayerId, data.args.cards.length);
 
             this.receiveCardsFromAnotherPlayer(data.args.senderPlayerId, data.args.cards);
 
-            this.players[this.player_id].howManyCards = this.players[this.player_id].howManyCards + data.args.cards.length;
-
-            this.setupNumberOfCardsInPlayersHand();
+            this.increaseNumberOfCardsOfPlayer(this.player_id, data.args.cards.length);
         },
         notif_cardsSentToAnotherPlayer: function (data) {
-            this.players[this.player_id].howManyCards = this.players[this.player_id].howManyCards - data.args.cards.length;
+            this.decreaseNumberOfCardsOfPlayer(this.player_id, data.args.cards.length);
 
             this.sendCardsToAnotherPlayer(data.args.receiverPlayerId, data.args.cards);
 
-            this.players[data.args.receiverPlayerId].howManyCards = this.players[data.args.receiverPlayerId].howManyCards + data.args.cards.length;
-
-            this.setupNumberOfCardsInPlayersHand();
+            this.increaseNumberOfCardsOfPlayer(data.args.receiverPlayerId, data.args.cards.length);
         },
         notif_cardsMovedBetweenTwoOtherPlayers: function (data) {
-            this.players[data.args.senderPlayerId].howManyCards = this.players[data.args.senderPlayerId].howManyCards - data.args.numberOfCards;
+            this.decreaseNumberOfCardsOfPlayer(data.args.senderPlayerId, data.args.numberOfCards);
 
             this.moveCardsBetweenTwoOtherPlayers(data.args.senderPlayerId, data.args.receiverPlayerId, data.args.numberOfCards);
 
-            this.players[data.args.receiverPlayerId].howManyCards = this.players[data.args.receiverPlayerId].howManyCards + data.args.numberOfCards;
-
-            this.setupNumberOfCardsInPlayersHand();
+            this.increaseNumberOfCardsOfPlayer(data.args.receiverPlayerId, data.args.numberOfCards);
         },
         notif_roundEnded: function (data) {
             const currentJerseyWearerId = this.getCurrentJerseyWearerIdIfExists();
@@ -1660,28 +1778,34 @@ function (dojo, declare) {
             this.moveJerseyToCurrentWinner(currentJerseyWearerId);
         },
         /**
-         * 2P mode
-         */
-        notif_attackRewardCardsRevealed: function (data) {
-            // @TODO
-        },
-        /**
-         * 2P mode
+         * /!\ 2P mode only
          */
         notif_attackRewardCardsMovedToPlayer: function (data) {
-            // @TODO
+            this.moveAttackRewardCardsToPlayer(data.args.receiverPlayerId, data.args.cards);
+
+            this.increaseNumberOfCardsOfPlayer(data.args.receiverPlayerId, data.args.cards.length);
         },
         /**
-         * 2P mode
+         * /!\ 2P mode only
+         */
+        notif_attackRewardCardsRevealed: function (data) {
+            this.setupAttackRewardCards(data.args.cards);
+        },
+        /**
+         * /!\ 2P mode only
          */
         notif_cardsReceivedFromDeck: function (data) {
-            // @TODO
+            this.moveCardsFromDeckToPlayerHand(data.args.cards);
+
+            this.increaseNumberOfCardsOfPlayer(this.player_id, data.args.numberOfCards);
         },
         /**
-         * 2P mode
+         * /!\ 2P mode only
          */
         notif_cardsMovedFromDeckToAnotherPlayer: function (data) {
-            // @TODO
+            this.moveCardsFromDeckToAnotherPlayer(data.args.receiverPlayerId, data.args.numberOfCards);
+
+            this.increaseNumberOfCardsOfPlayer(data.args.receiverPlayerId, data.args.numberOfCards);
         },
    });
 });

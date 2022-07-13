@@ -71,6 +71,20 @@ class action_velonimo extends APP_GameAction
         self::ajaxResponse();
     }
 
+    /**
+     * /!\ 2P mode only
+     */
+    public function selectWhoTakeAttackReward()
+    {
+        self::setAjaxMode();
+
+        $selectedPlayerId = trim(self::getArg('selectedPlayerId', AT_int, true));
+
+        $this->game->selectWhoTakeAttackReward((int) $selectedPlayerId);
+
+        self::ajaxResponse();
+    }
+
     public function selectPlayerToPickCards()
     {
         self::setAjaxMode();
