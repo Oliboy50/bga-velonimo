@@ -109,7 +109,12 @@ $machinestates = [
         'description' => '',
         'type' => 'game',
         'action' => 'stActivateNextPlayer',
-        'transitions' => ['firstPlayerTurn' => ST_FIRST_PLAYER_TURN, 'playerTurn' => ST_PLAYER_TURN, 'playerSelectNextPlayer' => ST_PLAYER_SELECT_NEXT_PLAYER],
+        'transitions' => [
+            'firstPlayerTurn' => ST_FIRST_PLAYER_TURN,
+            'playerTurn' => ST_PLAYER_TURN,
+            'playerSelectNextPlayer' => ST_PLAYER_SELECT_NEXT_PLAYER,
+            'playerSelectWhoTakeAttackReward' => ST_PLAYER_SELECT_WHO_TAKE_ATTACK_REWARD,
+        ],
     ],
 
     // The "natural" next player don't have cards anymore,
@@ -134,6 +139,22 @@ $machinestates = [
         'type' => 'game',
         'action' => 'stApplySelectedNextPlayer',
         'transitions' => ['firstPlayerTurn' => ST_FIRST_PLAYER_TURN],
+    ],
+
+    // /!\ 2P mode only
+    // When a player wins an attack,
+    // he has to choose if it takes the reward or if he gives it to its opponent
+    ST_PLAYER_SELECT_WHO_TAKE_ATTACK_REWARD => [
+        'name' => 'playerSelectWhoTakeAttackReward',
+        'description' => clienttranslate('${actplayer} must choose who will take the attacker reward'),
+        'descriptionmyturn' => clienttranslate('${you} must choose who will take the attacker reward'),
+        'type' => 'activeplayer',
+        'args' => 'argPlayerSelectWhoTakeAttackReward',
+        'possibleactions' => ['selectWhoTakeAttackReward'],
+        'transitions' => [
+            'firstPlayerTurn' => ST_FIRST_PLAYER_TURN,
+            'zombiePass' => ST_ACTIVATE_NEXT_PLAYER,
+        ],
     ],
 
     // When someone plays one or more cards of value "1",
