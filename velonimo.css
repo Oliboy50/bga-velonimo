@@ -229,11 +229,19 @@ Board cards
 /* /!\ 2P mode only */
 #cards-deck {
     position: absolute;
-    display: inline-block;
+    display: block;
     top: 177px; /* (containerHeight / 2) - (selfHeight / 2) */
     left: 10px; /* boardMargin */
     width: 90px; /* cardWidth */
     height: 126px; /* cardHeight */
+}
+/* /!\ 2P mode only */
+#cards-deck-cards .card-in-deck {
+    position: absolute;
+    display: block;
+    width: 90px; /* cardWidth */
+    height: 126px; /* cardHeight */
+    border-radius: 5px;
     background-image: url('img/remaining_cards.png');
     background-size: 90px 126px;
 }

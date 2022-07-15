@@ -66,6 +66,7 @@ const CARD_ID_JERSEY = 0;
 const DOM_ID_APP = 'velonimo-game';
 const DOM_ID_BOARD_CARPET = 'board-carpet';
 const DOM_ID_CARDS_DECK = 'cards-deck';
+const DOM_ID_CARDS_DECK_CARDS = 'cards-deck-cards';
 const DOM_ID_ATTACK_REWARD_CARD = 'attack-reward-card';
 const DOM_ID_PLAYED_CARDS_WRAPPER = 'played-cards';
 const DOM_ID_LAST_PLAYED_CARDS = 'last-played-cards';
@@ -183,11 +184,7 @@ const PLAYERS_PLACES_BY_NUMBER_OF_PLAYERS = {
     },
 };
 
-// @TODO: show cards in logs (especially the cards picked/gave for the impacted players)
-// @TODO: support 2 players game
 // @TODO: support "spectators"
-// @TODO: ? be more explicit when the player cannot beat the last played value (idea: disable its cards?)
-// @TODO: ? game rounds topology instead of choosing number of rounds
 define([
     'dojo','dojo/_base/declare',
     'ebg/core/gamegui',
@@ -206,6 +203,8 @@ function (dojo, declare) {
             this.howManyCardsToGiveBack = 0;
             this.players = [];
             this.playerHand = null; // https://en.doc.boardgamearena.com/Stock
+            // /!\ 2P mode only
+            this.howManyCardsInDeck = 0;
         },
         setup: function (gamedatas) {
             this.currentState = gamedatas.gamestate.name;
@@ -262,11 +261,13 @@ function (dojo, declare) {
             // show 2P mode items
             if (this.is2PlayersMode()) {
                 dojo.place(
-                    `<div id="${DOM_ID_CARDS_DECK}"><span class="${DOM_CLASS_TEXT_ON_CARDS}">DE<br/>CK</span></div>
+                    `<div id="${DOM_ID_CARDS_DECK}"><div id="${DOM_ID_CARDS_DECK_CARDS}"></div></div>
 <div id="${DOM_ID_ATTACK_REWARD_CARD}"></div>`,
                     DOM_ID_BOARD_CARPET
                 );
 
+                this.howManyCardsInDeck = gamedatas.numberOfCardsInDeck;
+                this.setupDeckOfCards();
                 this.setupAttackRewardCards(gamedatas.attackRewardCards);
             }
 
@@ -1359,6 +1360,38 @@ function (dojo, declare) {
         },
         /**
          * /!\ 2P mode only
+         */
+        setupDeckOfCards: function () {
+            const numberOfCards = this.howManyCardsInDeck;
+            const maxStackHeightInPx = 10;
+
+            let stackShadow = `box-shadow: ${3}px ${3}px ${10}px ${0}px #222222;`;
+            if (numberOfCards === 1) {
+                stackShadow = '';
+            } else if (numberOfCards < 4) {
+                stackShadow = `box-shadow: ${1}px ${1}px ${10}px ${0}px #222222;`
+            } else if (numberOfCards < 6) {
+                stackShadow = `box-shadow: ${2}px ${2}px ${10}px ${0}px #222222;`
+            }
+
+            let cardsInDeckHtml = '';
+            for (let i = 0; i < numberOfCards; i++) {
+                cardsInDeckHtml += `<div class="card-in-deck" style="top: -${Math.min(i/4, maxStackHeightInPx)}px; left: -${Math.min(i/4, maxStackHeightInPx)}px; ${i === 0 ? stackShadow : ''}"></div>`;
+            }
+
+            $(DOM_ID_CARDS_DECK_CARDS).innerHTML = cardsInDeckHtml;
+        },
+        /**
+         * /!\ 2P mode only
+         *
+         * @param {number} numberOfCards
+         */
+        decreaseNumberOfCardsInDeck: function (numberOfCards) {
+            this.howManyCardsInDeck = (this.howManyCardsInDeck || numberOfCards) - numberOfCards;
+            this.setupDeckOfCards();
+        },
+        /**
+         * /!\ 2P mode only
          *
          * @param {Object[]} cards
          */
@@ -1568,7 +1601,6 @@ function (dojo, declare) {
         },
         discardPlayedCards: function () {
             this.playedCardsValue = 0;
-            // @TODO: move to discarded cards stack
             dojo.query(`#${DOM_ID_PLAYED_CARDS_WRAPPER} .${DOM_CLASS_CARDS_STACK}`).forEach(dojo.destroy);
         },
         discardPlayerSpeechBubbles: function () {
@@ -1718,9 +1750,13 @@ function (dojo, declare) {
         },
         notif_roundStarted: function (data) {
             this.currentRound = data.args.currentRound;
-            this.players = data.args.players;
             this.setupRoundsInfo();
+
+            this.players = data.args.players;
             this.setupNumberOfCardsInPlayersHand();
+
+            this.howManyCardsInDeck = data.args.numberOfCardsInDeck;
+            this.setupDeckOfCards();
         },
         notif_cardsPlayed: function (data) {
             this.discardPlayerSpeechBubbles();
@@ -1789,6 +1825,7 @@ function (dojo, declare) {
          * /!\ 2P mode only
          */
         notif_attackRewardCardsRevealed: function (data) {
+            this.decreaseNumberOfCardsInDeck(data.args.cards.length);
             this.setupAttackRewardCards(data.args.cards);
         },
         /**
@@ -1797,6 +1834,7 @@ function (dojo, declare) {
         notif_cardsReceivedFromDeck: function (data) {
             this.moveCardsFromDeckToPlayerHand(data.args.cards);
 
+            this.decreaseNumberOfCardsInDeck(data.args.numberOfCards);
             this.increaseNumberOfCardsOfPlayer(this.player_id, data.args.numberOfCards);
         },
         /**
@@ -1805,6 +1843,7 @@ function (dojo, declare) {
         notif_cardsMovedFromDeckToAnotherPlayer: function (data) {
             this.moveCardsFromDeckToAnotherPlayer(data.args.receiverPlayerId, data.args.numberOfCards);
 
+            this.decreaseNumberOfCardsInDeck(data.args.numberOfCards);
             this.increaseNumberOfCardsOfPlayer(data.args.receiverPlayerId, data.args.numberOfCards);
         },
    });

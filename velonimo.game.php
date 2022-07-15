@@ -822,6 +822,7 @@ class Velonimo extends Table
         self::notifyAllPlayers('roundStarted', 'Round #${currentRound} starts', [
             'currentRound' => $newRound,
             'players' => $this->formatPlayersForClient($players),
+            'numberOfCardsInDeck' => $this->getNumberOfCardsInDeck(),
         ]);
 
         if ($this->is2PlayersMode($players)) {
