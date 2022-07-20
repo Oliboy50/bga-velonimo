@@ -86,10 +86,6 @@ Board
     box-shadow: 2px 2px 5px black;
     border: 1px solid #3b3119;
 }
-/* @TODO: remove if unused */
-#board-carpet.yellow {
-    background-color: #e9c646;
-}
 
 .player-table {
     position: absolute; /* position is dynamically computed */
@@ -101,7 +97,7 @@ Board
     box-sizing: border-box;
     background-color: rgba(255,255,255,0.7);
     padding: 5px;
-    z-index: 2;
+    z-index: 0;
 }
 .player-table.active {
     border: 2px solid #ff0000;
@@ -348,6 +344,9 @@ END Cards
 /**
 Animations
  */
+.moving-card {
+    z-index: 100;
+}
 .moving-jersey {
     position: absolute;
     width: 65px;

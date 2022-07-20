@@ -184,7 +184,6 @@ const PLAYERS_PLACES_BY_NUMBER_OF_PLAYERS = {
     },
 };
 
-// @TODO: support "spectators"
 define([
     'dojo','dojo/_base/declare',
     'ebg/core/gamegui',
@@ -271,7 +270,6 @@ function (dojo, declare) {
                 this.setupAttackRewardCards(gamedatas.attackRewardCards);
             }
 
-            // @TODO: support spectators (do not show "my hand" in this case)
             // Init playerHand "ebg.stock" component
             this.playerHand = new ebg.stock();
             this.playerHand.create(this, $(DOM_ID_PLAYER_HAND), CARD_WIDTH, CARD_HEIGHT);
@@ -622,10 +620,7 @@ function (dojo, declare) {
             }
         },
         setupGiveCardsBackAfterPickingActionButton: function () {
-            if (this.playerHand.isSelected(CARD_ID_JERSEY)) {
-                this.playerHand.unselectItem(CARD_ID_JERSEY);
-            }
-            this.displayCardsAsNonSelectable(this.addJerseyToCards([]));
+            this.refreshPlayerHandSelectableCards();
 
             const selectedCards = this.getSelectedPlayerCards();
             if (!$(DOM_ID_ACTION_BUTTON_GIVE_CARDS)) {
@@ -1201,23 +1196,33 @@ function (dojo, declare) {
                 }
             });
 
-            // display non-selectable cards as non-selectable
-            this.displayCardsAsNonSelectable(
-                this.getSelectedPlayerCards()
-                    .reduce(this.getPlayerCardsThatCannotBePlayedWithCardsReducer(playerCards), [])
-            );
+            this.refreshPlayerHandSelectableCards();
         },
         /**
          * @param {number} cardId
          */
         onPlayerCardUnselected: function (cardId) {
+            this.refreshPlayerHandSelectableCards();
+        },
+        refreshPlayerHandSelectableCards: function () {
             const playerCards = this.getAllPlayerCards();
+            const selectedCards = this.getSelectedPlayerCards();
 
-            // display non-selectable cards as non-selectable
-            this.displayCardsAsNonSelectable(
-                this.getSelectedPlayerCards()
-                    .reduce(this.getPlayerCardsThatCannotBePlayedWithCardsReducer(playerCards), [])
-            );
+            if (
+                this.isCurrentPlayerActive()
+                && this.currentState === 'playerGiveCardsBackAfterPicking'
+            ) {
+                if (this.playerHand.isSelected(CARD_ID_JERSEY)) {
+                    this.playerHand.unselectItem(CARD_ID_JERSEY);
+                }
+                this.displayCardsAsNonSelectable(this.addJerseyToCards([]));
+            } else if (selectedCards.length === 0) {
+                this.displayCardsAsNonSelectable([]);
+            } else {
+                this.displayCardsAsNonSelectable(
+                    selectedCards.reduce(this.getPlayerCardsThatCannotBePlayedWithCardsReducer(playerCards), [])
+                );
+            }
         },
         /**
          * @param {Object[]} cards
@@ -1233,7 +1238,7 @@ function (dojo, declare) {
         },
         unselectAllCards: function () {
             this.playerHand.unselectAll();
-            this.displayCardsAsNonSelectable([]);
+            this.refreshPlayerHandSelectableCards();
         },
         /**
          * @param {Object[]} cards
@@ -1311,7 +1316,7 @@ function (dojo, declare) {
                 const backgroundPositionX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position);
                 const backgroundPositionY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position);
                 animations[i] = this.slideTemporaryObject(
-                    `<div class="velonimo-card front-side" style="position: absolute; background-position: -${backgroundPositionX}px -${backgroundPositionY}px; z-index: ${100 - i};"></div>`,
+                    `<div class="velonimo-card front-side moving-card" style="position: absolute; background-position: -${backgroundPositionX}px -${backgroundPositionY}px; z-index: ${100 - i};"></div>`,
                     domId,
                     domId,
                     `player-table-${this.player_id}-hand`,
@@ -1320,6 +1325,7 @@ function (dojo, declare) {
                 );
                 dojo.connect(animations[i], 'onEnd', () => {
                     this.playerHand.addToStockWithId(position, cards[i].id);
+                    this.refreshPlayerHandSelectableCards();
                 });
                 animations[i].play();
             }
@@ -1332,7 +1338,7 @@ function (dojo, declare) {
         moveHiddenTemporaryCardsFromDomIdToDomId: function (fromDomId, toDomId, numberOfCards) {
             for (let i = 0; i < numberOfCards; i++) {
                 this.slideTemporaryObject(
-                    `<div class="velonimo-card back-side" style="position: absolute; z-index: ${100 - i};"></div>`,
+                    `<div class="velonimo-card back-side moving-card" style="position: absolute; z-index: ${100 - i};"></div>`,
                     fromDomId,
                     fromDomId,
                     toDomId,
@@ -1427,6 +1433,7 @@ function (dojo, declare) {
             dojo.connect(animation, 'onEnd', () => {
                 if (receiverPlayerId === this.player_id) {
                     this.addCardsToPlayerHand(cards);
+                    this.refreshPlayerHandSelectableCards();
                 }
                 this.fadeOutAndDestroy(rewardCardDomId);
             });
@@ -1467,6 +1474,7 @@ function (dojo, declare) {
                 this.placeOnObject(`cards-stack-${topOfStackCardId}`, `${DOM_ID_PLAYER_HAND}_item_${topOfStackCardId}`);
                 cards.forEach((card) => {
                     this.playerHand.removeFromStockById(card.id);
+                    this.refreshPlayerHandSelectableCards();
                 });
             }
 
@@ -1513,7 +1521,7 @@ function (dojo, declare) {
                 const backgroundPositionY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position);
                 const animationStartDomId = $(`${DOM_ID_PLAYER_HAND}_item_${sortedCards[i].id}`) ? `${DOM_ID_PLAYER_HAND}_item_${sortedCards[i].id}` : `player-table-${this.player_id}-hand`;
                 animations[i] = this.slideTemporaryObject(
-                    `<div class="velonimo-card front-side" style="position: absolute; background-position: -${backgroundPositionX}px -${backgroundPositionY}px; z-index: ${100 - i};"></div>`,
+                    `<div class="velonimo-card front-side moving-card" style="position: absolute; background-position: -${backgroundPositionX}px -${backgroundPositionY}px; z-index: ${100 - i};"></div>`,
                     `player-table-${this.player_id}-hand`,
                     animationStartDomId,
                     `player-table-${receiverId}-hand`,
@@ -1523,11 +1531,13 @@ function (dojo, declare) {
                 dojo.connect(animations[i], 'onEnd', () => {
                     if (sortedCards[i + 1]) {
                         this.playerHand.removeFromStockById(sortedCards[i + 1].id);
+                        this.refreshPlayerHandSelectableCards();
                     }
                 });
                 animations[i].play();
             }
             this.playerHand.removeFromStockById(sortedCards[0].id);
+            this.refreshPlayerHandSelectableCards();
         },
         /**
          * @param {number} senderId
@@ -1589,9 +1599,10 @@ function (dojo, declare) {
             }
 
             this.playerHand.removeFromStockById(CARD_ID_JERSEY);
+            this.refreshPlayerHandSelectableCards();
         },
         movePlayedCardsToPreviousPlayedCards: function () {
-            dojo.query(`.${DOM_CLASS_CARDS_STACK_PREVIOUS_PLAYED}`).forEach(dojo.destroy);
+            dojo.query(`.${DOM_CLASS_CARDS_STACK_PREVIOUS_PLAYED}`).forEach(this.fadeOutAndDestroy);
             dojo.query(`#${DOM_ID_LAST_PLAYED_CARDS} .${DOM_CLASS_CARDS_STACK}`).forEach((elementDomId) => {
                 dojo.addClass(elementDomId, DOM_CLASS_CARDS_STACK_PREVIOUS_PLAYED);
                 const animation = this.slideToObject(elementDomId, DOM_ID_PREVIOUS_LAST_PLAYED_CARDS);
@@ -1599,9 +1610,12 @@ function (dojo, declare) {
                 animation.play();
             });
         },
+        discardAttackRewardCards: function () {
+            dojo.query(`#${DOM_ID_ATTACK_REWARD_CARD} .${DOM_CLASS_CARDS_STACK}`).forEach(this.fadeOutAndDestroy);
+        },
         discardPlayedCards: function () {
             this.playedCardsValue = 0;
-            dojo.query(`#${DOM_ID_PLAYED_CARDS_WRAPPER} .${DOM_CLASS_CARDS_STACK}`).forEach(dojo.destroy);
+            dojo.query(`#${DOM_ID_PLAYED_CARDS_WRAPPER} .${DOM_CLASS_CARDS_STACK}`).forEach(this.fadeOutAndDestroy);
         },
         discardPlayerSpeechBubbles: function () {
             dojo.query(`.${DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW}`).forEach((elementDomId) => {
@@ -1719,23 +1733,32 @@ function (dojo, declare) {
                 ['cardsDealt', 1],
                 ['roundStarted', 1],
                 ['cardsPlayed', 1000],
-                ['cardsDiscarded', 1],
+                ['playedCardsDiscarded', 1],
                 ['cardsReceivedFromAnotherPlayer', 1000],
                 ['cardsSentToAnotherPlayer', 1000],
-                ['cardsMovedBetweenTwoOtherPlayers', 1000],
+                ['cardsMovedBetweenTwoOtherPlayers', 1000, (notif) => (notif.args.receiverPlayerId === this.player_id || notif.args.senderPlayerId === this.player_id)],
                 ['roundEnded', 1],
-                /* START 2P */
+                // /!\ 2P mode only
+                ['attackRewardCardsDiscarded', 1],
+                // /!\ 2P mode only
                 ['attackRewardCardsMovedToPlayer', 1000],
+                // /!\ 2P mode only
                 ['attackRewardCardsRevealed', 1000],
+                // /!\ 2P mode only
                 ['cardsReceivedFromDeck', 1000],
-                ['cardsMovedFromDeckToAnotherPlayer', 1000],
-                /* END 2P */
+                // /!\ 2P mode only
+                ['cardsMovedFromDeckToAnotherPlayer', 1000, (notif) => notif.args.receiverPlayerId === this.player_id],
             ].forEach((notif) => {
                 const name = notif[0];
                 const lockDurationInMs = notif[1];
+                const ignoreNotifIfTrue = notif[2];
 
                 dojo.subscribe(name, this, `notif_${name}`);
                 this.notifqueue.setSynchronous(name, lockDurationInMs);
+
+                if (ignoreNotifIfTrue) {
+                    this.notifqueue.setIgnoreNotificationCheck(name, ignoreNotifIfTrue);
+                }
             });
         },
         notif_cardsDealt: function (data) {
@@ -1747,6 +1770,7 @@ function (dojo, declare) {
             ) {
                 this.addJerseyToPlayerHand();
             }
+            this.refreshPlayerHandSelectableCards();
         },
         notif_roundStarted: function (data) {
             this.currentRound = data.args.currentRound;
@@ -1777,7 +1801,7 @@ function (dojo, declare) {
                 this.useJerseyForCurrentRound();
             }
         },
-        notif_cardsDiscarded: function (data) {
+        notif_playedCardsDiscarded: function (data) {
             this.discardPlayerSpeechBubbles();
             this.discardPlayedCards();
         },
@@ -1812,6 +1836,12 @@ function (dojo, declare) {
             // in order to have a beautiful jersey for the winner of the game (at the very end)
             this.restoreJerseyForCurrentRound();
             this.moveJerseyToCurrentWinner(currentJerseyWearerId);
+        },
+        /**
+         * /!\ 2P mode only
+         */
+        notif_attackRewardCardsDiscarded: function (data) {
+            this.discardAttackRewardCards();
         },
         /**
          * /!\ 2P mode only
