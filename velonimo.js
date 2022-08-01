@@ -72,9 +72,12 @@ const DOM_ID_PLAYED_CARDS_WRAPPER = 'played-cards';
 const DOM_ID_LAST_PLAYED_CARDS = 'last-played-cards';
 const DOM_ID_PREVIOUS_LAST_PLAYED_CARDS = 'previous-last-played-cards';
 const DOM_ID_PLAYER_HAND = 'my-hand';
+const DOM_ID_PLAYER_HAND_TITLE_WRAPPER = 'my-hand-title-wrapper';
 const DOM_ID_PLAYER_HAND_TITLE = 'my-hand-title';
 const DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON = 'toggle-sort-button';
 const DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL = 'toggle-sort-button-label';
+const DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON = 'group-cards-button';
+const DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON = 'ungroup-cards-button';
 const DOM_ID_CURRENT_ROUND = 'current-round';
 const DOM_ID_ACTION_BUTTON_PLAY_CARDS = 'action-button-play-cards';
 const DOM_ID_ACTION_BUTTON_PASS_TURN = 'action-button-pass-turn';
@@ -95,6 +98,9 @@ const DOM_CLASS_NON_SELECTABLE_CARD = 'non-selectable-player-card';
 const DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW = 'show-bubble';
 const DOM_CLASS_SPEECH_BUBBLE_LEFT = 'speech-bubble-on-left';
 const DOM_CLASS_SPEECH_BUBBLE_RIGHT = 'speech-bubble-on-right';
+const DOM_CLASS_CARDS_GROUP_CARD = 'cards-group-card';
+const DOM_CLASS_CARDS_GROUP_CARD_LEFT = 'cards-group-card-left';
+const DOM_CLASS_CARDS_GROUP_CARD_RIGHT = 'cards-group-card-right';
 
 // Player hand sorting modes
 const PLAYER_HAND_SORT_BY_COLOR = 'color';
@@ -193,7 +199,7 @@ define([
 function (dojo, declare) {
     return declare('bgagame.velonimo', ebg.core.gamegui, {
         constructor: function () {
-            this.currentState = null;
+            this.resetCurrentState();
             this.currentRound = 0;
             this.currentPlayerHasJersey = false;
             this.jerseyHasBeenUsedInTheCurrentRound = false;
@@ -204,6 +210,7 @@ function (dojo, declare) {
             this.playerHand = null; // https://en.doc.boardgamearena.com/Stock
             // /!\ 2P mode only
             this.howManyCardsInDeck = 0;
+            this.resetCardsGroups();
         },
         setup: function (gamedatas) {
             this.currentState = gamedatas.gamestate.name;
@@ -226,7 +233,7 @@ function (dojo, declare) {
     </div>
 </div>
 <div id="my-hand-wrapper" class="whiteblock">
-    <div id="my-hand-title-wrapper">
+    <div id="${DOM_ID_PLAYER_HAND_TITLE_WRAPPER}">
         <h3 id="${DOM_ID_PLAYER_HAND_TITLE}">${_('My hand')}</h3>
         <a href="javascript:void(0)" id="${DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON}" class="bgabutton bgabutton_gray"><span id="${DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL}"></span></a>
     </div>
@@ -292,7 +299,18 @@ function (dojo, declare) {
 
 
             // Setup currentPlayer cards
-            dojo.connect(this.playerHand, 'onChangeSelection', this, 'onPlayerHandSelectionChanged');
+            dojo.connect(this.playerHand, 'onChangeSelection', this, (_, itemId) => {
+                if (typeof itemId === 'undefined') {
+                    return;
+                }
+
+                const cardId = parseInt(itemId, 10);
+                if (this.playerHand.isSelected(cardId)) {
+                    this.onPlayerCardSelected(cardId);
+                } else {
+                    this.onPlayerCardUnselected(cardId);
+                }
+            });
             this.addCardsToPlayerHand(gamedatas.currentPlayerCards);
 
             // Setup cards played on table
@@ -379,8 +397,7 @@ function (dojo, declare) {
                     break;
             }
 
-            // reset currentState
-            this.currentState = null;
+            this.resetCurrentState();
         },
         onUpdateActionButtons: function (state, args) {
             this.removeActionButtons();
@@ -405,37 +422,6 @@ function (dojo, declare) {
                         this.unselectAllCards();
                     }
                     this.setupGiveCardsBackAfterPickingActionButton();
-                    break;
-            }
-        },
-        onPlayerHandSelectionChanged: function (controlName, itemId) {
-            if (typeof itemId === 'undefined') {
-                return;
-            }
-            const isCurrentPlayerActive = this.isCurrentPlayerActive();
-
-            if (
-                isCurrentPlayerActive
-                && this.currentState === 'playerGiveCardsBackAfterPicking'
-            ) {
-                this.setupGiveCardsBackAfterPickingActionButton();
-                return;
-            }
-
-            // cards combo helper (disable cards that cannot be played with current selection)
-            const cardId = parseInt(itemId, 10);
-            if (this.playerHand.isSelected(cardId)) {
-                this.onPlayerCardSelected(cardId);
-            } else {
-                this.onPlayerCardUnselected(cardId);
-            }
-
-            switch (this.currentState) {
-                case 'firstPlayerTurn':
-                case 'playerTurn':
-                    if (isCurrentPlayerActive && this.currentPlayerCanPlayCards()) {
-                        this.setupPlayCardsActionButton();
-                    }
                     break;
             }
         },
@@ -471,7 +457,6 @@ function (dojo, declare) {
          *  - the current player is spectator
          *  - the current player is in replay mode
          *  - the game has ended (a.k.a. archive mode)
-         *
          * @see https://en.doc.boardgamearena.com/Game_interface_logic:_yourgamename.js
          *
          * @returns {boolean}
@@ -579,6 +564,18 @@ function (dojo, declare) {
                 }
             });
         },
+        setupPlayCardsActionButtonIfNeeded: function () {
+            if (
+                this.isCurrentPlayerActive()
+                && (
+                    this.currentState === 'firstPlayerTurn'
+                    || this.currentState === 'playerTurn'
+                )
+                && this.currentPlayerCanPlayCards()
+            ) {
+                this.setupPlayCardsActionButton();
+            }
+        },
         setupPlayCardsActionButton: function () {
             const selectedCards = this.getSelectedPlayerCards();
             const selectedCardsValue = this.getCardsValue(selectedCards);
@@ -620,11 +617,11 @@ function (dojo, declare) {
             }
         },
         setupGiveCardsBackAfterPickingActionButton: function () {
-            this.refreshPlayerHandSelectableCards();
+            this.setupPlayerHandSelectableCards();
 
             const selectedCards = this.getSelectedPlayerCards();
             if (!$(DOM_ID_ACTION_BUTTON_GIVE_CARDS)) {
-                this.addActionButton(DOM_ID_ACTION_BUTTON_GIVE_CARDS, _('Give selected cards'), () => this.onSelectCardsToGiveBack());
+                this.addActionButton(DOM_ID_ACTION_BUTTON_GIVE_CARDS, _('Give selected cards'), 'onSelectCardsToGiveBack');
             }
             dojo.toggleClass(DOM_ID_ACTION_BUTTON_GIVE_CARDS, DOM_CLASS_DISABLED_ACTION_BUTTON, (selectedCards.length === 0) || (selectedCards.length !== this.howManyCardsToGiveBack));
         },
@@ -714,6 +711,26 @@ function (dojo, declare) {
                     return 49;
             }
         },
+        getSortingWeightForCardsGroups: function () {
+            const cardsWeightByPosition = {};
+            this.cardsGroups.forEach((group) => {
+                const groupValue = this.getCardsValue(group.cards);
+                group.cards.forEach((card, i) => {
+                    const cardPosition = this.getCardPositionInSpriteByColorAndValue(card.color, card.value);
+                    cardsWeightByPosition[cardPosition] = ((-10 * group.id) - (1000 * groupValue)) + i;
+                });
+            });
+
+            return cardsWeightByPosition;
+        },
+        sortPlayerCardsByCurrentSortingMode: function () {
+            const currentSortingMode = this.getCurrentPlayerCardsSortingMode();
+            if (currentSortingMode === PLAYER_HAND_SORT_BY_COLOR) {
+                this.sortPlayerCardsByColor();
+            } else {
+                this.sortPlayerCardsByValue();
+            }
+        },
         sortPlayerCardsByColor: function () {
             const cardsWeightByPosition = {};
             this.execFnForEachCardsInGame((color, value) => {
@@ -721,7 +738,7 @@ function (dojo, declare) {
                 cardsWeightByPosition[cardPositionAndWeight] = cardPositionAndWeight;
             });
 
-            this.playerHand.changeItemsWeight(cardsWeightByPosition);
+            this.playerHand.changeItemsWeight(Object.assign(cardsWeightByPosition, this.getSortingWeightForCardsGroups()));
         },
         /**
          * @param {number} color
@@ -737,7 +754,7 @@ function (dojo, declare) {
                 cardsWeightByPosition[this.getCardPositionInSpriteByColorAndValue(color, value)] = this.getCardWeightForColorAndValueToSortThemByValue(color, value);
             });
 
-            this.playerHand.changeItemsWeight(cardsWeightByPosition);
+            this.playerHand.changeItemsWeight(Object.assign(cardsWeightByPosition, this.getSortingWeightForCardsGroups()));
         },
         /**
          * @param {number} position
@@ -1025,14 +1042,22 @@ function (dojo, declare) {
             });
         },
         /**
-         * @param {Object[]} playerCards
-         * @returns {function (Object[], Object, number, Object[]): Object[]}
+         * @param {Object[]} cards
+         * @returns {Object[]}
          */
-        getPlayerCardsThatCanBePlayedWithCardsReducer: function (playerCards) {
-            return (acc, card, i, cards) => acc.concat(
-                this.getCardsThatCanBePlayedWithCard(card.color, card.value, playerCards)
-                    .filter((c) => acc.every((accCard) => c.id !== accCard.id))
-            ).filter((c) => cards.every((cardsCard) => c.id !== cardsCard.id));
+        getPlayerCardsThatCanBePlayedWithCards: function (cards) {
+            const playerCards = this.getAllPlayerCards();
+            if (cards.length === 0) {
+                return playerCards;
+            }
+
+            return cards.reduce(
+                (acc, card, i, cards) => acc.concat(
+                    this.getCardsThatCanBePlayedWithCard(card.color, card.value, playerCards)
+                        .filter((c) => acc.every((accCard) => c.id !== accCard.id))
+                ).filter((c) => cards.every((cardsCard) => c.id !== cardsCard.id)),
+                []
+            );
         },
         /**
          * @param {number} color
@@ -1061,13 +1086,22 @@ function (dojo, declare) {
             });
         },
         /**
-         * @param {Object[]} playerCards
-         * @returns {function (Object[], Object): Object[]}
+         * @param {Object[]} cards
+         * @returns {Object[]}
          */
-        getPlayerCardsThatCannotBePlayedWithCardsReducer: function (playerCards) {
-            return (acc, card) => acc.concat(
-                this.getCardsThatCannotBePlayedWithCard(card.color, card.value, playerCards)
-                    .filter((c) => acc.every((accCard) => c.id !== accCard.id))
+        getPlayerCardsThatCannotBePlayedWithCards: function (cards) {
+            if (cards.length === 0) {
+                return [];
+            }
+
+            const playerCards = this.getAllPlayerCards();
+
+            return cards.reduce(
+                (acc, card) => acc.concat(
+                    this.getCardsThatCannotBePlayedWithCard(card.color, card.value, playerCards)
+                        .filter((c) => acc.every((accCard) => c.id !== accCard.id))
+                ),
+                []
             );
         },
         /**
@@ -1091,8 +1125,7 @@ function (dojo, declare) {
             const playerCards = this.getAllPlayerCards();
             const sortCardsById = (a, b) => a.id - b.id;
             const highestPlayableGroupOfCards = playerCards.reduce((acc, card) => {
-                const cardsThatCanBePlayedWithCard = [card]
-                    .reduce(this.getPlayerCardsThatCanBePlayedWithCardsReducer(playerCards), []);
+                const cardsThatCanBePlayedWithCard = this.getPlayerCardsThatCanBePlayedWithCards([card]);
 
                 if (!cardsThatCanBePlayedWithCard.length) {
                     // add single card combination
@@ -1175,37 +1208,7 @@ function (dojo, declare) {
 
             return this.playedCardsValue < (playerCardsCombinations[0].value + (playerCanPlayJersey ? VALUE_JERSEY : 0));
         },
-        /**
-         * @param {number} cardId
-         */
-        onPlayerCardSelected: function (cardId) {
-            const playerCards = this.getAllPlayerCards();
-            const selectedCards = this.getSelectedPlayerCards();
-            const playerCardsThatCannotBePlayedWithSelectedCards = selectedCards.reduce(
-                this.getPlayerCardsThatCannotBePlayedWithCardsReducer(playerCards),
-                []
-            );
-
-            // unselect selected cards that cannot be played with the last selected card
-            selectedCards.forEach((card) => {
-                if (
-                    playerCardsThatCannotBePlayedWithSelectedCards.map((c) => c.id).includes(card.id)
-                    && cardId !== card.id
-                ) {
-                    this.playerHand.unselectItem(card.id);
-                }
-            });
-
-            this.refreshPlayerHandSelectableCards();
-        },
-        /**
-         * @param {number} cardId
-         */
-        onPlayerCardUnselected: function (cardId) {
-            this.refreshPlayerHandSelectableCards();
-        },
-        refreshPlayerHandSelectableCards: function () {
-            const playerCards = this.getAllPlayerCards();
+        setupPlayerHandSelectableCards: function () {
             const selectedCards = this.getSelectedPlayerCards();
 
             if (
@@ -1216,12 +1219,8 @@ function (dojo, declare) {
                     this.playerHand.unselectItem(CARD_ID_JERSEY);
                 }
                 this.displayCardsAsNonSelectable(this.addJerseyToCards([]));
-            } else if (selectedCards.length === 0) {
-                this.displayCardsAsNonSelectable([]);
             } else {
-                this.displayCardsAsNonSelectable(
-                    selectedCards.reduce(this.getPlayerCardsThatCannotBePlayedWithCardsReducer(playerCards), [])
-                );
+                this.displayCardsAsNonSelectable(this.getPlayerCardsThatCannotBePlayedWithCards(selectedCards));
             }
         },
         /**
@@ -1236,9 +1235,43 @@ function (dojo, declare) {
                 );
             });
         },
+        /**
+         * @param {Object[]} cards
+         */
+        selectCards: function (cards) {
+            cards.forEach((c) => {
+                if (
+                    $(`${DOM_ID_PLAYER_HAND}_item_${c.id}`)
+                    && !this.playerHand.isSelected(c.id)
+                ) {
+                    this.playerHand.selectItem(c.id);
+                }
+            });
+            this.setupPlayerHandSelectableCards();
+            this.setupGroupCardsButton();
+            this.setupPlayCardsActionButtonIfNeeded();
+        },
+        /**
+         * @param {Object[]} cards
+         */
+        unselectCards: function (cards) {
+            cards.forEach((c) => {
+                if (
+                    $(`${DOM_ID_PLAYER_HAND}_item_${c.id}`)
+                    && this.playerHand.isSelected(c.id)
+                ) {
+                    this.playerHand.unselectItem(c.id);
+                }
+            });
+            this.setupPlayerHandSelectableCards();
+            this.setupGroupCardsButton();
+            this.setupPlayCardsActionButtonIfNeeded();
+        },
         unselectAllCards: function () {
             this.playerHand.unselectAll();
-            this.refreshPlayerHandSelectableCards();
+            this.setupPlayerHandSelectableCards();
+            this.setupGroupCardsButton();
+            this.setupPlayCardsActionButtonIfNeeded();
         },
         /**
          * @param {Object[]} cards
@@ -1325,7 +1358,7 @@ function (dojo, declare) {
                 );
                 dojo.connect(animations[i], 'onEnd', () => {
                     this.playerHand.addToStockWithId(position, cards[i].id);
-                    this.refreshPlayerHandSelectableCards();
+                    this.setupPlayerHandSelectableCards();
                 });
                 animations[i].play();
             }
@@ -1433,7 +1466,7 @@ function (dojo, declare) {
             dojo.connect(animation, 'onEnd', () => {
                 if (receiverPlayerId === this.player_id) {
                     this.addCardsToPlayerHand(cards);
-                    this.refreshPlayerHandSelectableCards();
+                    this.setupPlayerHandSelectableCards();
                 }
                 this.fadeOutAndDestroy(rewardCardDomId);
             });
@@ -1473,8 +1506,7 @@ function (dojo, declare) {
             } else if ($(`${DOM_ID_PLAYER_HAND}_item_${topOfStackCardId}`)) {
                 this.placeOnObject(`cards-stack-${topOfStackCardId}`, `${DOM_ID_PLAYER_HAND}_item_${topOfStackCardId}`);
                 cards.forEach((card) => {
-                    this.playerHand.removeFromStockById(card.id);
-                    this.refreshPlayerHandSelectableCards();
+                    this.removeCardFromPlayerHand(card.id);
                 });
             }
 
@@ -1530,14 +1562,16 @@ function (dojo, declare) {
                 );
                 dojo.connect(animations[i], 'onEnd', () => {
                     if (sortedCards[i + 1]) {
-                        this.playerHand.removeFromStockById(sortedCards[i + 1].id);
-                        this.refreshPlayerHandSelectableCards();
+                        this.removeCardFromPlayerHand(sortedCards[i + 1].id);
+                    }
+                    // sort cards after the last animation (in case a group has been removed)
+                    if (i + 1 === sortedCards.length) {
+                        this.sortPlayerCardsByCurrentSortingMode();
                     }
                 });
                 animations[i].play();
             }
-            this.playerHand.removeFromStockById(sortedCards[0].id);
-            this.refreshPlayerHandSelectableCards();
+            this.removeCardFromPlayerHand(sortedCards[0].id);
         },
         /**
          * @param {number} senderId
@@ -1598,8 +1632,7 @@ function (dojo, declare) {
                 return;
             }
 
-            this.playerHand.removeFromStockById(CARD_ID_JERSEY);
-            this.refreshPlayerHandSelectableCards();
+            this.removeCardFromPlayerHand(CARD_ID_JERSEY);
         },
         movePlayedCardsToPreviousPlayedCards: function () {
             dojo.query(`.${DOM_CLASS_CARDS_STACK_PREVIOUS_PLAYED}`).forEach(this.fadeOutAndDestroy);
@@ -1622,10 +1655,296 @@ function (dojo, declare) {
                 dojo.removeClass(elementDomId, DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW);
             });
         },
+        /**
+         * @returns {string}
+         */
+        getCurrentPlayerCardsSortingMode: function () {
+            return dojo.attr(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, 'data-current-sort');
+        },
+        setupGroupCardsButton: function () {
+            // clean cards group buttons
+            if ($(DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON)) {
+                this.disconnect($(DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON), 'onclick');
+                dojo.destroy(DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON);
+            }
+            if ($(DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON)) {
+                this.disconnect($(DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON), 'onclick');
+                dojo.destroy(DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON);
+            }
+
+            const selectedCards = this.getSelectedPlayerCards();
+            if (!selectedCards.length) {
+                return;
+            }
+
+            const selectedCardsGroup = this.getCardsGroupForCards(selectedCards);
+            if (selectedCardsGroup) {
+                if (!$(DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON)) {
+                    dojo.place(
+                        `<a href="javascript:void(0)" id="${DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON}" class="bgabutton bgabutton_red"><span>${_('Ungroup cards')}</span></a>`,
+                        DOM_ID_PLAYER_HAND_TITLE_WRAPPER
+                    );
+                    this.connect($(DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON), 'onclick', 'onClickOnUngroupCardsButton');
+                }
+            } else if (selectedCards.length > 1) {
+                if (!$(DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON)) {
+                    dojo.place(
+                        `<a href="javascript:void(0)" id="${DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON}" class="bgabutton bgabutton_blue"><span>${_('Group cards')}</span></a>`,
+                        DOM_ID_PLAYER_HAND_TITLE_WRAPPER
+                    );
+                    this.connect($(DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON), 'onclick', 'onClickOnGroupCardsButton');
+                }
+            }
+        },
+        /**
+         * @param {number} cardId
+         */
+        selectOtherCardsInSameGroupOfCard: function (cardId) {
+            const selectedCardsGroup = this.getCardsGroupOfCard(cardId);
+            if (!selectedCardsGroup) {
+                return;
+            }
+
+            selectedCardsGroup.cards.forEach((c) => {
+                if (
+                    $(`${DOM_ID_PLAYER_HAND}_item_${c.id}`)
+                    && !this.playerHand.isSelected(c.id)
+                ) {
+                    this.playerHand.selectItem(c.id);
+                }
+            });
+        },
+        /**
+         * @param {number} cardId
+         * @returns {Object|undefined}
+         */
+        getCardsGroupOfCard: function (cardId) {
+            return this.cardsGroups.find((group) => group.cards.map((c) => c.id).includes(cardId));
+        },
+        /**
+         * @param {Object[]} cards
+         * @returns {Object|undefined}
+         */
+        getCardsGroupForCards: function (cards) {
+            const cardsGroups = this.getCardsGroupsForCards(cards);
+
+            return cardsGroups.find((group) => this.areCardsAllInGroup(cards, group));
+        },
+        /**
+         * @param {Object[]} cards
+         * @returns {Object[]}
+         */
+        getCardsGroupsForCards: function (cards) {
+            return this.cardsGroups.filter((group) => cards.some((card) => group.cards.map((c) => c.id).includes(card.id)));
+        },
+        /**
+         * @param {Object[]} cards
+         * @param {Object} group
+         * @returns {boolean}
+         */
+        areCardsAllInGroup: function (cards, group) {
+            const groupCardsIds = group.cards.map((c) => c.id);
+
+            return cards.every((card) => groupCardsIds.includes(card.id));
+        },
+        /**
+         * @param {Object[]} cards
+         */
+        addCardsGroupForCards: function (cards) {
+            if (cards.length === 0) {
+                return;
+            }
+
+            const sortedCards = this.sortPlayedCards(cards);
+
+            // make sure the ID of the new group is unique
+            let groupId = 1;
+            while (this.cardsGroups.find((g) => g.id === groupId)) {
+                groupId = groupId + 1;
+            }
+
+            // create group
+            this.cardsGroups.push({
+                id: groupId,
+                cards: sortedCards,
+            });
+
+            // create group style
+            sortedCards.forEach((card, i) => {
+                if ($(`${DOM_ID_PLAYER_HAND}_item_${card.id}`)) {
+                    dojo.addClass(`${DOM_ID_PLAYER_HAND}_item_${card.id}`, `cards-group-${groupId}`);
+                    dojo.addClass(`${DOM_ID_PLAYER_HAND}_item_${card.id}`, DOM_CLASS_CARDS_GROUP_CARD);
+                    if (i === 0) {
+                        dojo.addClass(`${DOM_ID_PLAYER_HAND}_item_${card.id}`, DOM_CLASS_CARDS_GROUP_CARD_LEFT);
+                    }
+                    if (i === (cards.length - 1)) {
+                        dojo.addClass(`${DOM_ID_PLAYER_HAND}_item_${card.id}`, DOM_CLASS_CARDS_GROUP_CARD_RIGHT);
+                    }
+                }
+            });
+        },
+        /**
+         * @param {number} groupId
+         */
+        removeCardsGroup: function (groupId) {
+            const removedGroup = this.cardsGroups.find((g) => g.id === groupId);
+
+            // delete group style
+            removedGroup.cards.forEach((card, i) => {
+                if ($(`${DOM_ID_PLAYER_HAND}_item_${card.id}`)) {
+                    dojo.removeClass(`${DOM_ID_PLAYER_HAND}_item_${card.id}`, `cards-group-${groupId}`);
+                    dojo.removeClass(`${DOM_ID_PLAYER_HAND}_item_${card.id}`, DOM_CLASS_CARDS_GROUP_CARD);
+                    dojo.removeClass(`${DOM_ID_PLAYER_HAND}_item_${card.id}`, DOM_CLASS_CARDS_GROUP_CARD_LEFT);
+                    dojo.removeClass(`${DOM_ID_PLAYER_HAND}_item_${card.id}`, DOM_CLASS_CARDS_GROUP_CARD_RIGHT);
+                }
+            });
+
+            // delete group
+            this.cardsGroups = this.cardsGroups.filter((g) => g.id !== groupId);
+        },
+        resetCardsGroups: function () {
+            this.cardsGroups = [];
+        },
+        resetCurrentState: function () {
+            this.currentState = null;
+        },
+        removeAllCardsFromPlayerHand: function () {
+            this.playerHand.removeAll();
+            this.resetCardsGroups();
+        },
+        /**
+         * @param {number} cardId
+         */
+        removeCardFromPlayerHand: function (cardId) {
+            this.cardsGroups.forEach((group) => {
+                if (group.cards.map((c) => c.id).includes(cardId)) {
+                    this.removeCardsGroup(group.id);
+                }
+            });
+            this.setupGroupCardsButton();
+
+            this.playerHand.removeFromStockById(cardId);
+            this.setupPlayerHandSelectableCards();
+        },
+        /**
+         * @param {Object[]} cardsA
+         * @param {Object[]} cardsB
+         * @returns {boolean}
+         */
+        areSameCards: function (cardsA, cardsB) {
+            if (cardsA.length !== cardsB.length) {
+                return false;
+            }
+
+            const cardsAIds = cardsA.map((c) => c.id);
+            const cardsBIds = cardsB.map((c) => c.id);
+
+            return cardsAIds.every((AId) => cardsBIds.includes(AId));
+        },
 
         ///////////////////////////////////////////////////
         //// Player's action
         ///////////////////////////////////////////////////
+        /**
+         * @param {number} cardId
+         */
+        onPlayerCardSelected: function (cardId) {
+            if (
+                this.isCurrentPlayerActive()
+                && this.currentState === 'playerGiveCardsBackAfterPicking'
+            ) {
+                this.setupGiveCardsBackAfterPickingActionButton();
+                return;
+            }
+
+            const selectedCards = this.getSelectedPlayerCards();
+            const selectedCardsWithoutLastSelectedCard = selectedCards.filter((card) => card.id !== cardId);
+            const playerCardsThatCannotBePlayedWithSelectedCards = this.getPlayerCardsThatCannotBePlayedWithCards(selectedCards);
+            const selectedCardGroup = this.getCardsGroupOfCard(cardId);
+
+            // if a card in a group has been selected
+            if (selectedCardGroup) {
+                const playerCardsThatCannotBePlayedWithSelectedCardGroup = this.getPlayerCardsThatCannotBePlayedWithCards(selectedCardGroup.cards);
+                // if this is the first card selected
+                if (selectedCards.length === 1) {
+                    this.selectCards(selectedCardGroup.cards);
+                }
+                // if all cards in this group are playable with already selected cards
+                else if (this.areSameCards(playerCardsThatCannotBePlayedWithSelectedCards, playerCardsThatCannotBePlayedWithSelectedCardGroup)) {
+                    this.selectCards(selectedCardGroup.cards);
+                }
+                // otherwise
+                else {
+                    this.unselectCards(selectedCardsWithoutLastSelectedCard);
+                    this.selectCards(selectedCardGroup.cards);
+                }
+            }
+            // otherwise
+            else {
+                this.unselectCards(selectedCards.filter(
+                    (card) => playerCardsThatCannotBePlayedWithSelectedCards.map((c) => c.id).includes(card.id)
+                        && cardId !== card.id
+                ));
+            }
+        },
+        /**
+         * @param {number} cardId
+         */
+        onPlayerCardUnselected: function (cardId) {
+            if (
+                this.isCurrentPlayerActive()
+                && this.currentState === 'playerGiveCardsBackAfterPicking'
+            ) {
+                this.setupGiveCardsBackAfterPickingActionButton();
+                return;
+            }
+
+            this.unselectCards(this.getAllPlayerCards().filter((card) => card.id === cardId));
+        },
+        onClickOnTogglePlayerHandSortButton: function () {
+            const currentSortingMode = this.getCurrentPlayerCardsSortingMode();
+            if (currentSortingMode === PLAYER_HAND_SORT_BY_COLOR) {
+                $(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL).innerHTML = _('Sort by color');
+                dojo.attr(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, 'data-current-sort', PLAYER_HAND_SORT_BY_VALUE);
+                this.sortPlayerCardsByValue();
+            } else {
+                $(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL).innerHTML = _('Sort by value');
+                dojo.attr(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, 'data-current-sort', PLAYER_HAND_SORT_BY_COLOR);
+                this.sortPlayerCardsByColor();
+            }
+        },
+        onClickOnGroupCardsButton: function () {
+            const selectedCards = this.getSelectedPlayerCards();
+            if (!selectedCards.length) {
+                return;
+            }
+            const selectedCardsGroup = this.getCardsGroupForCards(selectedCards);
+            if (selectedCardsGroup) {
+                // all selected cards are in a same existing group
+                // (this should never happen because the button should have called the "ungroup" function in this case)
+                this.onClickOnUngroupCardsButton();
+                return;
+            }
+
+            const selectedCardsGroups = this.getCardsGroupsForCards(selectedCards);
+            selectedCardsGroups.forEach((group) => {
+                this.removeCardsGroup(group.id);
+            });
+            this.addCardsGroupForCards(selectedCards);
+            this.unselectAllCards();
+            this.sortPlayerCardsByCurrentSortingMode();
+        },
+        onClickOnUngroupCardsButton: function () {
+            const selectedCards = this.getSelectedPlayerCards();
+            const selectedCardsGroup = this.getCardsGroupForCards(selectedCards);
+            if (!selectedCardsGroup) {
+                return;
+            }
+
+            this.removeCardsGroup(selectedCardsGroup.id);
+            this.unselectAllCards();
+            this.sortPlayerCardsByCurrentSortingMode();
+        },
         onPlayCards: function () {
             if (!this.checkAction('playCards')) {
                 return;
@@ -1706,24 +2025,6 @@ function (dojo, declare) {
 
             this.unselectAllCards();
         },
-        /**
-         * @returns {string}
-         */
-        getCurrentPlayerCardsSortingMode: function () {
-            return dojo.attr(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, 'data-current-sort');
-        },
-        onClickOnTogglePlayerHandSortButton: function () {
-            const currentSortingMode = this.getCurrentPlayerCardsSortingMode();
-            if (currentSortingMode === PLAYER_HAND_SORT_BY_COLOR) {
-                $(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL).innerHTML = _('Sort by color');
-                dojo.attr(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, 'data-current-sort', PLAYER_HAND_SORT_BY_VALUE);
-                this.sortPlayerCardsByValue();
-            } else {
-                $(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL).innerHTML = _('Sort by value');
-                dojo.attr(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, 'data-current-sort', PLAYER_HAND_SORT_BY_COLOR);
-                this.sortPlayerCardsByColor();
-            }
-        },
 
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
@@ -1762,7 +2063,7 @@ function (dojo, declare) {
             });
         },
         notif_cardsDealt: function (data) {
-            this.playerHand.removeAll();
+            this.removeAllCardsFromPlayerHand();
             this.addCardsToPlayerHand(data.args.cards);
             if (
                 this.currentPlayerHasJersey
@@ -1770,7 +2071,7 @@ function (dojo, declare) {
             ) {
                 this.addJerseyToPlayerHand();
             }
-            this.refreshPlayerHandSelectableCards();
+            this.setupPlayerHandSelectableCards();
         },
         notif_roundStarted: function (data) {
             this.currentRound = data.args.currentRound;
