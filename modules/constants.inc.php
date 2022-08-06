@@ -46,3 +46,6 @@ define('VALUE_40', 40);
 define('VALUE_45', 45);
 define('VALUE_50', 50);
 define('VALUE_JERSEY', 10);
+
+// Special cards ID
+define('CARD_ID_JERSEY', 0);

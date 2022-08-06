@@ -419,3 +419,15 @@ Animations
 /**
 END Animations
  */
+
+/**
+Log HTML
+ */
+.log .velonimo-card {
+    display: inline-block;
+    vertical-align: bottom;
+    border-radius: 0;
+}
+/**
+END Log HTML
+ */

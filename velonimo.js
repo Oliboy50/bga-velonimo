@@ -430,6 +430,75 @@ function (dojo, declare) {
         //// Utility methods
         ///////////////////////////////////////////////////
         /**
+         * @Override format_string_recursive BGA framework function
+         * @see https://en.doc.boardgamearena.com/BGA_Studio_Cookbook#Inject_images_and_styled_html_in_the_log
+         */
+        format_string_recursive: function (log, args) {
+            try {
+                if (log && args && !args.processed) {
+                    args.processed = true;
+
+                    for (let key in args) {
+                        switch (key) {
+                            case 'cardsImage':
+                                args[key] = this.getLogHtmlForCards(args[key]);
+                                break;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Custom format_string_recursive thrown", log, args, e.stack);
+            }
+            return this.inherited(arguments); // equivalent to "super()"
+        },
+        /**
+         * @param {Object[]} cards
+         * @returns string
+         */
+        getLogHtmlForCards: function (cards) {
+            const getWidthForCard = (card) => {
+                if (card.color === COLOR_ADVENTURER) {
+                    return 32;
+                }
+                if (card.color === COLOR_JERSEY) {
+                    return 25;
+                }
+                return 17;
+            };
+            const getBackgroundOffsetXForCard = (card) => {
+                if (card.color === COLOR_ADVENTURER) {
+                    return 6;
+                }
+                if (card.value === VALUE_1) {
+                    return 12;
+                }
+                if (card.value === VALUE_2) {
+                    return 63;
+                }
+                if (card.value === VALUE_7) {
+                    return 10;
+                }
+                if (card.color === COLOR_JERSEY) {
+                    return 6;
+                }
+                return 11;
+            };
+            const getBackgroundOffsetYForCard = (card) => {
+                if (card.color === COLOR_ADVENTURER) {
+                    return 8;
+                }
+                return 7;
+            };
+
+            return this.sortPlayedCards(cards).map((card) => {
+                const position = this.getCardPositionInSpriteByColorAndValue(card.color, card.value);
+                const backgroundX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position) + getBackgroundOffsetXForCard(card);
+                const backgroundY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position) + getBackgroundOffsetYForCard(card);
+
+                return `<div class="velonimo-card front-side" style="width: ${getWidthForCard(card)}px; height: 24px; background-position: -${backgroundX}px -${backgroundY}px;"></div>`;
+            }).join(' ');
+        },
+        /**
          * @param {string} action
          * @param {Object} data
          */
@@ -1310,7 +1379,8 @@ function (dojo, declare) {
                 cards.length <= 0
                 || !placeDomId
             ) {
-                return;
+                console.error(cards, placeDomId);
+                throw new Error(`buildAndPlacePlayedStackOfCards`);
             }
 
             const stackedCards = this.sortPlayedCards(cards);
