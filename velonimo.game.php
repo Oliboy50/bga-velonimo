@@ -354,7 +354,7 @@ class Velonimo extends Table
             'cardsImage' => $cardsPlayedWithJersey
                 ? array_merge([$this->formatJerseyForClient()], $formattedCards)
                 : $formattedCards,
-            'player_name' => self::getCurrentPlayerName(),
+            'player_name' => $currentPlayerName = self::getCurrentPlayerName(),
             'playedCardsValue' => $playedCardsValue,
             'withJersey' => $cardsPlayedWithJersey,
         ]);
@@ -398,7 +398,6 @@ class Velonimo extends Table
                             self::notifyPlayer($currentPlayer->getId(), 'cardsReceivedFromDeck', $translatedMessage, [
                                 'cards' => $formattedCards = $this->formatCardsForClient($cardsPickedFromDeck),
                                 'cardsImage' => $formattedCards,
-                                'numberOfCards' => $numberOfCardsToPickFromDeck,
                                 'player_name' => $currentPlayer->getName(),
                             ]);
                         }
@@ -416,6 +415,12 @@ class Velonimo extends Table
             if ($nextRankForRound === 1) {
                 $this->incStat(1, 'numberOfRoundsWon', $currentPlayerId);
             }
+            self::notifyAllPlayers('playerHasFinishedRound', clienttranslate('${player_name} finished in position ${rank}'), [
+                'playerId' => $currentPlayer->getId(),
+                'roundsRanking' => $currentPlayer->getRoundsRanking(),
+                'player_name' => $currentPlayerName,
+                'rank' => $nextRankForRound,
+            ]);
 
             $playersWhoCanPlay = array_filter(
                 $this->getPlayersWhoCanPlayDuringRound($currentRound, $players),
@@ -896,12 +901,8 @@ class Velonimo extends Table
         $numberOfPlayers = count($players);
         $currentRound = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
         $numberOfPointsForRoundByPlayerId = [];
-        $winnerOfCurrentRound = null;
         foreach ($players as $k => $player) {
             $playerCurrentRoundRank = $player->getLastRoundRank();
-            if ($playerCurrentRoundRank === 1) {
-                $winnerOfCurrentRound = $player;
-            }
             $numberOfPointsForRoundByPlayerId[$player->getId()] = $this->getNumberOfPointsAtRankForRound(
                 $playerCurrentRoundRank,
                 $currentRound,
@@ -928,9 +929,8 @@ class Velonimo extends Table
         // re-allow the jersey to be used
         self::setGameStateValue(self::GAME_STATE_JERSEY_HAS_BEEN_USED_IN_THE_CURRENT_ROUND, 0);
 
-        self::notifyAllPlayers('roundEnded', clienttranslate('Round #${currentRound} has been won by ${player_name}'), [
+        self::notifyAllPlayers('roundEnded', clienttranslate('Round #${currentRound} ends'), [
             'currentRound' => $currentRound,
-            'player_name' => $winnerOfCurrentRound ? $winnerOfCurrentRound->getName() : 'N/A',
             'players' => $this->formatPlayersForClient($players),
         ]);
 
@@ -1216,6 +1216,7 @@ class Velonimo extends Table
                 'name' => $player->getName(),
                 'color' => $player->getColor(),
                 'score' => $player->getScore(),
+                'roundsRanking' => $player->getRoundsRanking(),
                 'isWearingJersey' => $player->isWearingJersey(),
                 'howManyCards' => count($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYER_HAND, $player->getId())),
             ];

@@ -45,11 +45,23 @@
 /* Note: you must not use any @import directive */
 
 /**
-Override "tableWindow" style (BGA framework feature)
+Override BGA elements style
  */
+#page-title {
+    z-index: 97;
+}
+#log_history_status {
+    z-index: 97;
+}
+#maingameview_menuheader {
+    z-index: 97;
+}
 .tableWindow table {
     width: 100%;
 }
+/**
+END Override BGA elements style
+ */
 
 /**
 Board
@@ -89,51 +101,108 @@ Board
 
 .player-table {
     position: absolute; /* position is dynamically computed */
-    width: 130px;
-    height: 130px;
     text-align: center;
-    border: 2px solid transparent;
-    border-radius: 10px;
-    box-sizing: border-box;
-    background-color: rgba(255,255,255,0.7);
-    padding: 5px;
     z-index: 0;
 }
-.player-table.active {
-    border: 2px solid #ff0000;
-}
-.player-table.selectable {
+.player-table.selectable,
+.player-table.selectable-for-card-picking {
     cursor: pointer;
-    border: 2px solid black;
 }
 .player-table.selectable:hover {
-    border: 2px solid #ff0000;
     transform: scale(1.02);
 }
 .player-table-name {
+    position: absolute;
+    width: 100%;
     font-weight: bold;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+    z-index: 1;
+}
+.player-table.selectable .player-table-name,
+.player-table.selectable-for-card-picking .player-table-name {
     pointer-events: none;
 }
+.player-table-name span {
+    background: rgba(255, 255, 255, 0.9);
+}
+.player-table.active .player-table-name span {
+    border: 2px solid;
+}
+.player-table.selectable .player-table-name span,
+.player-table.selectable-for-card-picking .player-table-name span {
+    border: 2px solid black;
+}
+.player-table.selectable:hover .player-table-name span,
+.player-table.selectable-for-card-picking:hover .player-table-name span {
+    border: 2px solid;
+}
+.player-table.player-position-top .player-table-name {
+    top: 10px;
+}
+.player-table.player-position-bottom .player-table-name {
+    bottom: 10px;
+}
 .player-table-hand {
-    position: relative;
-    width: 65px;
-    height: 90px;
-    background-size: 65px 90px;
-    margin: 5px auto 0;
-    border-radius: 5px;
-    background-image: url('img/remaining_cards.png');
-    background-repeat: no-repeat;
-    background-position: center center;
+    position: absolute;
+    width: 90px;
+    height: 126px;
+    padding-left: 100px;
+    transition-property: top, bottom;
+    transition-duration: 1s;
+}
+.player-table.selectable .player-table-hand,
+.player-table.selectable-for-card-picking .player-table-hand {
     pointer-events: none;
+}
+.player-table.player-position-top .player-table-hand {
+    top: 0;
+}
+.player-table.player-position-top.active .player-table-hand {
+    top: 25px;
+}
+.player-table.player-position-bottom .player-table-hand {
+    bottom: 0;
+}
+.player-table.player-position-bottom.active .player-table-hand {
+    bottom: 20px;
+}
+.player-table-hand-cards {
+    position: absolute;
+}
+.player-table-hand-cards .velonimo-card {
+    position: absolute;
+    transform-origin: center 100% 0;
+    left: 0;
     transition-property: all;
     transition-duration: 0.4s;
 }
-.player-table.is-wearing-jersey .player-table-hand {
-    margin: 5px 0 0 -6px;
+.player-table.selectable-for-card-picking:hover .player-table-hand-cards .velonimo-card {
+    transform-origin: center 200% 0;
+}
+.player-table.player-position-top .player-table-hand-cards .velonimo-card {
+    bottom: 0;
+}
+.player-table.selectable-for-card-picking.player-position-top .player-table-hand-cards .velonimo-card:hover {
+    bottom: 30px;
+}
+.player-table.player-position-bottom .player-table-hand-cards .velonimo-card {
+    top: 0;
+}
+.player-table.selectable-for-card-picking.player-position-bottom .player-table-hand-cards .velonimo-card:hover {
+    top: -30px;
+}
+.player-table.player-position-top .player-table-hand-cards {
+    top: -25px;
+    left: 145px;
+    transform: rotate(180deg);
+}
+.player-table.player-position-bottom .player-table-hand-cards {
+    top: 20px;
+    left: 55px;
 }
 .player-table-speech-bubble {
     position: absolute;
-    top: 0;
     width: 50px;
     height: 40px;
     border-radius: 5px;
@@ -142,55 +211,128 @@ Board
     text-align: center;
     font-weight: bold;
     opacity: 0;
-    pointer-events: none;
     transition-property: opacity;
     transition-duration: 0.4s;
+}
+.player-table.selectable .player-table-speech-bubble,
+.player-table.selectable-for-card-picking .player-table-speech-bubble {
+    pointer-events: none;
+}
+.player-table.player-position-top .player-table-speech-bubble {
+    bottom: -10px;
+}
+.player-table.player-position-bottom .player-table-speech-bubble {
+    top: -10px;
+}
+.player-table-speech-bubble.speech-bubble-on-left {
+    left: -40px;
+    box-shadow: -2px 2px 5px 0 black;
+}
+.player-table-speech-bubble.speech-bubble-on-right {
+    right: -40px;
+    box-shadow: 2px 2px 5px 0 black;
 }
 .player-table-speech-bubble::after {
     content: "";
     position: absolute;
-    top: 30px;
     width: 0;
     height: 0;
     border-left: 5px solid transparent;
     border-right: 5px solid transparent;
     border-top: 20px solid #ffffff;
 }
+.player-table.player-position-top .player-table-speech-bubble::after {
+    top: -10px;
+}
+.player-table.player-position-bottom .player-table-speech-bubble::after {
+    top: 30px;
+}
+.player-table-speech-bubble.speech-bubble-on-left::after {
+    right: -10px;
+}
+.player-table-speech-bubble.speech-bubble-on-right::after {
+    left: -10px;
+}
+.player-table.player-position-top .player-table-speech-bubble.speech-bubble-on-left::after {
+    transform: rotate(-120deg);
+}
+.player-table.player-position-top .player-table-speech-bubble.speech-bubble-on-right::after {
+    transform: rotate(120deg);
+}
+.player-table.player-position-bottom .player-table-speech-bubble.speech-bubble-on-left::after {
+    transform: rotate(-60deg);
+}
+.player-table.player-position-bottom .player-table-speech-bubble.speech-bubble-on-right::after {
+    transform: rotate(60deg);
+}
 .player-table-speech-bubble.show-bubble {
     opacity: 1;
 }
-.speech-bubble-on-left {
-    left: -70px;
-    box-shadow: -2px 2px 5px 0 black;
-}
-.speech-bubble-on-left::after {
-    right: -10px;
-    transform: rotate(-60deg);
-}
-.speech-bubble-on-right {
-    right: -70px;
-    box-shadow: 2px 2px 5px 0 black;
-}
-.speech-bubble-on-right::after {
-    left: -10px;
-    transform: rotate(60deg);
-}
 .player-table.is-wearing-jersey .player-table-jersey {
     position: absolute;
-    bottom: 7px;
-    right: -1px;
     width: 65px;
     height: 90px;
     background-size: 65px 90px;
     background-image: url('img/jersey.png');
     background-repeat: no-repeat;
     background-position: center center;
-    pointer-events: none;
+    opacity: 1;
     transition-property: opacity;
-    transition-duration: 0.4s;
+    transition-duration: 0.5s;
+}
+.player-table.selectable .player-table-jersey,
+.player-table.selectable-for-card-picking .player-table-jersey {
+    pointer-events: none;
+}
+.player-table.player-position-bottom .player-table-jersey {
+    bottom: 0;
+}
+.player-table.player-position-top .player-table-jersey {
+    top: 0;
+}
+.player-table.player-position-jersey-left .player-table-jersey {
+    left: -40px;
+}
+.player-table.player-position-jersey-right .player-table-jersey {
+    right: -40px;
 }
 .player-table.is-wearing-jersey.has-used-jersey .player-table-jersey {
-    opacity: 0.2;
+    opacity: 0.3;
+}
+.player-table .player-table-finish-position {
+    display: none;
+    position: absolute;
+    left: 75px;
+    width: 50px;
+    height: 90px;
+    background-repeat: no-repeat;
+    background-image: url('img/finish.png');
+    background-size: 150px 90px;
+    background-position-y: center;
+}
+.player-table.selectable .player-table-finish-position,
+.player-table.selectable-for-card-picking .player-table-finish-position {
+    pointer-events: none;
+}
+.player-table.player-position-top .player-table-finish-position {
+    bottom: 0;
+}
+.player-table.player-position-bottom .player-table-finish-position {
+    top: 0;
+}
+.player-table.has-finished-1 .player-table-finish-position,
+.player-table.has-finished-2 .player-table-finish-position,
+.player-table.has-finished-3 .player-table-finish-position {
+    display: block;
+}
+.player-table.has-finished-1 .player-table-finish-position {
+    background-position-x: left;
+}
+.player-table.has-finished-2 .player-table-finish-position {
+    background-position-x: center;
+}
+.player-table.has-finished-3 .player-table-finish-position {
+    background-position-x: right;
 }
 /**
 END Board
@@ -257,6 +399,10 @@ END Board cards
 /**
 Current player hand
  */
+#my-hand-wrapper {
+    position: relative;
+    z-index: 20;
+}
 .spectatorMode #my-hand-wrapper {
     display: none;
 }
@@ -331,15 +477,6 @@ Cards
 }
 .cards-stack .velonimo-card {
     margin-right: -60px; /* 2/3 of card width */
-}
-.text-on-cards {
-    position: absolute;
-    left: 8px;
-    top: 20px;
-    font-size: 2em;
-    text-align: center;
-    width: 1em;
-    pointer-events: none;
 }
 .cards-group-card::after {
     content: "";
