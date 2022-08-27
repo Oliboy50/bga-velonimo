@@ -95,6 +95,7 @@ const DOM_CLASS_ACTIVE_PLAYER = 'active';
 const DOM_CLASS_SELECTABLE_PLAYER = 'selectable';
 const DOM_CLASS_NON_SELECTABLE_CARD = 'non-selectable-player-card';
 const DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW = 'show-bubble';
+const DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW_TEMPORARY = 'temporary-show-bubble';
 const DOM_CLASS_SPEECH_BUBBLE = 'player-table-speech-bubble';
 const DOM_CLASS_SPEECH_BUBBLE_LEFT = 'speech-bubble-on-left';
 const DOM_CLASS_SPEECH_BUBBLE_RIGHT = 'speech-bubble-on-right';
@@ -1640,6 +1641,17 @@ function (dojo, declare) {
         },
         /**
          * @param {number} playerId
+         */
+        showTurnPassedBubbleForAFewSeconds: function (playerId) {
+            $(`player-table-${playerId}-speech-bubble`).innerHTML = '<i class="fa fa-repeat"></i>';
+            dojo.addClass(`player-table-${playerId}-speech-bubble`, DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW_TEMPORARY);
+            setTimeout(
+                () => dojo.removeClass(`player-table-${playerId}-speech-bubble`, DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW_TEMPORARY),
+                1000
+            );
+        },
+        /**
+         * @param {number} playerId
          * @param {Object[]} cards
          */
         moveCardsFromPlayerHandToTable: function (playerId, cards) {
@@ -1886,24 +1898,6 @@ function (dojo, declare) {
                     this.connect($(DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON), 'onclick', 'onClickOnGroupCardsButton');
                 }
             }
-        },
-        /**
-         * @param {number} cardId
-         */
-        selectOtherCardsInSameGroupOfCard: function (cardId) {
-            const selectedCardsGroup = this.getCardsGroupOfCard(cardId);
-            if (!selectedCardsGroup) {
-                return;
-            }
-
-            selectedCardsGroup.cards.forEach((c) => {
-                if (
-                    $(`${DOM_ID_PLAYER_HAND}_item_${c.id}`)
-                    && !this.playerHand.isSelected(c.id)
-                ) {
-                    this.playerHand.selectItem(c.id);
-                }
-            });
         },
         /**
          * @param {number} cardId
@@ -2203,16 +2197,18 @@ function (dojo, declare) {
         //// Reaction to cometD notifications
         ///////////////////////////////////////////////////
         setupNotifications: function () {
+            const isReadOnly = this.isReadOnly();
             [
                 ['roundStarted', 1],
                 ['roundEnded', 1],
                 ['cardsDealt', 1],
                 ['cardsPlayed', 1000],
+                ['turnPassed', isReadOnly ? 1000 : 1],
                 ['playerHasFinishedRound', 1],
                 ['playedCardsDiscarded', 1],
-                ['cardsReceivedFromAnotherPlayer', this.isReadOnly() ? 3000 : 1500],
-                ['cardsSentToAnotherPlayer', this.isReadOnly() ? 3000 : 1500],
-                ['cardsMovedBetweenTwoOtherPlayers', this.isReadOnly() ? 2000 : 1500, (notif) => (notif.args.receiverPlayerId === this.player_id || notif.args.senderPlayerId === this.player_id)],
+                ['cardsReceivedFromAnotherPlayer', isReadOnly ? 3000 : 1500],
+                ['cardsSentToAnotherPlayer', isReadOnly ? 3000 : 1500],
+                ['cardsMovedBetweenTwoOtherPlayers', isReadOnly ? 2000 : 1500, (notif) => (notif.args.receiverPlayerId === this.player_id || notif.args.senderPlayerId === this.player_id)],
                 // /!\ 2P mode only
                 ['attackRewardCardsDiscarded', 1],
                 // /!\ 2P mode only
@@ -2220,9 +2216,9 @@ function (dojo, declare) {
                 // /!\ 2P mode only
                 ['attackRewardCardsRevealed', 1000],
                 // /!\ 2P mode only
-                ['cardsReceivedFromDeck', this.isReadOnly() ? 2000 : 1000],
+                ['cardsReceivedFromDeck', isReadOnly ? 2000 : 1000],
                 // /!\ 2P mode only
-                ['cardsMovedFromDeckToAnotherPlayer', this.isReadOnly() ? 2000 : 1500, (notif) => notif.args.receiverPlayerId === this.player_id],
+                ['cardsMovedFromDeckToAnotherPlayer', isReadOnly ? 2000 : 1500, (notif) => notif.args.receiverPlayerId === this.player_id],
             ].forEach((notif) => {
                 const name = notif[0];
                 const lockDurationInMs = notif[1];
@@ -2273,6 +2269,9 @@ function (dojo, declare) {
             if (data.args.withJersey) {
                 this.useJerseyForCurrentRound();
             }
+        },
+        notif_turnPassed: function (data) {
+            this.showTurnPassedBubbleForAFewSeconds(data.args.playerId);
         },
         notif_playerHasFinishedRound: function (data) {
             this.players[data.args.playerId].roundsRanking = data.args.roundsRanking;

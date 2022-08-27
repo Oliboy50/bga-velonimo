@@ -460,6 +460,7 @@ class Velonimo extends Table
         self::checkAction('passTurn');
 
         self::notifyAllPlayers('turnPassed', clienttranslate('${player_name} passes'), [
+            'playerId' => (int) self::getCurrentPlayerId(),
             'player_name' => self::getCurrentPlayerName(),
         ]);
 

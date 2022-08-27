@@ -203,10 +203,11 @@ Board
 }
 .player-table-speech-bubble {
     position: absolute;
-    width: 50px;
-    height: 40px;
+    min-width: 25px;
+    padding: 2px 4px;
     border-radius: 5px;
     background-color: #ffffff;
+    box-shadow: 2px 2px 5px 0 black;
     font-size: 2.2em;
     text-align: center;
     font-weight: bold;
@@ -219,18 +220,16 @@ Board
     pointer-events: none;
 }
 .player-table.player-position-top .player-table-speech-bubble {
-    bottom: -10px;
+    bottom: -15px;
 }
 .player-table.player-position-bottom .player-table-speech-bubble {
-    top: -10px;
+    top: -15px;
 }
 .player-table-speech-bubble.speech-bubble-on-left {
-    left: -40px;
-    box-shadow: -2px 2px 5px 0 black;
+    right: 190px;
 }
 .player-table-speech-bubble.speech-bubble-on-right {
-    right: -40px;
-    box-shadow: 2px 2px 5px 0 black;
+    left: 190px;
 }
 .player-table-speech-bubble::after {
     content: "";
@@ -245,7 +244,7 @@ Board
     top: -10px;
 }
 .player-table.player-position-bottom .player-table-speech-bubble::after {
-    top: 30px;
+    bottom: -10px;
 }
 .player-table-speech-bubble.speech-bubble-on-left::after {
     right: -10px;
@@ -265,7 +264,8 @@ Board
 .player-table.player-position-bottom .player-table-speech-bubble.speech-bubble-on-right::after {
     transform: rotate(60deg);
 }
-.player-table-speech-bubble.show-bubble {
+.player-table-speech-bubble.show-bubble,
+.player-table-speech-bubble.temporary-show-bubble {
     opacity: 1;
 }
 .player-table.is-wearing-jersey .player-table-jersey {
