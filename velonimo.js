@@ -205,10 +205,12 @@ function (dojo, declare) {
             this.howManyRounds = 0;
             this.playedCardsValue = 0;
             this.howManyCardsToGiveBack = 0;
-            this.players = [];
+            this.players = {};
             this.playerHand = null; // https://en.doc.boardgamearena.com/Stock
             // /!\ 2P mode only
             this.howManyCardsInDeck = 0;
+            this.resetDisplayedNumberOfCardsByPlayerId();
+            this.timeoutToRefreshDisplayedNumberOfCards = null;
             this.resetCardsGroups();
         },
         setup: function (gamedatas) {
@@ -264,8 +266,8 @@ function (dojo, declare) {
 </div>`,
                     DOM_ID_BOARD_CARPET);
             });
-            console.log(this.players);
-            this.setupNumberOfCardsInPlayersHand();
+            this.resetDisplayedNumberOfCardsByPlayerId();
+            this.setupPlayersHiddenCards();
             this.setupPlayersFinishPosition();
 
             // setup jersey
@@ -321,11 +323,11 @@ function (dojo, declare) {
             this.onClickOnTogglePlayerHandSortButton();
             dojo.connect($(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON), 'onclick', this, 'onClickOnTogglePlayerHandSortButton');
             // setup currentPlayer cards
-            this.players[this.player_id].howManyCards = 0;
             this.addCardsToPlayerHand(
                 (this.currentPlayerHasJersey && !this.jerseyHasBeenUsedInTheCurrentRound)
                     ? this.addJerseyToCards(gamedatas.currentPlayerCards)
-                    : gamedatas.currentPlayerCards
+                    : gamedatas.currentPlayerCards,
+                false
             );
 
             // setup cards played on table
@@ -545,10 +547,18 @@ function (dojo, declare) {
         is2PlayersMode: function () {
             return Object.keys(this.players).length === 2;
         },
+        resetDisplayedNumberOfCardsByPlayerId: function () {
+            this.displayedNumberOfCardsByPlayerId = {};
+            Object.entries(this.players).forEach((entry) => {
+                const player = entry[1];
+
+                this.displayedNumberOfCardsByPlayerId[player.id] = player.howManyCards;
+            });
+        },
         setupRoundsInfo: function () {
             $(DOM_ID_CURRENT_ROUND).innerHTML = `${this.currentRound} / ${this.howManyRounds}`;
         },
-        setupNumberOfCardsInPlayersHand: function () {
+        setupPlayersHiddenCards: function () {
             const getCardRotateDeg = (numberOfCards, i) => {
                 if (numberOfCards === 1) {
                     return 0;
@@ -558,14 +568,15 @@ function (dojo, declare) {
 
                 return offset + ((i * -1) * 5);
             };
-            Object.entries(this.players).forEach((entry) => {
-                const player = entry[1];
+            Object.entries(this.displayedNumberOfCardsByPlayerId).forEach((entry) => {
+                const playerId = entry[0];
+                const howManyCards = entry[1];
 
                 const playerCardsHtml = [];
-                for (let i = 0; i < player.howManyCards; i++) {
-                    playerCardsHtml.push(`<div id="player-table-${player.id}-card-${i}" class="velonimo-card back-side" style="transform: rotate(${getCardRotateDeg(player.howManyCards, i)}deg);"></div>`);
+                for (let i = 0; i < howManyCards; i++) {
+                    playerCardsHtml.push(`<div id="player-table-${playerId}-card-${i}" class="velonimo-card back-side" style="transform: rotate(${getCardRotateDeg(howManyCards, i)}deg);"></div>`);
                 }
-                $(`player-table-${player.id}-hand-cards`).innerHTML = playerCardsHtml.join('');
+                $(`player-table-${playerId}-hand-cards`).innerHTML = playerCardsHtml.join('');
             });
         },
         setupPlayersScore: function () {
@@ -1575,7 +1586,8 @@ function (dojo, declare) {
          * @param {number} numberOfCards
          */
         decreaseNumberOfCardsInDeck: function (numberOfCards) {
-            this.howManyCardsInDeck = (this.howManyCardsInDeck || numberOfCards) - numberOfCards;
+            const removableNumberOfCards = Math.max(0, Math.min(numberOfCards, this.howManyCardsInDeck));
+            this.howManyCardsInDeck = this.howManyCardsInDeck - removableNumberOfCards;
             this.setupDeckOfCards();
         },
         /**
@@ -1782,32 +1794,57 @@ function (dojo, declare) {
          * @param {number} numberOfCards
          */
         increaseNumberOfCardsOfPlayer: function (playerId, numberOfCards) {
-            this.players[playerId].howManyCards = this.players[playerId].howManyCards + numberOfCards;
+            const addableNumberOfCards = Math.max(0, numberOfCards);
+            this.displayedNumberOfCardsByPlayerId[playerId] = this.displayedNumberOfCardsByPlayerId[playerId] + addableNumberOfCards;
 
-            this.setupNumberOfCardsInPlayersHand();
+            this.updatePlayersHiddenCardsWithEventualConsistency();
         },
         /**
          * @param {number} playerId
          * @param {number} numberOfCards
          */
         decreaseNumberOfCardsOfPlayer: function (playerId, numberOfCards) {
-            if (this.players[playerId].howManyCards > 0) {
-                this.players[playerId].howManyCards = this.players[playerId].howManyCards - numberOfCards;
-            }
+            const removableNumberOfCards = Math.max(0, Math.min(numberOfCards, this.displayedNumberOfCardsByPlayerId[playerId]));
+            this.displayedNumberOfCardsByPlayerId[playerId] = this.displayedNumberOfCardsByPlayerId[playerId] - removableNumberOfCards;
 
-            this.setupNumberOfCardsInPlayersHand();
+            this.updatePlayersHiddenCardsWithEventualConsistency();
+        },
+        /**
+         * Setup players hidden cards and eventually update the correct number of cards for each player (in case some card animations did not work)
+         */
+        updatePlayersHiddenCardsWithEventualConsistency: function () {
+            this.setupPlayersHiddenCards();
+
+            if (this.timeoutToRefreshDisplayedNumberOfCards !== null) {
+                clearTimeout(this.timeoutToRefreshDisplayedNumberOfCards);
+            }
+            this.timeoutToRefreshDisplayedNumberOfCards = setTimeout(
+                () => {
+                    this.resetDisplayedNumberOfCardsByPlayerId();
+                    this.setupPlayersHiddenCards();
+                },
+                3000
+            );
         },
         /**
          * @param {Object[]} cards
+         * @param {boolean=true} updateNumberOfCards
          */
-        addCardsToPlayerHand: function (cards) {
+        addCardsToPlayerHand: function (cards, updateNumberOfCards) {
+            if (typeof updateNumberOfCards === 'undefined') {
+                updateNumberOfCards = true;
+            }
+
             cards.forEach((card) => {
-                if (card.id !== CARD_ID_JERSEY) {
+                if (
+                    updateNumberOfCards
+                    && card.id !== CARD_ID_JERSEY
+                ) {
                     this.increaseNumberOfCardsOfPlayer(this.player_id, 1);
                 }
                 this.playerHand.addToStockWithId(this.getCardPositionInSpriteByColorAndValue(card.color, card.value), card.id);
-                this.setupPlayerHandSelectableCards();
             });
+            this.setupPlayerHandSelectableCards();
         },
         /**
          * @param {number} cardId
@@ -2235,10 +2272,10 @@ function (dojo, declare) {
         notif_cardsDealt: function (data) {
             this.playerHand.removeAll();
             this.resetCardsGroups();
-            this.players[this.player_id].howManyCards = 0;
             this.addCardsToPlayerHand((this.currentPlayerHasJersey && !this.jerseyHasBeenUsedInTheCurrentRound)
                 ? this.addJerseyToCards(data.args.cards)
-                : data.args.cards
+                : data.args.cards,
+                false
             );
         },
         notif_roundStarted: function (data) {
@@ -2246,7 +2283,8 @@ function (dojo, declare) {
             this.setupRoundsInfo();
 
             this.players = data.args.players;
-            this.setupNumberOfCardsInPlayersHand();
+            this.resetDisplayedNumberOfCardsByPlayerId();
+            this.setupPlayersHiddenCards();
             this.setupPlayersFinishPosition();
 
             if (this.is2PlayersMode()) {
@@ -2255,6 +2293,7 @@ function (dojo, declare) {
             }
         },
         notif_cardsPlayed: function (data) {
+            this.players = data.args.players;
             this.discardPlayerSpeechBubbles();
             this.movePlayedCardsToPreviousPlayedCards();
 
@@ -2282,12 +2321,15 @@ function (dojo, declare) {
             this.discardPlayedCards();
         },
         notif_cardsReceivedFromAnotherPlayer: function (data) {
+            this.players = data.args.players;
             this.receiveCardsFromAnotherPlayer(data.args.senderPlayerId, data.args.cards);
         },
         notif_cardsSentToAnotherPlayer: function (data) {
+            this.players = data.args.players;
             this.sendCardsToAnotherPlayer(data.args.receiverPlayerId, data.args.cards);
         },
         notif_cardsMovedBetweenTwoOtherPlayers: function (data) {
+            this.players = data.args.players;
             this.moveCardsBetweenTwoOtherPlayers(data.args.senderPlayerId, data.args.receiverPlayerId, data.args.numberOfCards);
         },
         notif_roundEnded: function (data) {
@@ -2301,6 +2343,8 @@ function (dojo, declare) {
             }
             const previousJerseyWearerId = this.getCurrentJerseyWearerIdIfExists();
             this.players = data.args.players;
+            this.resetDisplayedNumberOfCardsByPlayerId();
+            this.setupPlayersHiddenCards();
             this.restoreJerseyForCurrentRound();
             this.moveJerseyToCurrentWinner(previousJerseyWearerId);
 
@@ -2316,6 +2360,7 @@ function (dojo, declare) {
          * /!\ 2P mode only
          */
         notif_attackRewardCardsMovedToPlayer: function (data) {
+            this.players = data.args.players;
             this.moveAttackRewardCardsToPlayer(data.args.receiverPlayerId, data.args.cards);
         },
         /**
@@ -2329,12 +2374,14 @@ function (dojo, declare) {
          * /!\ 2P mode only
          */
         notif_cardsReceivedFromDeck: function (data) {
+            this.players = data.args.players;
             this.moveCardsFromDeckToPlayerHand(data.args.cards);
         },
         /**
          * /!\ 2P mode only
          */
         notif_cardsMovedFromDeckToAnotherPlayer: function (data) {
+            this.players = data.args.players;
             this.moveCardsFromDeckToAnotherPlayer(data.args.receiverPlayerId, data.args.numberOfCards);
         },
    });
