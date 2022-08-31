@@ -461,7 +461,7 @@ function (dojo, declare) {
         },
         /**
          * @param {Object[]} cards
-         * @returns string
+         * @returns {string}
          */
         getLogHtmlForCards: function (cards) {
             const getWidthForCard = (card) => {
@@ -505,6 +505,50 @@ function (dojo, declare) {
 
                 return `<div class="velonimo-card front-side" style="width: ${getWidthForCard(card)}px; height: 24px; background-position: -${backgroundX}px -${backgroundY}px;"></div>`;
             }).join(' ');
+        },
+        /**
+         * @param {Object} card
+         * @returns {[string, string]|null}
+         * @see https://en.doc.boardgamearena.com/Game_interface_logic:_yourgamename.js#Tooltips
+         */
+        getTooltipTextsForCard: function (card) {
+            switch (card.color) {
+                case COLOR_BLUE:
+                case COLOR_BROWN:
+                case COLOR_GRAY:
+                case COLOR_GREEN:
+                case COLOR_PINK:
+                case COLOR_RED:
+                case COLOR_YELLOW:
+                    if (card.value === VALUE_1) {
+                        return [
+                            _('Leader - Value: 1 - For each leader played, you must randomly pick 1 card from the player hand of your choice, then give this player back 1 card of your choice.'),
+                            '',
+                        ];
+                    } else if (
+                        card.value === VALUE_2
+                        && this.is2PlayersMode()
+                    ) {
+                        return [
+                            _('Water carrier - Value: 2 - For each water carrier played, you must draw 1 card from the deck (even if this was your last card).'),
+                            '',
+                        ];
+                    } else {
+                        return null;
+                    }
+                case COLOR_ADVENTURER:
+                    return [
+                        dojo.string.substitute(_('Adventurer - Value: ${v} - This card cannot be played with others, because the adventurers does not belong to a team, they always play solo.'), { v: card.value }),
+                        '',
+                    ];
+                case COLOR_JERSEY:
+                    return [
+                        _('Carrot polka dot Jersey - Value: +10 - It adds 10 points to any valid card combinations (one or more colored cards). It cannot be played with adventurers.'),
+                        ''
+                    ];
+                default:
+                    return null;
+            }
         },
         /**
          * @param {string} action
@@ -1843,6 +1887,10 @@ function (dojo, declare) {
                     this.increaseNumberOfCardsOfPlayer(this.player_id, 1);
                 }
                 this.playerHand.addToStockWithId(this.getCardPositionInSpriteByColorAndValue(card.color, card.value), card.id);
+                const tooltipTextsForCard = this.getTooltipTextsForCard(card);
+                if (tooltipTextsForCard) {
+                    this.addTooltip(`${DOM_ID_PLAYER_HAND}_item_${card.id}`, tooltipTextsForCard[0], tooltipTextsForCard[1]);
+                }
             });
             this.setupPlayerHandSelectableCards();
         },
@@ -1924,6 +1972,7 @@ function (dojo, declare) {
                         `<a href="javascript:void(0)" id="${DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON}" class="bgabutton bgabutton_red"><span>${_('Ungroup cards')}</span></a>`,
                         DOM_ID_PLAYER_HAND_TITLE_WRAPPER
                     );
+                    this.addTooltip(DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON, '', _('Click this button to stop grouping selected cards.'));
                     this.connect($(DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON), 'onclick', 'onClickOnUngroupCardsButton');
                 }
             } else if (selectedCards.length > 1) {
@@ -1932,6 +1981,7 @@ function (dojo, declare) {
                         `<a href="javascript:void(0)" id="${DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON}" class="bgabutton bgabutton_blue"><span>${_('Group cards')}</span></a>`,
                         DOM_ID_PLAYER_HAND_TITLE_WRAPPER
                     );
+                    this.addTooltip(DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON, '', _('Click this button to group selected cards. Grouped cards are not affected by sorting.'));
                     this.connect($(DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON), 'onclick', 'onClickOnGroupCardsButton');
                 }
             }
@@ -2110,10 +2160,12 @@ function (dojo, declare) {
             if (currentSortingMode === PLAYER_HAND_SORT_BY_COLOR) {
                 $(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL).innerHTML = _('Sort by color');
                 dojo.attr(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, 'data-current-sort', PLAYER_HAND_SORT_BY_VALUE);
+                this.addTooltip(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, '', _('Click this button to sort your hand by color.'));
                 this.sortPlayerCardsByValue();
             } else {
                 $(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL).innerHTML = _('Sort by value');
                 dojo.attr(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, 'data-current-sort', PLAYER_HAND_SORT_BY_COLOR);
+                this.addTooltip(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, '', _('Click this button to sort your hand by value.'));
                 this.sortPlayerCardsByColor();
             }
         },
