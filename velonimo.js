@@ -1506,23 +1506,21 @@ function (dojo, declare) {
                 onBeforeFirstAnimation.bind(this)(0);
             }
 
-            let animations = [];
             for (let i = 0; i < cards.length; i++) {
-                const position = this.getCardPositionInSpriteByColorAndValue(cards[i].color, cards[i].value);
-                const backgroundPositionX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position);
-                const backgroundPositionY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position);
-                animations[i] = this.slideTemporaryObject(
-                    `<div class="velonimo-card front-side moving-card" style="position: absolute; background-position: -${backgroundPositionX}px -${backgroundPositionY}px; z-index: ${100 - i};"></div>`,
-                    domId,
-                    domId,
-                    `player-table-${this.player_id}-hand`,
-                    1000,
+                setTimeout(
+                    () => {
+                        this.addCardsToPlayerHand([cards[i]], true, domId);
+                    },
                     i * 1000
                 );
-                if (typeof onAfterEachAnimation === 'function') {
-                    dojo.connect(animations[i], 'onEnd', () => onAfterEachAnimation.bind(this)(i));
-                }
-                animations[i].play();
+                setTimeout(
+                    () => {
+                        if (typeof onAfterEachAnimation === 'function') {
+                            onAfterEachAnimation.bind(this)(i);
+                        }
+                    },
+                    (i + 1) * 1000
+                );
             }
         },
         /**
@@ -1573,8 +1571,6 @@ function (dojo, declare) {
                     if ((animationIndex + 1) < cards.length) {
                         this.decreaseNumberOfCardsInDeck(1);
                     }
-
-                    this.addCardsToPlayerHand([cards[animationIndex]]);
                 }
             );
         },
@@ -1664,19 +1660,20 @@ function (dojo, declare) {
             }
 
             const rewardCardDomId = `cards-stack-${cards[0].id}`;
-            const animation = this.slideToObject(
-                rewardCardDomId,
-                `player-table-${receiverPlayerId}-hand`
-            );
-            dojo.connect(animation, 'onEnd', () => {
-                if (receiverPlayerId === this.player_id) {
-                    this.addCardsToPlayerHand(cards);
-                } else {
+            if (receiverPlayerId === this.player_id) {
+                this.addCardsToPlayerHand(cards, true, rewardCardDomId);
+                dojo.destroy(rewardCardDomId);
+            } else {
+                const animation = this.slideToObject(
+                    rewardCardDomId,
+                    `player-table-${receiverPlayerId}-hand`
+                );
+                dojo.connect(animation, 'onEnd', () => {
                     this.increaseNumberOfCardsOfPlayer(receiverPlayerId, cards.length);
-                }
-                this.fadeOutAndDestroy(rewardCardDomId);
-            });
-            animation.play();
+                    this.fadeOutAndDestroy(rewardCardDomId);
+                });
+                animation.play();
+            }
         },
         /**
          * @param {Object[]} cards
@@ -1754,8 +1751,6 @@ function (dojo, declare) {
                     if ((animationIndex + 1) < cards.length) {
                         this.decreaseNumberOfCardsOfPlayer(senderId, 1);
                     }
-
-                    this.addCardsToPlayerHand([cards[animationIndex]]);
                 }
             );
         },
@@ -1873,8 +1868,9 @@ function (dojo, declare) {
         /**
          * @param {Object[]} cards
          * @param {boolean=true} updateNumberOfCards
+         * @param {string=} fromDomId
          */
-        addCardsToPlayerHand: function (cards, updateNumberOfCards) {
+        addCardsToPlayerHand: function (cards, updateNumberOfCards, fromDomId) {
             if (typeof updateNumberOfCards === 'undefined') {
                 updateNumberOfCards = true;
             }
@@ -1884,9 +1880,22 @@ function (dojo, declare) {
                     updateNumberOfCards
                     && card.id !== CARD_ID_JERSEY
                 ) {
-                    this.increaseNumberOfCardsOfPlayer(this.player_id, 1);
+                    if (fromDomId) {
+                        setTimeout(
+                            () => {
+                                this.increaseNumberOfCardsOfPlayer(this.player_id, 1);
+                            },
+                            1000
+                        );
+                    } else {
+                        this.increaseNumberOfCardsOfPlayer(this.player_id, 1);
+                    }
                 }
-                this.playerHand.addToStockWithId(this.getCardPositionInSpriteByColorAndValue(card.color, card.value), card.id);
+                if (fromDomId) {
+                    this.playerHand.addToStockWithId(this.getCardPositionInSpriteByColorAndValue(card.color, card.value), card.id, fromDomId);
+                } else {
+                    this.playerHand.addToStockWithId(this.getCardPositionInSpriteByColorAndValue(card.color, card.value), card.id);
+                }
                 const tooltipTextsForCard = this.getTooltipTextsForCard(card);
                 if (tooltipTextsForCard) {
                     this.addTooltip(`${DOM_ID_PLAYER_HAND}_item_${card.id}`, tooltipTextsForCard[0], tooltipTextsForCard[1]);
