@@ -707,11 +707,12 @@ function (dojo, declare) {
         moveJerseyToCurrentWinner: function (previousJerseyWearerId) {
             const wearJersey = (playerId) => {
                 dojo.addClass(`player-table-${playerId}`, DOM_CLASS_PLAYER_IS_WEARING_JERSEY);
-                dojo.place(`<div class="${DOM_CLASS_JERSEY_IN_PLAYER_PANEL}"></div>`, `player_board_${playerId}`);
+                dojo.place(`<div id="player-panel-${playerId}-jersey" class="${DOM_CLASS_JERSEY_IN_PLAYER_PANEL}"></div>`, `player_board_${playerId}`);
+                this.addTooltip(`player-panel-${playerId}-jersey`, _('Current leader of the game'), '');
             };
             const removeJersey = (playerId) => {
                 dojo.removeClass(`player-table-${playerId}`, DOM_CLASS_PLAYER_IS_WEARING_JERSEY);
-                dojo.query(`#player_board_${playerId} .${DOM_CLASS_JERSEY_IN_PLAYER_PANEL}`).forEach(this.fadeOutAndDestroy);
+                this.fadeOutAndDestroy(`player-panel-${playerId}-jersey`);
             };
 
             Object.entries(this.players).forEach((entry) => {
