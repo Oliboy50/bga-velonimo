@@ -88,6 +88,7 @@ const DOM_ID_ACTION_BUTTON_GIVE_CARDS = 'action-button-give-cards';
 const DOM_CLASS_PLAYER_TABLE = 'player-table';
 const DOM_CLASS_PLAYER_IS_WEARING_JERSEY = 'is-wearing-jersey';
 const DOM_CLASS_PLAYER_HAS_USED_JERSEY = 'has-used-jersey';
+const DOM_CLASS_JERSEY_IN_PLAYER_PANEL = 'player-panel-jersey';
 const DOM_CLASS_CARDS_STACK = 'cards-stack';
 const DOM_CLASS_CARDS_STACK_PREVIOUS_PLAYED = 'previous-last-played-cards';
 const DOM_CLASS_DISABLED_ACTION_BUTTON = 'disabled';
@@ -704,6 +705,15 @@ function (dojo, declare) {
          * @param {number|undefined} [previousJerseyWearerId]
          */
         moveJerseyToCurrentWinner: function (previousJerseyWearerId) {
+            const wearJersey = (playerId) => {
+                dojo.addClass(`player-table-${playerId}`, DOM_CLASS_PLAYER_IS_WEARING_JERSEY);
+                dojo.place(`<div class="${DOM_CLASS_JERSEY_IN_PLAYER_PANEL}"></div>`, `player_board_${playerId}`);
+            };
+            const removeJersey = (playerId) => {
+                dojo.removeClass(`player-table-${playerId}`, DOM_CLASS_PLAYER_IS_WEARING_JERSEY);
+                dojo.query(`#player_board_${playerId} .${DOM_CLASS_JERSEY_IN_PLAYER_PANEL}`).forEach(this.fadeOutAndDestroy);
+            };
+
             Object.entries(this.players).forEach((entry) => {
                 const player = entry[1];
                 const isCurrentPlayer = this.player_id === player.id;
@@ -721,15 +731,15 @@ function (dojo, declare) {
                                 `player-table-${previousJerseyWearerId}-jersey`,
                                 `player-table-${player.id}-jersey`
                             );
-                            dojo.connect(animation, 'onEnd', () => dojo.addClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_IS_WEARING_JERSEY));
+                            dojo.connect(animation, 'onEnd', () => wearJersey(player.id));
                             animation.play();
                         } else {
-                            dojo.addClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_IS_WEARING_JERSEY);
+                            wearJersey(player.id);
                         }
                     }
                 } else {
                     if (dojo.hasClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_IS_WEARING_JERSEY)) {
-                        dojo.removeClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_IS_WEARING_JERSEY);
+                        removeJersey(player.id);
                     }
                 }
             });
@@ -2338,6 +2348,7 @@ function (dojo, declare) {
                 : data.args.cards,
                 false
             );
+            this.sortPlayerCardsByCurrentSortingMode();
         },
         notif_roundStarted: function (data) {
             this.currentRound = data.args.currentRound;

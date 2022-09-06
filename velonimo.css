@@ -94,9 +94,10 @@ Board
     position: relative;
     width: 740px;
     height: 480px;
-    background-color: #35714a;
-    box-shadow: 2px 2px 5px black;
-    border: 1px solid #3b3119;
+    background-size: 740px 480px;
+    background-image: url('img/board_carpet.png');
+    background-repeat: no-repeat;
+    background-position: center center;
 }
 
 .player-table {
@@ -297,7 +298,7 @@ Board
     right: -40px;
 }
 .player-table.is-wearing-jersey.has-used-jersey .player-table-jersey {
-    opacity: 0.3;
+    opacity: 0.5;
 }
 .player-table .player-table-finish-position {
     display: none;
@@ -567,4 +568,19 @@ Log HTML
 }
 /**
 END Log HTML
+ */
+
+/**
+Player panel HTML
+ */
+.player-panel-jersey {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    background-size: 40px 40px;
+    background-image: url('img/jersey_player_panel.png');
+    background-repeat: no-repeat;
+}
+/**
+END Player panel HTML
  */
