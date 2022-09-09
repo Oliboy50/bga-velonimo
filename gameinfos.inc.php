@@ -64,13 +64,13 @@ $gameinfos = [
     // Time in second add to a player when "giveExtraTime" is called (speed profile = slow)
     'slow_additional_time' => 50,
 
-    // If you are using a tie breaker in your game (using "player_score_aux"), you must describe here
+    // If you are using a tiebreaker in your game (using "player_score_aux"), you must describe here
     // the formula used to compute "player_score_aux". This description will be used as a tooltip to explain
-    // the tie breaker to the players.
-    // Note: if you are NOT using any tie breaker, leave the empty string.
+    // the tiebreaker to the players.
+    // Note: if you are NOT using any tiebreaker, leave the empty string.
     //
     // Example: 'tie_breaker_description' => totranslate( "Number of remaining cards in hand" ),
-    'tie_breaker_description' => '',
+    'tie_breaker_description' => totranslate('Number of points earned during the last round'),
 
     // If in the game, all losers are equal (no score to rank them or explicit in the rules that losers are not ranked between them), set this to true
     // The game end result will display "Winner" for the 1st player and "Loser" for all other players
@@ -100,10 +100,10 @@ $gameinfos = [
     'strategy' => 3,
 
     // Diplomacy of the game, from 0 (no interaction in this game) to 5 (totally based on interaction and discussion between players)
-    'diplomacy' => 1,
+    'diplomacy' => 2,
 
     // Colors attributed to players
-    'player_colors' => ['ff0000', '008000', '0000ff', 'ffa500', '773300'],
+    'player_colors' => ['ff0000', '00aa00', '2222ff', 'ffbb00', '222222'],
 
     // Favorite colors support : if set to "true", support attribution of favorite colors based on player's preferences (see reattributeColorsBasedOnPreferences PHP method)
     // NB: this parameter is used only to flag games supporting this feature; you must use (or not use) reattributeColorsBasedOnPreferences PHP method to actually enable or disable the feature.

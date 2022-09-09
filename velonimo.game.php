@@ -413,14 +413,14 @@ class Velonimo extends Table
         if (($numberOfCurrentPlayerCards - $numberOfPlayedCards) === 0) {
             $currentRound = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
             $nextRankForRound = $this->getNextRankForRound($players, $currentRound);
-            $currentPlayer->addRoundRanking($currentRound, $nextRankForRound);
-            $this->updatePlayerRoundsRanking($currentPlayer);
+            $this->updatePlayerRoundsRanking($currentPlayer, $players, $currentRound, $nextRankForRound);
             if ($nextRankForRound === 1) {
                 $this->incStat(1, 'numberOfRoundsWon', $currentPlayerId);
             }
             self::notifyAllPlayers('playerHasFinishedRound', clienttranslate('${player_name} finished in position ${rank}'), [
                 'playerId' => $currentPlayer->getId(),
                 'roundsRanking' => $currentPlayer->getRoundsRanking(),
+                'lastNumberOfPointsEarned' => $currentPlayer->getLastNumberOfPointsEarned(),
                 'player_name' => $currentPlayerName,
                 'rank' => $nextRankForRound,
             ]);
@@ -433,8 +433,7 @@ class Velonimo extends Table
             // end the round if there is only 1 player who can play now
             if (count($playersWhoCanPlay) === 1) {
                 $lastPlayer = $playersWhoCanPlay[0];
-                $lastPlayer->addRoundRanking($currentRound, $nextRankForRound + 1);
-                $this->updatePlayerRoundsRanking($lastPlayer);
+                $this->updatePlayerRoundsRanking($lastPlayer, $players, $currentRound, $nextRankForRound + 1);
 
                 $this->gamestate->nextState('endRound');
                 return;
@@ -909,19 +908,9 @@ class Velonimo extends Table
     function stEndRound() {
         // update players score and jersey
         $players = $this->getPlayersFromDatabase();
-        $numberOfPlayers = count($players);
         $currentRound = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
-        $numberOfPointsForRoundByPlayerId = [];
         foreach ($players as $k => $player) {
-            $playerCurrentRoundRank = $player->getLastRoundRank();
-            $numberOfPointsForRoundByPlayerId[$player->getId()] = $this->getNumberOfPointsAtRankForRound(
-                $playerCurrentRoundRank,
-                $currentRound,
-                $numberOfPlayers
-            );
-            $players[$k] = $player->addPoints(
-                $numberOfPointsForRoundByPlayerId[$player->getId()]
-            );
+            $players[$k] = $player->addPoints($player->getLastNumberOfPointsEarned());
         }
         $newWinner = $this->getCurrentWinner($players);
         foreach ($players as $k => $player) {
@@ -949,9 +938,9 @@ class Velonimo extends Table
         $translatedMessageForPoints = clienttranslate('${player_name} wins ${points} point(s)');
         $translatedMessageForNoPoints = clienttranslate('${player_name} does not get any point');
         foreach ($players as $player) {
-            self::notifyAllPlayers('pointsWon', ($numberOfPointsForRoundByPlayerId[$player->getId()] > 0) ? $translatedMessageForPoints : $translatedMessageForNoPoints, [
+            self::notifyAllPlayers('pointsWon', ($player->getLastNumberOfPointsEarned() > 0) ? $translatedMessageForPoints : $translatedMessageForNoPoints, [
                 'player_name' => $player->getName(),
-                'points' => $numberOfPointsForRoundByPlayerId[$player->getId()],
+                'points' => $player->getLastNumberOfPointsEarned(),
             ]);
         }
 
@@ -983,7 +972,7 @@ class Velonimo extends Table
                 ],
                 'type' => 'header'
             ];
-            $roundPoints[] = $numberOfPointsForRoundByPlayerId[$player->getId()];
+            $roundPoints[] = $player->getLastNumberOfPointsEarned();
             $totalPoints[] = $player->getScore();
         }
         $this->notifyAllPlayers( 'tableWindow', '', array(
@@ -1150,7 +1139,7 @@ class Velonimo extends Table
      */
     private function getPlayersFromDatabase(): array {
         $players = array_values(self::getCollectionFromDB(
-            'SELECT player_id, player_no, player_name, player_color, player_score, rounds_ranking, is_wearing_jersey FROM player'
+            'SELECT player_id, player_no, player_name, player_color, player_score, player_score_aux, rounds_ranking, is_wearing_jersey FROM player'
         ));
 
         return array_map(
@@ -1160,6 +1149,7 @@ class Velonimo extends Table
                 $player['player_name'],
                 $player['player_color'],
                 (int) $player['player_score'],
+                (int) $player['player_score_aux'],
                 VelonimoPlayer::deserializeRoundsRanking($player['rounds_ranking']),
                 ((int) $player['is_wearing_jersey']) === 1
             ),
@@ -1227,6 +1217,7 @@ class Velonimo extends Table
                 'name' => $player->getName(),
                 'color' => $player->getColor(),
                 'score' => $player->getScore(),
+                'lastNumberOfPointsEarned' => $player->getLastNumberOfPointsEarned(),
                 'roundsRanking' => $player->getRoundsRanking(),
                 'isWearingJersey' => $player->isWearingJersey(),
                 'howManyCards' => count($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYER_HAND, $player->getId())),
@@ -1351,10 +1342,26 @@ class Velonimo extends Table
         self::notifyAllPlayers('attackRewardCardsDiscarded', '', []);
     }
 
-    private function updatePlayerRoundsRanking(VelonimoPlayer $player): void {
+    /**
+     * @param VelonimoPlayer[] $players
+     */
+    private function updatePlayerRoundsRanking(
+        VelonimoPlayer $player,
+        array $players,
+        int $currentRound,
+        int $nextRankForRound
+    ): void {
+        $player->addRoundRanking($currentRound, $nextRankForRound);
+        $player->setLastNumberOfPointsEarned($this->getNumberOfPointsAtRankForRound(
+            $player->getLastRoundRank(),
+            $currentRound,
+            count($players)
+        ));
+
         self::DbQuery(sprintf(
-            'UPDATE player SET rounds_ranking="%s" WHERE player_id=%s',
+            'UPDATE player SET rounds_ranking="%s", player_score_aux=%s WHERE player_id=%s',
             VelonimoPlayer::serializeRoundsRanking($player->getRoundsRanking()),
+            $player->getLastNumberOfPointsEarned(),
             $player->getId()
         ));
     }

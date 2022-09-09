@@ -118,7 +118,7 @@ Board
     font-weight: bold;
     border: 2px solid transparent;
     box-sizing: border-box;
-    z-index: 1;
+    z-index: 5;
 }
 .player-table.selectable .player-table-name,
 .player-table.selectable-for-card-picking .player-table-name {
@@ -151,6 +151,7 @@ Board
     padding-left: 100px;
     transition-property: top, bottom;
     transition-duration: 1s;
+    z-index: 4;
 }
 .player-table.selectable .player-table-hand,
 .player-table.selectable-for-card-picking .player-table-hand {
@@ -214,7 +215,7 @@ Board
     font-weight: bold;
     opacity: 0;
     transition-property: opacity;
-    transition-duration: 0.4s;
+    transition-duration: 0.5s;
 }
 .player-table.selectable .player-table-speech-bubble,
 .player-table.selectable-for-card-picking .player-table-speech-bubble {
@@ -265,8 +266,7 @@ Board
 .player-table.player-position-bottom .player-table-speech-bubble.speech-bubble-on-right::after {
     transform: rotate(60deg);
 }
-.player-table-speech-bubble.show-bubble,
-.player-table-speech-bubble.temporary-show-bubble {
+.player-table-speech-bubble.show-bubble {
     opacity: 1;
 }
 .player-table.is-wearing-jersey .player-table-jersey {
@@ -353,17 +353,23 @@ Board cards
     height: 148px; /* cardHeight + (cardHeight / 6) */
     z-index: 4;
 }
+#previous-last-played-cards {
+    position: absolute;
+    top: 0;
+    height: 126px; /* cardHeight */
+    z-index: 8;
+}
 #last-played-cards {
     position: absolute;
     bottom: 0;
     height: 126px; /* cardHeight */
     z-index: 10;
 }
-#previous-last-played-cards {
-    position: absolute;
-    top: 0;
-    height: 126px; /* cardHeight */
-    z-index: 8;
+#previous-last-played-cards .velonimo-card,
+#last-played-cards .velonimo-card {
+    transition-property: all;
+    transition-duration: 0.5s;
+    transform: scale(1.2);
 }
 /* /!\ 2P mode only */
 #cards-deck {

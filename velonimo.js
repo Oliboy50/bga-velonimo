@@ -96,7 +96,6 @@ const DOM_CLASS_ACTIVE_PLAYER = 'active';
 const DOM_CLASS_SELECTABLE_PLAYER = 'selectable';
 const DOM_CLASS_NON_SELECTABLE_CARD = 'non-selectable-player-card';
 const DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW = 'show-bubble';
-const DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW_TEMPORARY = 'temporary-show-bubble';
 const DOM_CLASS_SPEECH_BUBBLE = 'player-table-speech-bubble';
 const DOM_CLASS_SPEECH_BUBBLE_LEFT = 'speech-bubble-on-left';
 const DOM_CLASS_SPEECH_BUBBLE_RIGHT = 'speech-bubble-on-right';
@@ -136,56 +135,56 @@ const PLAYERS_PLACES_BY_NUMBER_OF_PLAYERS = {
     },
     3: {
         0: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_MIDDLE_LEFT}`,
+            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
             bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
         },
         1: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_MIDDLE_LEFT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
         },
         2: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_MIDDLE_RIGHT}`,
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_MIDDLE_RIGHT}`,
             bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
     },
     4: {
         0: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_MIDDLE_LEFT}`,
+            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
             bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
         },
         1: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_MIDDLE_LEFT}`,
-            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_LEFT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
         2: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_MIDDLE_RIGHT}`,
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
             bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
         3: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_MIDDLE_RIGHT}`,
-            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
         },
     },
     5: {
         0: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_LEFT}`,
-            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
-        },
-        1: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_MIDDLE_LEFT}`,
+            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_MIDDLE_LEFT}`,
             bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
         },
+        1: {
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_LEFT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
+        },
         2: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_MIDDLE_RIGHT}`,
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
             bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
         3: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
+            tableStyle: `${TABLE_STYLE_VERTICAL_TOP} ${TABLE_STYLE_HORIZONTAL_RIGHT}`,
             bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
         },
         4: {
-            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_CENTER}`,
-            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_LEFT,
+            tableStyle: `${TABLE_STYLE_VERTICAL_BOTTOM} ${TABLE_STYLE_HORIZONTAL_MIDDLE_RIGHT}`,
+            bubbleClass: DOM_CLASS_SPEECH_BUBBLE_RIGHT,
         },
     },
 };
@@ -267,8 +266,6 @@ function (dojo, declare) {
 </div>`,
                     DOM_ID_BOARD_CARPET);
             });
-            this.resetDisplayedNumberOfCardsByPlayerId();
-            this.setupPlayersHiddenCards();
             this.setupPlayersFinishPosition();
 
             // setup jersey
@@ -295,6 +292,7 @@ function (dojo, declare) {
             // init playerHand "ebg.stock" component
             this.playerHand = new ebg.stock();
             this.playerHand.create(this, $(DOM_ID_PLAYER_HAND), CARD_WIDTH, CARD_HEIGHT);
+            this.playerHand.resizeItems(CARD_WIDTH, CARD_HEIGHT, CARD_WIDTH * 7, CARD_HEIGHT * 8);
             this.playerHand.setSelectionAppearance('class');
             this.playerHand.image_items_per_row = 7;
             // create cards
@@ -344,6 +342,8 @@ function (dojo, declare) {
                     ? this.addJerseyToCards(gamedatas.playedCards)
                     : gamedatas.playedCards
             );
+            this.resetDisplayedNumberOfCardsByPlayerId();
+            this.setupPlayersHiddenCards();
 
             // setup players score
             this.setupPlayersScore();
@@ -1706,13 +1706,9 @@ function (dojo, declare) {
         /**
          * @param {number} playerId
          */
-        showTurnPassedBubbleForAFewSeconds: function (playerId) {
+        showTurnPassedBubble: function (playerId) {
             $(`player-table-${playerId}-speech-bubble`).innerHTML = '<i class="fa fa-repeat"></i>';
-            dojo.addClass(`player-table-${playerId}-speech-bubble`, DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW_TEMPORARY);
-            setTimeout(
-                () => dojo.removeClass(`player-table-${playerId}-speech-bubble`, DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW_TEMPORARY),
-                1000
-            );
+            dojo.addClass(`player-table-${playerId}-speech-bubble`, DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW);
         },
         /**
          * @param {number} playerId
@@ -1960,7 +1956,10 @@ function (dojo, declare) {
         },
         discardPlayerSpeechBubbles: function () {
             dojo.query(`.${DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW}`).forEach((elementDomId) => {
-                dojo.removeClass(elementDomId, DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW);
+                setTimeout(
+                    () => dojo.removeClass(elementDomId, DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW),
+                    500
+                );
             });
         },
         /**
@@ -2383,7 +2382,7 @@ function (dojo, declare) {
             }
         },
         notif_turnPassed: function (data) {
-            this.showTurnPassedBubbleForAFewSeconds(data.args.playerId);
+            this.showTurnPassedBubble(data.args.playerId);
         },
         notif_playerHasFinishedRound: function (data) {
             this.players[data.args.playerId].roundsRanking = data.args.roundsRanking;

@@ -12,6 +12,7 @@ class VelonimoPlayer
     private string $name;
     private string $color;
     private int $score;
+    private int $lastNumberOfPointsEarned;
     /**
      * @var array<int, int> where the key is the round_number and the value is the rank_number
      * Example: if the player finished 1st during the 2nd round (i.e. he won this round), the array will contain [..., 2 => 1, ...].
@@ -25,6 +26,7 @@ class VelonimoPlayer
         string $name,
         string $color,
         int $score,
+        int $lastNumberOfPointsEarned,
         array $roundsRanking,
         bool $isWearingJersey
     ) {
@@ -33,6 +35,7 @@ class VelonimoPlayer
         $this->name = $name;
         $this->color = $color;
         $this->score = $score;
+        $this->lastNumberOfPointsEarned = $lastNumberOfPointsEarned;
         $this->roundsRanking = $roundsRanking;
         $this->isWearingJersey = $isWearingJersey;
     }
@@ -102,6 +105,10 @@ class VelonimoPlayer
     {
         return $this->score;
     }
+    public function getLastNumberOfPointsEarned(): int
+    {
+        return $this->lastNumberOfPointsEarned;
+    }
     public function isWearingJersey(): bool
     {
         return $this->isWearingJersey;
@@ -124,9 +131,15 @@ class VelonimoPlayer
     /*
      *  SETTERS
      */
-    public function addPoints($points): self
+    public function addPoints(int $points): self
     {
         $this->score = $this->score + $points;
+
+        return $this;
+    }
+    public function setLastNumberOfPointsEarned(int $lastNumberOfPointsEarned): self
+    {
+        $this->lastNumberOfPointsEarned = $lastNumberOfPointsEarned;
 
         return $this;
     }
