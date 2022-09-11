@@ -203,6 +203,7 @@ class Velonimo extends Table
     protected function getAllDatas() {
         $result = [];
         $currentPlayerId = (int) self::getCurrentPlayerId();
+        $activePlayerId = (int) self::getActivePlayerId();
         $players = $this->getPlayersFromDatabase();
 
         // Rounds
@@ -213,6 +214,7 @@ class Velonimo extends Table
         // Players
         $result['players'] = $this->formatPlayersForClient($players);
         $result['currentPlayerId'] = $currentPlayerId;
+        $result['activePlayerId'] = $activePlayerId;
 
         // Cards
         $result['currentPlayerCards'] = $this->formatCardsForClient(

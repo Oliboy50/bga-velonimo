@@ -247,7 +247,7 @@ function (dojo, declare) {
             this.players = gamedatas.players;
             const howManyPlayers = Object.keys(this.players).length;
             const playersPlace = PLAYERS_PLACES_BY_NUMBER_OF_PLAYERS[howManyPlayers];
-            this.sortPlayersToHaveTheCurrentPlayerFirstIfPresent(
+            this.sortPlayersToStartWithPlayerIdIfPresent(
                 this.sortPlayersByTurnOrderPosition(Object.entries(this.players).map((entry) => entry[1])),
                 gamedatas.currentPlayerId
             ).forEach((player, index) => {
@@ -264,7 +264,8 @@ function (dojo, declare) {
     <div id="player-table-${player.id}-finish-position" class="player-table-finish-position"></div>
     <div id="player-table-${player.id}-speech-bubble" class="${DOM_CLASS_SPEECH_BUBBLE} ${playerPosition.bubbleClass}" style="color: ${playerColorRGB};"></div>
 </div>`,
-                    DOM_ID_BOARD_CARPET);
+                    DOM_ID_BOARD_CARPET
+                );
             });
             this.setupPlayersFinishPosition();
 
@@ -344,6 +345,7 @@ function (dojo, declare) {
             );
             this.resetDisplayedNumberOfCardsByPlayerId();
             this.setupPlayersHiddenCards();
+            this.setupTurnPassedBubbles(gamedatas.playedCardsPlayerId, gamedatas.activePlayerId);
 
             // setup players score
             this.setupPlayersScore();
@@ -1456,16 +1458,16 @@ function (dojo, declare) {
         },
         /**
          * @param {Object[]} players
-         * @param {number} currentPlayerId
+         * @param {number} playerId
          * @returns {Object[]}
          */
-        sortPlayersToHaveTheCurrentPlayerFirstIfPresent: function (players, currentPlayerId) {
-            const currentPlayerIndex = players.findIndex((player) => player.id === currentPlayerId);
-            if (currentPlayerIndex <= 0) {
+        sortPlayersToStartWithPlayerIdIfPresent: function (players, playerId) {
+            const playerIndex = players.findIndex((player) => player.id === playerId);
+            if (playerIndex <= 0) {
                 return players;
             }
 
-            return [...players.slice(currentPlayerIndex), ...players.slice(0, currentPlayerIndex)];
+            return [...players.slice(playerIndex), ...players.slice(0, playerIndex)];
         },
         /**
          * @param {Object[]} cards
@@ -1704,10 +1706,32 @@ function (dojo, declare) {
             this.slideToObject(`cards-stack-${topOfStackCardId}`, DOM_ID_PREVIOUS_LAST_PLAYED_CARDS).play();
         },
         /**
+         * @param {number} lastPlayedCardsPlayerId
+         * @param {number} activePlayerId
+         */
+        setupTurnPassedBubbles: function (lastPlayedCardsPlayerId, activePlayerId) {
+            const sortedPlayers = this.sortPlayersToStartWithPlayerIdIfPresent(
+                this.sortPlayersByTurnOrderPosition(Object.entries(this.players).map((entry) => entry[1])),
+                lastPlayedCardsPlayerId
+            );
+
+            const activePlayerIndex = sortedPlayers.findIndex((player) => player.id === activePlayerId);
+            // if the active player is the first player after the last played cards player
+            // or if the last played cards player is the active player
+            // or if there is no active player among players (this may happen at the end of the game... maybe?)
+            if (activePlayerIndex <= 1) {
+                return;
+            }
+
+            for (let i = 1; i < activePlayerIndex; i++) {
+                this.showTurnPassedBubble(sortedPlayers[i].id);
+            }
+        },
+        /**
          * @param {number} playerId
          */
         showTurnPassedBubble: function (playerId) {
-            $(`player-table-${playerId}-speech-bubble`).innerHTML = '<i class="fa fa-repeat"></i>';
+            $(`player-table-${playerId}-speech-bubble`).innerHTML = '<i class="fa fa-repeat turn-passed-bubble-content"></i>';
             dojo.addClass(`player-table-${playerId}-speech-bubble`, DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW);
         },
         /**

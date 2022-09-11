@@ -228,10 +228,13 @@ Board
     top: -15px;
 }
 .player-table-speech-bubble.speech-bubble-on-left {
-    right: 190px;
+    right: 185px;
 }
 .player-table-speech-bubble.speech-bubble-on-right {
-    left: 190px;
+    left: 185px;
+}
+.player-table-speech-bubble .turn-passed-bubble-content {
+    padding: 3px;
 }
 .player-table-speech-bubble::after {
     content: "";
