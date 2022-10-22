@@ -58,4 +58,14 @@ $game_options = [
         ],
         'default' => 5,
     ],
+//    110 => [
+//        'name' => totranslate('Extension "Legends"'),
+//        'values' => [
+//            0 => ['name' => totranslate('No')],
+//            1 => ['name' => totranslate('Yes')],
+//        ],
+//        'default' => 0,
+//        'description' => totranslate('Add 6 special cards'),
+//        'nobeginner' => true,
+//    ],
 ];

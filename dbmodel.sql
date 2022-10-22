@@ -34,4 +34,10 @@ CREATE TABLE IF NOT EXISTS `card` (
 
 ALTER TABLE `player`
     ADD `rounds_ranking` VARCHAR(250) NOT NULL DEFAULT '',
-    ADD `is_wearing_jersey` TINYINT UNSIGNED NOT NULL DEFAULT 0;
+    ADD `has_card_jersey` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    ADD `has_card_legends_broom_wagon` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    ADD `has_card_legends_eagle` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    ADD `has_card_legends_panda` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    ADD `has_card_legends_shark` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    ADD `has_card_legends_badger` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    ADD `has_card_legends_elephant` TINYINT UNSIGNED NOT NULL DEFAULT 0;

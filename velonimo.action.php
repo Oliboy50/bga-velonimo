@@ -45,8 +45,24 @@ class action_velonimo extends APP_GameAction
         $cardIds = explode(';', $cardsArg);
 
         $withJerseyArg = (bool) self::getArg('withJersey', AT_bool, true);
+        $withLegendsBroomWagonArg = (bool) self::getArg('withLegendsBroomWagon', AT_bool, true);
+        $withLegendsEagleArg = (bool) self::getArg('withLegendsEagle', AT_bool, true);
+        $withLegendsPandaArg = (bool) self::getArg('withLegendsPanda', AT_bool, true);
+        $withLegendsSharkArg = (bool) self::getArg('withLegendsShark', AT_bool, true);
+        $withLegendsBadgerArg = (bool) self::getArg('withLegendsBadger', AT_bool, true);
+        $withLegendsElephantArg = (bool) self::getArg('withLegendsElephant', AT_bool, true);
 
-        $this->game->playCards(array_map(fn ($id) => (int) $id, $cardIds), $withJerseyArg);
+        // @TODO: support extension legends
+        $this->game->playCards(
+            array_map(fn ($id) => (int) $id, $cardIds),
+            $withJerseyArg,
+            $withLegendsBroomWagonArg,
+            $withLegendsEagleArg,
+            $withLegendsPandaArg,
+            $withLegendsSharkArg,
+            $withLegendsBadgerArg,
+            $withLegendsElephantArg
+        );
 
         self::ajaxResponse();
     }

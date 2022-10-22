@@ -20,7 +20,7 @@ define('ST_PLAYER_GIVE_CARDS_BACK_TO_PLAYER_AFTER_PICKING', 41);
 define('ST_END_ROUND', 80);
 define('ST_BGA_GAME_END', 99);
 
-// Cards color ID
+// Cards color
 define('COLOR_BLUE', 10);
 define('COLOR_BROWN', 20);
 define('COLOR_GRAY', 30);
@@ -46,6 +46,13 @@ define('VALUE_40', 40);
 define('VALUE_45', 45);
 define('VALUE_50', 50);
 define('VALUE_JERSEY', 10);
+define('VALUE_LEGENDS_BROOM_WAGON', 5);
 
 // Special cards ID
-define('CARD_ID_JERSEY', 0);
+define('CARD_ID_JERSEY_PLUS_TEN', -2);
+define('CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE', -3);
+define('CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER', -4);
+define('CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR', -5);
+define('CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN', -6);
+define('CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR', -7);
+define('CARD_ID_LEGENDS_ELEPHANT_STOP', -8);

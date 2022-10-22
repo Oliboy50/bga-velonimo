@@ -19,6 +19,12 @@ class VelonimoPlayer
      */
     private array $roundsRanking;
     private bool $isWearingJersey;
+    private bool $hasCardLegendsBroomWagon;
+    private bool $hasCardLegendsEagle;
+    private bool $hasCardLegendsPanda;
+    private bool $hasCardLegendsShark;
+    private bool $hasCardLegendsBadger;
+    private bool $hasCardLegendsElephant;
 
     public function __construct(
         int $bgaId,
@@ -28,7 +34,13 @@ class VelonimoPlayer
         int $score,
         int $lastNumberOfPointsEarned,
         array $roundsRanking,
-        bool $isWearingJersey
+        bool $isWearingJersey,
+        bool $hasCardLegendsBroomWagon,
+        bool $hasCardLegendsEagle,
+        bool $hasCardLegendsPanda,
+        bool $hasCardLegendsShark,
+        bool $hasCardLegendsBadger,
+        bool $hasCardLegendsElephant
     ) {
         $this->bgaId = $bgaId;
         $this->naturalOrderPosition = $naturalOrderPosition;
@@ -38,6 +50,12 @@ class VelonimoPlayer
         $this->lastNumberOfPointsEarned = $lastNumberOfPointsEarned;
         $this->roundsRanking = $roundsRanking;
         $this->isWearingJersey = $isWearingJersey;
+        $this->hasCardLegendsBroomWagon = $hasCardLegendsBroomWagon;
+        $this->hasCardLegendsEagle = $hasCardLegendsEagle;
+        $this->hasCardLegendsPanda = $hasCardLegendsPanda;
+        $this->hasCardLegendsShark = $hasCardLegendsShark;
+        $this->hasCardLegendsBadger = $hasCardLegendsBadger;
+        $this->hasCardLegendsElephant = $hasCardLegendsElephant;
     }
 
     /*
@@ -112,6 +130,30 @@ class VelonimoPlayer
     public function isWearingJersey(): bool
     {
         return $this->isWearingJersey;
+    }
+    public function hasCardLegendsBroomWagon(): bool
+    {
+        return $this->hasCardLegendsBroomWagon;
+    }
+    public function hasCardLegendsEagle(): bool
+    {
+        return $this->hasCardLegendsEagle;
+    }
+    public function hasCardLegendsPanda(): bool
+    {
+        return $this->hasCardLegendsPanda;
+    }
+    public function hasCardLegendsShark(): bool
+    {
+        return $this->hasCardLegendsShark;
+    }
+    public function hasCardLegendsBadger(): bool
+    {
+        return $this->hasCardLegendsBadger;
+    }
+    public function hasCardLegendsElephant(): bool
+    {
+        return $this->hasCardLegendsElephant;
     }
     public function getRoundsRanking(): array
     {

@@ -60,7 +60,13 @@ const VALUE_50 = 50;
 const VALUE_JERSEY = 10;
 
 // Special cards ID
-const CARD_ID_JERSEY = 0;
+const CARD_ID_JERSEY_PLUS_TEN = -2;
+const CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE = -3;
+const CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER = -4;
+const CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR = -5;
+const CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN = -6;
+const CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR = -7;
+const CARD_ID_LEGENDS_ELEPHANT_STOP = -8;
 
 // DOM IDs
 const DOM_ID_APP = 'velonimo-game';
@@ -201,7 +207,7 @@ function (dojo, declare) {
             this.resetCurrentState();
             this.currentRound = 0;
             this.currentPlayerHasJersey = false;
-            this.jerseyHasBeenUsedInTheCurrentRound = false;
+            this.jerseyIsNotPlayable = false;
             this.howManyRounds = 0;
             this.playedCardsValue = 0;
             this.howManyCardsToGiveBack = 0;
@@ -216,7 +222,7 @@ function (dojo, declare) {
         setup: function (gamedatas) {
             this.currentState = gamedatas.gamestate.name;
             this.currentRound = gamedatas.currentRound;
-            this.jerseyHasBeenUsedInTheCurrentRound = gamedatas.jerseyHasBeenUsedInTheCurrentRound;
+            this.jerseyIsNotPlayable = gamedatas.jerseyIsNotPlayable;
             this.howManyRounds = gamedatas.howManyRounds;
 
             // setup board
@@ -270,7 +276,7 @@ function (dojo, declare) {
             this.setupPlayersFinishPosition();
 
             // setup jersey
-            if (gamedatas.jerseyHasBeenUsedInTheCurrentRound) {
+            if (gamedatas.jerseyIsNotPlayable) {
                 this.useJerseyForCurrentRound();
             } else {
                 this.restoreJerseyForCurrentRound();
@@ -324,7 +330,7 @@ function (dojo, declare) {
             dojo.connect($(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON), 'onclick', this, 'onClickOnTogglePlayerHandSortButton');
             // setup currentPlayer cards
             this.addCardsToPlayerHand(
-                (this.currentPlayerHasJersey && !this.jerseyHasBeenUsedInTheCurrentRound)
+                (this.currentPlayerHasJersey && !this.jerseyIsNotPlayable)
                     ? this.addJerseyToCards(gamedatas.currentPlayerCards)
                     : gamedatas.currentPlayerCards,
                 false
@@ -762,7 +768,7 @@ function (dojo, declare) {
             return undefined;
         },
         useJerseyForCurrentRound: function () {
-            this.jerseyHasBeenUsedInTheCurrentRound = true;
+            this.jerseyIsNotPlayable = true;
 
             Object.entries(this.players).forEach((entry) => {
                 const player = entry[1];
@@ -775,7 +781,7 @@ function (dojo, declare) {
             });
         },
         restoreJerseyForCurrentRound: function () {
-            this.jerseyHasBeenUsedInTheCurrentRound = false;
+            this.jerseyIsNotPlayable = false;
 
             Object.entries(this.players).forEach((entry) => {
                 const player = entry[1];
@@ -1304,10 +1310,10 @@ function (dojo, declare) {
 
                 return [
                     ...acc,
-                    // add highest color combination
-                    [card, ...cardsThatCanBePlayedWithCard].filter((c) => c.color === card.color || c.id === CARD_ID_JERSEY).sort(sortCardsById),
-                    // add highest value combination
-                    [card, ...cardsThatCanBePlayedWithCard].filter((c) => c.value === card.value || c.id === CARD_ID_JERSEY).sort(sortCardsById),
+                    // add the highest color combination
+                    [card, ...cardsThatCanBePlayedWithCard].filter((c) => c.color === card.color || c.id === CARD_ID_JERSEY_PLUS_TEN).sort(sortCardsById),
+                    // add the highest value combination
+                    [card, ...cardsThatCanBePlayedWithCard].filter((c) => c.value === card.value || c.id === CARD_ID_JERSEY_PLUS_TEN).sort(sortCardsById),
                 ];
 
             }, []);
@@ -1339,8 +1345,8 @@ function (dojo, declare) {
          * @returns {number}
          */
         getCardsValue: function (cards) {
-            const withJersey = cards.map((c) => c.id).includes(CARD_ID_JERSEY);
-            const cardsWithoutJersey = cards.filter((c) => c.id !== CARD_ID_JERSEY);
+            const withJersey = cards.map((c) => c.id).includes(CARD_ID_JERSEY_PLUS_TEN);
+            const cardsWithoutJersey = cards.filter((c) => c.id !== CARD_ID_JERSEY_PLUS_TEN);
             if (!cardsWithoutJersey.length) {
                 return 0;
             }
@@ -1384,8 +1390,8 @@ function (dojo, declare) {
                 this.isCurrentPlayerActive()
                 && this.currentState === 'playerGiveCardsBackAfterPicking'
             ) {
-                if (this.playerHand.isSelected(CARD_ID_JERSEY)) {
-                    this.playerHand.unselectItem(CARD_ID_JERSEY);
+                if (this.playerHand.isSelected(CARD_ID_JERSEY_PLUS_TEN)) {
+                    this.playerHand.unselectItem(CARD_ID_JERSEY_PLUS_TEN);
                 }
                 this.displayCardsAsNonSelectable(this.addJerseyToCards([]));
             } else {
@@ -1749,7 +1755,7 @@ function (dojo, declare) {
             if (playerId !== this.player_id) {
                 this.placeOnObject(`cards-stack-${topOfStackCardId}`, `player-table-${playerId}-hand`);
                 cards.forEach((card) => {
-                    if (card.id !== CARD_ID_JERSEY) {
+                    if (card.id !== CARD_ID_JERSEY_PLUS_TEN) {
                         this.decreaseNumberOfCardsOfPlayer(playerId, 1);
                     }
                 });
@@ -1909,7 +1915,7 @@ function (dojo, declare) {
             cards.forEach((card) => {
                 if (
                     updateNumberOfCards
-                    && card.id !== CARD_ID_JERSEY
+                    && card.id !== CARD_ID_JERSEY_PLUS_TEN
                 ) {
                     if (fromDomId) {
                         setTimeout(
@@ -1946,7 +1952,7 @@ function (dojo, declare) {
             this.setupGroupCardsButton();
 
             this.playerHand.removeFromStockById(cardId);
-            if (cardId !== CARD_ID_JERSEY) {
+            if (cardId !== CARD_ID_JERSEY_PLUS_TEN) {
                 this.decreaseNumberOfCardsOfPlayer(this.player_id, 1);
             }
             this.setupPlayerHandSelectableCards();
@@ -1958,7 +1964,7 @@ function (dojo, declare) {
             return cards.concat(
                 this.getCardObjectFromPositionInSpriteAndId(
                     this.getCardPositionInSpriteByColorAndValue(COLOR_JERSEY, VALUE_JERSEY),
-                    CARD_ID_JERSEY
+                    CARD_ID_JERSEY_PLUS_TEN
                 )
             );
         },
@@ -2250,8 +2256,23 @@ function (dojo, declare) {
             }
 
             const cards = this.getSelectedPlayerCards();
-            const withJersey = cards.map((c) => c.id).includes(CARD_ID_JERSEY);
-            const playedCards = cards.filter((c) => c.id !== CARD_ID_JERSEY);
+            const cardIds = cards.map((c) => c.id);
+            const withJersey = cardIds.includes(CARD_ID_JERSEY_PLUS_TEN);
+            const withLegendsBroomWagon = cardIds.includes(CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE);
+            const withLegendsEagle = cardIds.includes(CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER);
+            const withLegendsPanda = cardIds.includes(CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR);
+            const withLegendsShark = cardIds.includes(CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN);
+            const withLegendsBadger = cardIds.includes(CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR);
+            const withLegendsElephant = cardIds.includes(CARD_ID_LEGENDS_ELEPHANT_STOP);
+            const playedCards = cards.filter((c) => ![
+                CARD_ID_JERSEY_PLUS_TEN,
+                CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE,
+                CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER,
+                CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR,
+                CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN,
+                CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR,
+                CARD_ID_LEGENDS_ELEPHANT_STOP,
+            ].includes(c.id));
             if (playedCards.length <= 0) {
                 return;
             }
@@ -2259,6 +2280,12 @@ function (dojo, declare) {
             this.requestAction('playCards', {
                 cards: playedCards.map(card => card.id).join(';'),
                 withJersey: withJersey,
+                withLegendsBroomWagon: withLegendsBroomWagon,
+                withLegendsEagle: withLegendsEagle,
+                withLegendsPanda: withLegendsPanda,
+                withLegendsShark: withLegendsShark,
+                withLegendsBadger: withLegendsBadger,
+                withLegendsElephant: withLegendsElephant,
             });
 
             this.unselectAllCards();
@@ -2367,7 +2394,7 @@ function (dojo, declare) {
         notif_cardsDealt: function (data) {
             this.playerHand.removeAll();
             this.resetCardsGroups();
-            this.addCardsToPlayerHand((this.currentPlayerHasJersey && !this.jerseyHasBeenUsedInTheCurrentRound)
+            this.addCardsToPlayerHand((this.currentPlayerHasJersey && !this.jerseyIsNotPlayable)
                 ? this.addJerseyToCards(data.args.cards)
                 : data.args.cards,
                 false
@@ -2433,9 +2460,9 @@ function (dojo, declare) {
             // in order to have a beautiful jersey for the winner of the game (at the very end)
             if (
                 this.currentPlayerHasJersey
-                && !this.jerseyHasBeenUsedInTheCurrentRound
+                && !this.jerseyIsNotPlayable
             ) {
-                this.removeCardFromPlayerHand(CARD_ID_JERSEY);
+                this.removeCardFromPlayerHand(CARD_ID_JERSEY_PLUS_TEN);
             }
             const previousJerseyWearerId = this.getCurrentJerseyWearerIdIfExists();
             this.players = data.args.players;
