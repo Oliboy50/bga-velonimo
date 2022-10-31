@@ -83,6 +83,7 @@ Board
     top: 0;
     left: 2px;
     text-align: center;
+    text-transform: uppercase;
     border: 1px solid black;
     border-radius: 8px;
 }
@@ -416,17 +417,47 @@ Current player hand
 .spectatorMode #my-hand-wrapper {
     display: none;
 }
+#my-hand-title-wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: space-between;
+    align-items: center;
+}
+#my-hand-title-wrapper-left {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-content: center;
+    align-items: center;
+}
+#my-hand-title-wrapper-right {
+    display: flex;
+    flex-direction: row-reverse;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-content: center;
+    align-items: center;
+}
 #my-hand-title {
-    display: inline-block;
+    margin-left: 5px;
+    text-decoration: underline;
 }
-#toggle-sort-button {
-    display: inline-block;
-    margin: 0 0 0 10px;
-}
+#toggle-sort-button,
 #group-cards-button,
 #ungroup-cards-button {
-    display: inline-block;
-    margin: 0 0 0 10px;
+    margin-left: 10px;
+}
+#my-hand-selected-cards {
+    padding: 10px;
+    border: 1px solid black;
+    border-radius: 40px;
+}
+#my-hand-selected-cards-value {
+    margin-left: 5px;
+    font-weight: bold;
 }
 #my-hand .stockitem {
     border-radius: 10px;
@@ -583,8 +614,37 @@ END Log HTML
 /**
 Player panel HTML
  */
+.player-panel-velonimo-wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: space-between;
+    align-items: center;
+}
+.player-panel-velonimo-left {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-content: center;
+    align-items: center;
+}
+.player-panel-velonimo-right {
+    display: flex;
+    flex-direction: row-reverse;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-content: center;
+    align-items: center;
+}
+.player-panel-number-of-remaining-cards {
+    width: 40px;
+    margin-top: 10px;
+    margin-right: 10px;
+    text-align: center;
+}
 .player-panel-jersey {
-    display: inline-block;
     width: 40px;
     height: 40px;
     background-size: 40px 40px;

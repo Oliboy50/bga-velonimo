@@ -79,11 +79,14 @@ const DOM_ID_LAST_PLAYED_CARDS = 'last-played-cards';
 const DOM_ID_PREVIOUS_LAST_PLAYED_CARDS = 'previous-last-played-cards';
 const DOM_ID_PLAYER_HAND = 'my-hand';
 const DOM_ID_PLAYER_HAND_TITLE_WRAPPER = 'my-hand-title-wrapper';
+const DOM_ID_PLAYER_HAND_TITLE_WRAPPER_LEFT = 'my-hand-title-wrapper-left';
+const DOM_ID_PLAYER_HAND_TITLE_WRAPPER_RIGHT = 'my-hand-title-wrapper-right';
 const DOM_ID_PLAYER_HAND_TITLE = 'my-hand-title';
 const DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON = 'toggle-sort-button';
 const DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL = 'toggle-sort-button-label';
 const DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON = 'group-cards-button';
 const DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON = 'ungroup-cards-button';
+const DOM_ID_PLAYER_HAND_SELECTED_CARDS = 'my-hand-selected-cards';
 const DOM_ID_CURRENT_ROUND = 'current-round';
 const DOM_ID_ACTION_BUTTON_PLAY_CARDS = 'action-button-play-cards';
 const DOM_ID_ACTION_BUTTON_PASS_TURN = 'action-button-pass-turn';
@@ -94,7 +97,11 @@ const DOM_ID_ACTION_BUTTON_GIVE_CARDS = 'action-button-give-cards';
 const DOM_CLASS_PLAYER_TABLE = 'player-table';
 const DOM_CLASS_PLAYER_IS_WEARING_JERSEY = 'is-wearing-jersey';
 const DOM_CLASS_PLAYER_HAS_USED_JERSEY = 'has-used-jersey';
+const DOM_CLASS_PLAYER_PANEL_CONTAINER = 'player-panel-velonimo-wrapper';
+const DOM_CLASS_PLAYER_PANEL_LEFT = 'player-panel-velonimo-left';
+const DOM_CLASS_PLAYER_PANEL_RIGHT = 'player-panel-velonimo-right';
 const DOM_CLASS_JERSEY_IN_PLAYER_PANEL = 'player-panel-jersey';
+const DOM_CLASS_NUMBER_OF_REMAINING_CARDS_IN_PLAYER_PANEL = 'player-panel-number-of-remaining-cards';
 const DOM_CLASS_CARDS_STACK = 'cards-stack';
 const DOM_CLASS_CARDS_STACK_PREVIOUS_PLAYED = 'previous-last-played-cards';
 const DOM_CLASS_DISABLED_ACTION_BUTTON = 'disabled';
@@ -241,8 +248,12 @@ function (dojo, declare) {
 </div>
 <div id="my-hand-wrapper" class="whiteblock">
     <div id="${DOM_ID_PLAYER_HAND_TITLE_WRAPPER}">
-        <h3 id="${DOM_ID_PLAYER_HAND_TITLE}">${_('My hand')}</h3>
-        <a href="javascript:void(0)" id="${DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON}" class="bgabutton bgabutton_gray"><span id="${DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL}"></span></a>
+        <div id="${DOM_ID_PLAYER_HAND_TITLE_WRAPPER_LEFT}">
+            <i class="fa fa-hand-paper-o"></i>
+            <h3 id="${DOM_ID_PLAYER_HAND_TITLE}">${_('My hand')}</h3>
+            <a href="javascript:void(0)" id="${DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON}" class="bgabutton bgabutton_gray"><span id="${DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL}"></span></a>
+        </div>
+        <div id="${DOM_ID_PLAYER_HAND_TITLE_WRAPPER_RIGHT}"></div>
     </div>
     <div id="${DOM_ID_PLAYER_HAND}"></div>
 </div>`,
@@ -262,6 +273,7 @@ function (dojo, declare) {
                 const isPositionTop = playerPosition.tableStyle.indexOf('top') !== -1;
                 const hasJerseyOnLeft = playerPosition.bubbleClass.indexOf('left') !== -1;
 
+                // setup player on board
                 dojo.place(
                     `<div id="player-table-${player.id}" class="${DOM_CLASS_PLAYER_TABLE} ${isPositionTop ? 'player-position-top' : 'player-position-bottom'} ${hasJerseyOnLeft ? 'player-position-jersey-left' : 'player-position-jersey-right'}" style="width: ${PLAYER_TABLE_WIDTH}px; height: ${PLAYER_TABLE_HEIGHT}px; ${playerPosition.tableStyle}">
     <div class="player-table-name" style="color: ${playerColorRGB};"><span>${(player.name.length > 10 ? (player.name.substr(0,10) + '...') : player.name)}</span></div>
@@ -272,6 +284,20 @@ function (dojo, declare) {
 </div>`,
                     DOM_ID_BOARD_CARPET
                 );
+
+                // setup player panel
+                dojo.place(
+                    `<div class="${DOM_CLASS_PLAYER_PANEL_CONTAINER}">
+    <div id="player-panel-${player.id}-velonimo-left"  class="${DOM_CLASS_PLAYER_PANEL_LEFT}">
+        <div id="player-panel-${player.id}-remaining-cards" class="${DOM_CLASS_NUMBER_OF_REMAINING_CARDS_IN_PLAYER_PANEL}">
+            <i class="fa fa-hand-paper-o"></i><span id="player-panel-${player.id}-remaining-cards-number">0</span>
+        </div>
+    </div>
+    <div id="player-panel-${player.id}-velonimo-right"  class="${DOM_CLASS_PLAYER_PANEL_RIGHT}"></div>
+</div>`,
+                    `player_board_${player.id}`
+                );
+                this.addTooltip(`player-panel-${player.id}-remaining-cards`, _('Number of cards in hand'), '');
             });
             this.setupPlayersFinishPosition();
 
@@ -315,6 +341,14 @@ function (dojo, declare) {
             });
             dojo.connect(this.playerHand, 'onChangeSelection', this, (_, itemId) => {
                 if (typeof itemId === 'undefined') {
+                    return;
+                }
+
+                if (
+                    this.isCurrentPlayerActive()
+                    && this.currentState === 'playerGiveCardsBackAfterPicking'
+                ) {
+                    this.setupGiveCardsBackAfterPickingActionButton();
                     return;
                 }
 
@@ -560,6 +594,12 @@ function (dojo, declare) {
             }
         },
         /**
+         * @returns {string}
+         */
+        getTranslatedTextForSelectedCardsValue: function () {
+            return _('Combined value of selected cards');
+        },
+        /**
          * @param {string} action
          * @param {Object} data
          */
@@ -630,6 +670,7 @@ function (dojo, declare) {
                     playerCardsHtml.push(`<div id="player-table-${playerId}-card-${i}" class="velonimo-card back-side" style="transform: rotate(${getCardRotateDeg(howManyCards, i)}deg);"></div>`);
                 }
                 $(`player-table-${playerId}-hand-cards`).innerHTML = playerCardsHtml.join('');
+                $(`player-panel-${playerId}-remaining-cards-number`).innerHTML = howManyCards;
             });
         },
         setupPlayersScore: function () {
@@ -674,10 +715,38 @@ function (dojo, declare) {
             if (!$(DOM_ID_ACTION_BUTTON_PLAY_CARDS)) {
                 this.addActionButton(DOM_ID_ACTION_BUTTON_PLAY_CARDS, _('Play selected cards'), 'onPlayCards');
                 dojo.place(`<span id="${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value"> (${selectedCardsValue})</span>`, DOM_ID_ACTION_BUTTON_PLAY_CARDS);
-                this.addTooltip(`${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value`, _('Total value of selected cards'), '');
+                this.addTooltip(`${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value`, this.getTranslatedTextForSelectedCardsValue(), '');
             }
             dojo.toggleClass(DOM_ID_ACTION_BUTTON_PLAY_CARDS, DOM_CLASS_DISABLED_ACTION_BUTTON, selectedCardsValue <= this.playedCardsValue);
             $(`${DOM_ID_ACTION_BUTTON_PLAY_CARDS}-value`).innerText = ` (${selectedCardsValue})`;
+        },
+        setupSelectedCardsValueInPlayerHand: function () {
+            if ($(DOM_ID_PLAYER_HAND_SELECTED_CARDS)) {
+                dojo.destroy(DOM_ID_PLAYER_HAND_SELECTED_CARDS);
+            }
+
+            const selectedCards = this.getSelectedPlayerCards();
+            if (!selectedCards.length) {
+                return;
+            }
+
+            const getIcon = (cardsValue) => {
+                if (cardsValue < 20) {
+                    return 'battery-empty';
+                } else if (cardsValue < 30) {
+                    return 'battery-quarter';
+                } else if (cardsValue < 40) {
+                    return 'battery-half';
+                } else if (cardsValue < 50) {
+                    return 'battery-three-quarters';
+                } else {
+                    return 'battery-full';
+                }
+            };
+
+            const selectedCardsValue = this.getCardsValue(selectedCards);
+            dojo.place(`<div id="${DOM_ID_PLAYER_HAND_SELECTED_CARDS}"><i class="fa fa-${getIcon(selectedCardsValue)}"></i><span id="${DOM_ID_PLAYER_HAND_SELECTED_CARDS}-value">${selectedCardsValue}</span></div>`, DOM_ID_PLAYER_HAND_TITLE_WRAPPER_RIGHT);
+            this.addTooltip(DOM_ID_PLAYER_HAND_SELECTED_CARDS, this.getTranslatedTextForSelectedCardsValue(), '');
         },
         /**
          *
@@ -715,7 +784,7 @@ function (dojo, declare) {
         moveJerseyToCurrentWinner: function (previousJerseyWearerId) {
             const wearJersey = (playerId) => {
                 dojo.addClass(`player-table-${playerId}`, DOM_CLASS_PLAYER_IS_WEARING_JERSEY);
-                dojo.place(`<div id="player-panel-${playerId}-jersey" class="${DOM_CLASS_JERSEY_IN_PLAYER_PANEL}"></div>`, `player_board_${playerId}`);
+                dojo.place(`<div id="player-panel-${playerId}-jersey" class="${DOM_CLASS_JERSEY_IN_PLAYER_PANEL}"></div>`, `player-panel-${playerId}-velonimo-right`);
                 this.addTooltip(`player-panel-${playerId}-jersey`, _('Current leader of the game'), '');
             };
             const removeJersey = (playerId) => {
@@ -1424,6 +1493,7 @@ function (dojo, declare) {
             });
             this.setupPlayerHandSelectableCards();
             this.setupGroupCardsButton();
+            this.setupSelectedCardsValueInPlayerHand();
             this.setupPlayCardsActionButtonIfNeeded();
         },
         /**
@@ -1440,12 +1510,14 @@ function (dojo, declare) {
             });
             this.setupPlayerHandSelectableCards();
             this.setupGroupCardsButton();
+            this.setupSelectedCardsValueInPlayerHand();
             this.setupPlayCardsActionButtonIfNeeded();
         },
         unselectAllCards: function () {
             this.playerHand.unselectAll();
             this.setupPlayerHandSelectableCards();
             this.setupGroupCardsButton();
+            this.setupSelectedCardsValueInPlayerHand();
             this.setupPlayCardsActionButtonIfNeeded();
         },
         /**
@@ -1737,7 +1809,7 @@ function (dojo, declare) {
          * @param {number} playerId
          */
         showTurnPassedBubble: function (playerId) {
-            $(`player-table-${playerId}-speech-bubble`).innerHTML = '<i class="fa fa-repeat turn-passed-bubble-content"></i>';
+            $(`player-table-${playerId}-speech-bubble`).innerHTML = '<i class="fa fa-backward turn-passed-bubble-content"></i>';
             dojo.addClass(`player-table-${playerId}-speech-bubble`, DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW);
         },
         /**
@@ -1949,13 +2021,13 @@ function (dojo, declare) {
                     this.removeCardsGroup(group.id);
                 }
             });
-            this.setupGroupCardsButton();
-
             this.playerHand.removeFromStockById(cardId);
             if (cardId !== CARD_ID_JERSEY_PLUS_TEN) {
                 this.decreaseNumberOfCardsOfPlayer(this.player_id, 1);
             }
             this.setupPlayerHandSelectableCards();
+            this.setupGroupCardsButton();
+            this.setupSelectedCardsValueInPlayerHand();
         },
         /**
          * @param {Object[]} cards
@@ -2019,7 +2091,7 @@ function (dojo, declare) {
                 if (!$(DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON)) {
                     dojo.place(
                         `<a href="javascript:void(0)" id="${DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON}" class="bgabutton bgabutton_red"><span>${_('Ungroup cards')}</span></a>`,
-                        DOM_ID_PLAYER_HAND_TITLE_WRAPPER
+                        DOM_ID_PLAYER_HAND_TITLE_WRAPPER_LEFT
                     );
                     this.addTooltip(DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON, '', _('Click this button to stop grouping selected cards.'));
                     this.connect($(DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON), 'onclick', 'onClickOnUngroupCardsButton');
@@ -2028,7 +2100,7 @@ function (dojo, declare) {
                 if (!$(DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON)) {
                     dojo.place(
                         `<a href="javascript:void(0)" id="${DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON}" class="bgabutton bgabutton_blue"><span>${_('Group cards')}</span></a>`,
-                        DOM_ID_PLAYER_HAND_TITLE_WRAPPER
+                        DOM_ID_PLAYER_HAND_TITLE_WRAPPER_LEFT
                     );
                     this.addTooltip(DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON, '', _('Click this button to group selected cards. Grouped cards are not affected by sorting.'));
                     this.connect($(DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON), 'onclick', 'onClickOnGroupCardsButton');
@@ -2129,21 +2201,6 @@ function (dojo, declare) {
         resetCurrentState: function () {
             this.currentState = null;
         },
-        /**
-         * @param {Object[]} cardsA
-         * @param {Object[]} cardsB
-         * @returns {boolean}
-         */
-        areSameCards: function (cardsA, cardsB) {
-            if (cardsA.length !== cardsB.length) {
-                return false;
-            }
-
-            const cardsAIds = cardsA.map((c) => c.id);
-            const cardsBIds = cardsB.map((c) => c.id);
-
-            return cardsAIds.every((AId) => cardsBIds.includes(AId));
-        },
 
         ///////////////////////////////////////////////////
         //// Player's action
@@ -2152,67 +2209,48 @@ function (dojo, declare) {
          * @param {number} cardId
          */
         onPlayerCardSelected: function (cardId) {
-            if (
-                this.isCurrentPlayerActive()
-                && this.currentState === 'playerGiveCardsBackAfterPicking'
-            ) {
-                this.setupGiveCardsBackAfterPickingActionButton();
-                return;
-            }
-
             const selectedCards = this.getSelectedPlayerCards();
             const selectedCardsWithoutLastSelectedCard = selectedCards.filter((card) => card.id !== cardId);
-            const playerCardsThatCannotBePlayedWithSelectedCards = this.getPlayerCardsThatCannotBePlayedWithCards(selectedCards);
             const selectedCardGroup = this.getCardsGroupOfCard(cardId);
 
             // if a card in a group has been selected
             if (selectedCardGroup) {
-                const playerCardsThatCannotBePlayedWithSelectedCardGroup = this.getPlayerCardsThatCannotBePlayedWithCards(selectedCardGroup.cards);
                 // if this is the first card selected
                 if (selectedCards.length === 1) {
                     this.selectCards(selectedCardGroup.cards);
-                }
-                // if all cards in this group are playable with already selected cards
-                else if (this.areSameCards(playerCardsThatCannotBePlayedWithSelectedCards, playerCardsThatCannotBePlayedWithSelectedCardGroup)) {
-                    this.selectCards(selectedCardGroup.cards);
-                }
-                // otherwise
-                else {
+                } else {
                     this.unselectCards(selectedCardsWithoutLastSelectedCard);
                     this.selectCards(selectedCardGroup.cards);
                 }
-            }
-            // otherwise
-            else {
-                this.unselectCards(selectedCards.filter(
-                    (card) => playerCardsThatCannotBePlayedWithSelectedCards.map((c) => c.id).includes(card.id)
-                        && cardId !== card.id
-                ));
+            } else {
+                const selectedCardsWithoutLastSelectedCardGroups = this.getCardsGroupsForCards(selectedCardsWithoutLastSelectedCard);
+                // if a cards group was selected
+                if (selectedCardsWithoutLastSelectedCardGroups.length > 0) {
+                    this.unselectCards(selectedCardsWithoutLastSelectedCard);
+                } else {
+                    const playerCardsThatCannotBePlayedWithSelectedCards = this.getPlayerCardsThatCannotBePlayedWithCards(selectedCards);
+                    this.unselectCards(selectedCards.filter(
+                        (card) => playerCardsThatCannotBePlayedWithSelectedCards.map((c) => c.id).includes(card.id)
+                            && cardId !== card.id
+                    ));
+                }
             }
         },
         /**
          * @param {number} cardId
          */
         onPlayerCardUnselected: function (cardId) {
-            if (
-                this.isCurrentPlayerActive()
-                && this.currentState === 'playerGiveCardsBackAfterPicking'
-            ) {
-                this.setupGiveCardsBackAfterPickingActionButton();
-                return;
-            }
-
             this.unselectCards(this.getAllPlayerCards().filter((card) => card.id === cardId));
         },
         onClickOnTogglePlayerHandSortButton: function () {
             const currentSortingMode = this.getCurrentPlayerCardsSortingMode();
             if (currentSortingMode === PLAYER_HAND_SORT_BY_COLOR) {
-                $(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL).innerHTML = _('Sort by color');
+                $(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL).innerHTML = _('Sorted by value');
                 dojo.attr(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, 'data-current-sort', PLAYER_HAND_SORT_BY_VALUE);
                 this.addTooltip(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, '', _('Click this button to sort your hand by color.'));
                 this.sortPlayerCardsByValue();
             } else {
-                $(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL).innerHTML = _('Sort by value');
+                $(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON_LABEL).innerHTML = _('Sorted by color');
                 dojo.attr(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, 'data-current-sort', PLAYER_HAND_SORT_BY_COLOR);
                 this.addTooltip(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON, '', _('Click this button to sort your hand by value.'));
                 this.sortPlayerCardsByColor();

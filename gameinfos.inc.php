@@ -94,7 +94,7 @@ $gameinfos = [
     'complexity' => 1,
 
     // Luck of the game, from 0 (absolutely no luck in this game) to 5 (totally luck driven)
-    'luck' => 4,
+    'luck' => 3,
 
     // Strategy of the game, from 0 (no strategy can be setup) to 5 (totally based on strategy)
     'strategy' => 3,
@@ -103,7 +103,7 @@ $gameinfos = [
     'diplomacy' => 2,
 
     // Colors attributed to players
-    'player_colors' => ['ff0000', '00aa00', '2222ff', 'ffbb00', '222222'],
+    'player_colors' => ['ff4444', '22aa22', '0077ff', 'dd00dd', '777777'],
 
     // Favorite colors support : if set to "true", support attribution of favorite colors based on player's preferences (see reattributeColorsBasedOnPreferences PHP method)
     // NB: this parameter is used only to flag games supporting this feature; you must use (or not use) reattributeColorsBasedOnPreferences PHP method to actually enable or disable the feature.
