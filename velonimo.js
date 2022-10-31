@@ -1809,7 +1809,7 @@ function (dojo, declare) {
          * @param {number} playerId
          */
         showTurnPassedBubble: function (playerId) {
-            $(`player-table-${playerId}-speech-bubble`).innerHTML = '<i class="fa fa-backward turn-passed-bubble-content"></i>';
+            $(`player-table-${playerId}-speech-bubble`).innerHTML = '<i class="fa fa-times"></i>';
             dojo.addClass(`player-table-${playerId}-speech-bubble`, DOM_CLASS_PLAYER_SPEECH_BUBBLE_SHOW);
         },
         /**

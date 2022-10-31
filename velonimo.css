@@ -234,9 +234,6 @@ Board
 .player-table-speech-bubble.speech-bubble-on-right {
     left: 185px;
 }
-.player-table-speech-bubble .turn-passed-bubble-content {
-    padding: 3px;
-}
 .player-table-speech-bubble::after {
     content: "";
     position: absolute;
