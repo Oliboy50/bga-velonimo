@@ -496,7 +496,7 @@ Cards
 }
 .velonimo-card.front-side {
     background-image: url('img/cards.png'); /* background-position is dynamically computed */
-    background-size: 630px 1008px;
+    background-size: 630px 1129px;
 }
 .velonimo-card.back-side {
     background-image: url('img/remaining_cards.png');

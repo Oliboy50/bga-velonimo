@@ -8,7 +8,7 @@
 
 - Create sprite from 180px wide PNG card images:
   ```shell
-  magick montage $(ls blue-*.png) $(ls brown-*.png) $(ls gray-*.png) $(ls green-*.png) $(ls pink-*.png) $(ls red-*.png) $(ls yellow-*.png) jersey.png $(ls adventurer-*.png) -geometry +0+0 -tile 7x8 -mode concatenate -background none cards.png
+  magick montage $(ls blue-*.png) $(ls brown-*.png) $(ls gray-*.png) $(ls green-*.png) $(ls pink-*.png) $(ls red-*.png) $(ls yellow-*.png) jersey.png $(ls adventurer-*.png) $(ls ext_legendes-*.png) -geometry +0+0 -tile 7x9 -mode concatenate -background none cards.png
   ```
 - Reduce generated sprite size by ~90% (using https://tinypng.com or https://compresspng.com if the file is too large)
 

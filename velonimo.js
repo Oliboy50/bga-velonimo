@@ -41,7 +41,7 @@ const COLOR_PINK = 50;
 const COLOR_RED = 60;
 const COLOR_YELLOW = 70;
 const COLOR_ADVENTURER = 80;
-const COLOR_JERSEY = 90;
+const COLOR_SPECIAL = 90;
 
 // Cards value
 const VALUE_1 = 1;
@@ -58,6 +58,12 @@ const VALUE_40 = 40;
 const VALUE_45 = 45;
 const VALUE_50 = 50;
 const VALUE_JERSEY = 10;
+const VALUE_LEGENDS_BROOM_WAGON = 5;
+const VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER = -4;
+const VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR = -5;
+const VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN = -6;
+const VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR = -7;
+const VALUE_LEGENDS_ELEPHANT_STOP = -8;
 
 // Special cards ID
 const CARD_ID_JERSEY_PLUS_TEN = -2;
@@ -215,6 +221,7 @@ function (dojo, declare) {
             this.currentRound = 0;
             this.currentPlayerHasJersey = false;
             this.jerseyIsNotPlayable = false;
+            this.isExtensionLegendsEnabled = false;
             this.howManyRounds = 0;
             this.playedCardsValue = 0;
             this.howManyCardsToGiveBack = 0;
@@ -231,6 +238,7 @@ function (dojo, declare) {
             this.currentRound = gamedatas.currentRound;
             this.jerseyIsNotPlayable = gamedatas.jerseyIsNotPlayable;
             this.howManyRounds = gamedatas.howManyRounds;
+            this.isExtensionLegendsEnabled = gamedatas.isExtensionLegendsEnabled === true;
 
             // setup board
             dojo.place(
@@ -511,7 +519,10 @@ function (dojo, declare) {
                 if (card.color === COLOR_ADVENTURER) {
                     return 32;
                 }
-                if (card.color === COLOR_JERSEY) {
+                if (
+                    card.color === COLOR_SPECIAL
+                    && card.value === VALUE_JERSEY
+                ) {
                     return 25;
                 }
                 return 17;
@@ -529,7 +540,10 @@ function (dojo, declare) {
                 if (card.value === VALUE_7) {
                     return 10;
                 }
-                if (card.color === COLOR_JERSEY) {
+                if (
+                    card.color === COLOR_SPECIAL
+                    && card.value === VALUE_JERSEY
+                ) {
                     return 6;
                 }
                 return 11;
@@ -584,11 +598,21 @@ function (dojo, declare) {
                         dojo.string.substitute(_('Adventurer - Value: ${v} - This card cannot be played with others, because the adventurers does not belong to a team, they always play solo.'), { v: card.value }),
                         '',
                     ];
-                case COLOR_JERSEY:
-                    return [
-                        _('Carrot polka dot Jersey - Value: +10 - It adds 10 points to any valid card combinations (one or more colored cards). It cannot be played with adventurers.'),
-                        ''
-                    ];
+                case COLOR_SPECIAL:
+                    switch (card.value) {
+                        case VALUE_JERSEY:
+                            return [
+                                dojo.string.substitute(_('Carrot polka dot Jersey - Value: +${v} - It adds ${v} points to any valid card combinations (one or more colored cards). It cannot be played with adventurers.'), { v: VALUE_JERSEY }),
+                                ''
+                            ];
+                        case VALUE_LEGENDS_BROOM_WAGON:
+                            return [
+                                dojo.string.substitute(_('Broom Wagon - Value: +${v} - It adds ${v} points to any valid card combinations (one or more colored cards). It cannot be played with adventurers.'), { v: VALUE_LEGENDS_BROOM_WAGON }),
+                                ''
+                            ];
+                        default:
+                            return null;
+                    }
                 default:
                     return null;
             }
@@ -906,7 +930,7 @@ function (dojo, declare) {
             ].forEach((value) => fn.bind(this)(COLOR_ADVENTURER, value));
 
             // jersey card
-            fn.bind(this)(COLOR_JERSEY, VALUE_JERSEY);
+            fn.bind(this)(COLOR_SPECIAL, VALUE_JERSEY);
         },
         /**
          * This function gives the position of the card in the sprite "cards.png",
@@ -951,9 +975,28 @@ function (dojo, declare) {
                         default:
                             throw new Error('Unsupported');
                     }
+                case COLOR_SPECIAL:
+                    switch (value) {
+                        case VALUE_JERSEY:
+                            return 49;
+                        case VALUE_LEGENDS_BROOM_WAGON:
+                            return 57;
+                        case VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR:
+                            return 58;
+                        case VALUE_LEGENDS_ELEPHANT_STOP:
+                            return 59;
+                        case VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER:
+                            return 60;
+                        case VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR:
+                            return 61;
+                        case VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN:
+                            return 62;
+                        default:
+                            throw new Error('Unsupported');
+                    }
                 default:
-                    // Jersey
-                    return 49;
+                    // Card back
+                    throw new Error('Unsupported');
             }
         },
         getSortingWeightForCardsGroups: function () {
@@ -1223,7 +1266,7 @@ function (dojo, declare) {
                     value = VALUE_7;
                     break;
                 case 49:
-                    color = COLOR_JERSEY;
+                    color = COLOR_SPECIAL;
                     value = VALUE_JERSEY;
                     break;
                 case 50:
@@ -1250,6 +1293,30 @@ function (dojo, declare) {
                     color = COLOR_ADVENTURER;
                     value = VALUE_50;
                     break;
+                case 57:
+                    color = COLOR_SPECIAL;
+                    value = VALUE_LEGENDS_BROOM_WAGON;
+                    break;
+                case 58:
+                    color = COLOR_SPECIAL;
+                    value = VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR;
+                    break;
+                case 59:
+                    color = COLOR_SPECIAL;
+                    value = VALUE_LEGENDS_ELEPHANT_STOP;
+                    break;
+                case 60:
+                    color = COLOR_SPECIAL;
+                    value = VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER;
+                    break;
+                case 61:
+                    color = COLOR_SPECIAL;
+                    value = VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR;
+                    break;
+                case 62:
+                    color = COLOR_SPECIAL;
+                    value = VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN;
+                    break;
                 default:
                     throw new Error(`Unsupported card position in sprite: ${position}`);
             }
@@ -1268,11 +1335,19 @@ function (dojo, declare) {
          */
         getCardsThatCanBePlayedWithCard: function (color, value, cards) {
             return cards.filter((card) => {
-                if (color === COLOR_JERSEY) {
-                    return card.color !== COLOR_ADVENTURER;
+                if (
+                    color === COLOR_SPECIAL
+                    && value === VALUE_JERSEY
+                ) {
+                    return card.color !== COLOR_ADVENTURER
+                        && card.color !== COLOR_SPECIAL;
                 }
-                if (card.color === COLOR_JERSEY) {
-                    return color !== COLOR_ADVENTURER;
+                if (
+                    card.color === COLOR_SPECIAL
+                    && card.value === VALUE_JERSEY
+                ) {
+                    return color !== COLOR_ADVENTURER
+                        && color !== COLOR_SPECIAL;
                 }
 
                 if (color === COLOR_ADVENTURER && value !== card.value) {
@@ -1312,10 +1387,16 @@ function (dojo, declare) {
          */
         getCardsThatCannotBePlayedWithCard: function (color, value, cards) {
             return cards.filter((card) => {
-                if (color === COLOR_JERSEY) {
+                if (
+                    color === COLOR_SPECIAL
+                    && value === VALUE_JERSEY
+                ) {
                     return card.color === COLOR_ADVENTURER;
                 }
-                if (card.color === COLOR_JERSEY) {
+                if (
+                    card.color === COLOR_SPECIAL
+                    && card.value === VALUE_JERSEY
+                ) {
                     return color === COLOR_ADVENTURER;
                 }
 
@@ -1519,6 +1600,69 @@ function (dojo, declare) {
             this.setupGroupCardsButton();
             this.setupSelectedCardsValueInPlayerHand();
             this.setupPlayCardsActionButtonIfNeeded();
+        },
+        /**
+         * @param {number} color
+         * @param {number} value
+         * @returns {boolean}
+         */
+        isJersey: function (color, value) {
+            return color === COLOR_SPECIAL
+                && value === VALUE_JERSEY;
+        },
+        /**
+         * @param {number} color
+         * @param {number} value
+         * @returns {boolean}
+         */
+        isLegendsBroomWagon: function (color, value) {
+            return color === COLOR_SPECIAL
+                && value === VALUE_LEGENDS_BROOM_WAGON;
+        },
+        /**
+         * @param {number} color
+         * @param {number} value
+         * @returns {boolean}
+         */
+        isLegendsBadger: function (color, value) {
+            return color === COLOR_SPECIAL
+                && value === VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR;
+        },
+        /**
+         * @param {number} color
+         * @param {number} value
+         * @returns {boolean}
+         */
+        isLegendsElephant: function (color, value) {
+            return color === COLOR_SPECIAL
+                && value === VALUE_LEGENDS_ELEPHANT_STOP;
+        },
+        /**
+         * @param {number} color
+         * @param {number} value
+         * @returns {boolean}
+         */
+        isLegendsEagle: function (color, value) {
+            return color === COLOR_SPECIAL
+                && value === VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER;
+        },
+        /**
+         * @param {number} color
+         * @param {number} value
+         * @returns {boolean}
+         */
+        isLegendsPanda: function (color, value) {
+            return color === COLOR_SPECIAL
+                && value === VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR;
+        },
+        /**
+         * @param {number} color
+         * @param {number} value
+         * @returns {boolean}
+         */
+        isLegendsShark: function (color, value) {
+            return color === COLOR_SPECIAL
+                && value === VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN;
         },
         /**
          * @param {Object[]} cards
@@ -2035,7 +2179,7 @@ function (dojo, declare) {
         addJerseyToCards: function (cards) {
             return cards.concat(
                 this.getCardObjectFromPositionInSpriteAndId(
-                    this.getCardPositionInSpriteByColorAndValue(COLOR_JERSEY, VALUE_JERSEY),
+                    this.getCardPositionInSpriteByColorAndValue(COLOR_SPECIAL, VALUE_JERSEY),
                     CARD_ID_JERSEY_PLUS_TEN
                 )
             );
@@ -2399,6 +2543,7 @@ function (dojo, declare) {
                 ['roundStarted', 1],
                 ['roundEnded', 1],
                 ['cardsDealt', 1],
+                ['extensionLegendsCoachCardDealt', 1],
                 ['cardsPlayed', 1000],
                 ['turnPassed', isReadOnly ? 1000 : 1],
                 ['playerHasFinishedRound', 1],
@@ -2438,6 +2583,11 @@ function (dojo, declare) {
                 false
             );
             this.sortPlayerCardsByCurrentSortingMode();
+        },
+        notif_extensionLegendsCoachCardDealt: function (data) {
+            // @TODO: deal coach
+            // this.addCardsToPlayerHand();
+            console.log("coach card dealt", data.args.cards);
         },
         notif_roundStarted: function (data) {
             this.currentRound = data.args.currentRound;
