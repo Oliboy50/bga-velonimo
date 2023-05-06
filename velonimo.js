@@ -333,7 +333,7 @@ function (dojo, declare) {
             // init playerHand "ebg.stock" component
             this.playerHand = new ebg.stock();
             this.playerHand.create(this, $(DOM_ID_PLAYER_HAND), CARD_WIDTH, CARD_HEIGHT);
-            this.playerHand.resizeItems(CARD_WIDTH, CARD_HEIGHT, CARD_WIDTH * 7, CARD_HEIGHT * 8);
+            this.playerHand.resizeItems(CARD_WIDTH, CARD_HEIGHT, CARD_WIDTH * 7, CARD_HEIGHT * 9);
             this.playerHand.setSelectionAppearance('class');
             this.playerHand.image_items_per_row = 7;
             // create cards

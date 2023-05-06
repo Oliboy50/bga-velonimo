@@ -36,9 +36,21 @@ class Velonimo extends Table
     private const GAME_STATE_LEGENDS_BADGER_IS_NOT_PLAYABLE = 'legendsBadgerIsNotPlayable';
     private const GAME_STATE_LEGENDS_ELEPHANT_IS_NOT_PLAYABLE = 'legendsElephantIsNotPlayable';
     private const GAME_STATE_PREVIOUS_PLAYED_CARDS_VALUE = 'previousValueToBeat';
-    private const GAME_STATE_PREVIOUS_PLAYED_SPECIAL_CARDS = 'previousPlayedSpecialCards';
+    private const GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_JERSEY = 'previousPlayedCardsContainJersey';
+    private const GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON = 'previousPlayedCardsContainLegendsBroomWagon';
+    private const GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE = 'previousPlayedCardsContainLegendsEagle';
+    private const GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA = 'previousPlayedCardsContainLegendsPanda';
+    private const GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK = 'previousPlayedCardsContainLegendsShark';
+    private const GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER = 'previousPlayedCardsContainLegendsBadger';
+    private const GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT = 'previousPlayedCardsContainLegendsElephant';
     private const GAME_STATE_LAST_PLAYED_CARDS_VALUE = 'valueToBeat';
-    private const GAME_STATE_LAST_PLAYED_SPECIAL_CARDS = 'playedSpecialCards';
+    private const GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_JERSEY = 'lastPlayedCardsContainJersey';
+    private const GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON = 'lastPlayedCardsContainLegendsBroomWagon';
+    private const GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE = 'lastPlayedCardsContainLegendsEagle';
+    private const GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA = 'lastPlayedCardsContainLegendsPanda';
+    private const GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK = 'lastPlayedCardsContainLegendsShark';
+    private const GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER = 'lastPlayedCardsContainLegendsBadger';
+    private const GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT = 'lastPlayedCardsContainLegendsElephant';
     private const GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID = 'playerIdForValueToBeat';
     private const GAME_STATE_LAST_SELECTED_NEXT_PLAYER_ID = 'selectedNextPlayerId';
     private const GAME_STATE_LAST_NUMBER_OF_CARDS_TO_PICK = 'numberOfCardsToPick';
@@ -86,8 +98,20 @@ class Velonimo extends Table
             self::GAME_STATE_LEGENDS_SHARK_IS_NOT_PLAYABLE => 23,
             self::GAME_STATE_LEGENDS_BADGER_IS_NOT_PLAYABLE => 24,
             self::GAME_STATE_LEGENDS_ELEPHANT_IS_NOT_PLAYABLE => 25,
-            self::GAME_STATE_PREVIOUS_PLAYED_SPECIAL_CARDS => 26,
-            self::GAME_STATE_LAST_PLAYED_SPECIAL_CARDS => 27,
+            self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_JERSEY => 26,
+            self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON => 27,
+            self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE => 28,
+            self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA => 29,
+            self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK => 30,
+            self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER => 31,
+            self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT => 32,
+            self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_JERSEY => 33,
+            self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON => 34,
+            self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE => 35,
+            self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA => 36,
+            self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK => 37,
+            self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER => 38,
+            self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT => 39,
             self::GAME_OPTION_HOW_MANY_ROUNDS => 100,
             self::GAME_OPTION_ENABLE_EXTENSION_LEGENDS => 110,
         ]);
@@ -143,9 +167,21 @@ class Velonimo extends Table
         // Init global values with their initial values
         self::setGameStateValue(self::GAME_STATE_CURRENT_ROUND, 0);
         self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_VALUE, 0);
-        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_SPECIAL_CARDS, '');
-        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_SPECIAL_CARDS, '');
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_JERSEY, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_JERSEY, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_SELECTED_NEXT_PLAYER_ID, 0);
         self::setGameStateValue(self::GAME_STATE_JERSEY_IS_NOT_PLAYABLE, 0);
@@ -249,7 +285,7 @@ class Velonimo extends Table
             $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYED))
         );
         $result['playedSpecialCards'] = $this->formatCardsForClient(
-            $this->fromSpecialCardsGameStateCollectionToVelonimoCards(self::GAME_STATE_LAST_PLAYED_SPECIAL_CARDS)
+            $this->fromSpecialPlayedCardsToVelonimoCards('LAST')
         );
         $result['playedCardsValue'] = (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE);
         $result['playedCardsPlayerId'] = (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID);
@@ -257,7 +293,7 @@ class Velonimo extends Table
             $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PREVIOUS_PLAYED))
         );
         $result['previousPlayedSpecialCards'] = $this->formatCardsForClient(
-            $this->fromSpecialCardsGameStateCollectionToVelonimoCards(self::GAME_STATE_PREVIOUS_PLAYED_SPECIAL_CARDS)
+            $this->fromSpecialPlayedCardsToVelonimoCards('PREVIOUS')
         );
         $result['previousPlayedCardsValue'] = (int) self::getGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_VALUE);
 
@@ -475,20 +511,21 @@ class Velonimo extends Table
         }
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, $currentPlayerId);
         self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_VALUE, $lastPlayedCardsValue);
-        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_SPECIAL_CARDS, (string) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_SPECIAL_CARDS));
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_JERSEY, (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_JERSEY));
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON, (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON));
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE, (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE));
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA, (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA));
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK, (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK));
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER, (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER));
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT, (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT));
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, $playedCardsValue);
-        self::setGameStateValue(
-            self::GAME_STATE_LAST_PLAYED_SPECIAL_CARDS,
-            join(',', array_values(array_filter([
-                $cardsPlayedWithJersey ? CARD_ID_JERSEY_PLUS_TEN : null,
-                $cardsPlayedWithLegendsBroomWagon ? CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE : null,
-                $cardsPlayedWithLegendsEagle ? CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER : null,
-                $cardsPlayedWithLegendsPanda ? CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR : null,
-                $cardsPlayedWithLegendsShark ? CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN : null,
-                $cardsPlayedWithLegendsBadger ? CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR : null,
-                $cardsPlayedWithLegendsElephant ? CARD_ID_LEGENDS_ELEPHANT_STOP : null,
-            ])))
-        );
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_JERSEY, $cardsPlayedWithJersey ? CARD_ID_JERSEY_PLUS_TEN : 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON, $cardsPlayedWithLegendsBroomWagon ? CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE : 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE, $cardsPlayedWithLegendsEagle ? CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER : 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA, $cardsPlayedWithLegendsPanda ? CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR : 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK, $cardsPlayedWithLegendsShark ? CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN : 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER, $cardsPlayedWithLegendsBadger ? CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR : 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT, $cardsPlayedWithLegendsElephant ? CARD_ID_LEGENDS_ELEPHANT_STOP : 0);
         self::notifyAllPlayers('cardsPlayed', clienttranslate('${player_name} attacks with ${cardsImage}'), [
             'players' => $this->formatPlayersForClient($players),
             'playedCardsPlayerId' => $currentPlayerId,
@@ -1267,19 +1304,29 @@ class Velonimo extends Table
     /**
      * @return VelonimoCard[]
      */
-    private function fromSpecialCardsGameStateCollectionToVelonimoCards(string $gameStateKey): array {
-        if (!in_array($gameStateKey, [
-            self::GAME_STATE_LAST_PLAYED_SPECIAL_CARDS,
-            self::GAME_STATE_PREVIOUS_PLAYED_SPECIAL_CARDS,
+    private function fromSpecialPlayedCardsToVelonimoCards(string $playedCardsType): array {
+        if (!in_array($playedCardsType, [
+            'LAST',
+            'PREVIOUS',
         ], true)) {
             throw new BgaVisibleSystemException('Invalid argument for ' . __FUNCTION__);
         }
 
-        $cardIds = explode(',', (string) self::getGameStateValue($gameStateKey));
-        if (empty($cardIds) || $cardIds[0] === '' || $cardIds[0] === '0') {
-            return [];
-        }
-        $cardIds = array_map(fn ($id) => intval($id), $cardIds);
+        $cardIds = array_values(array_filter(
+            array_map(
+                fn (string $cardKey) => (int) self::getGameStateValue(constant('self::GAME_STATE_'.$playedCardsType.'_PLAYED_CARDS_CONTAIN_'.$cardKey)),
+                [
+                    'JERSEY',
+                    'LEGENDS_BROOM_WAGON',
+                    'LEGENDS_EAGLE',
+                    'LEGENDS_PANDA',
+                    'LEGENDS_SHARK',
+                    'LEGENDS_BADGER',
+                    'LEGENDS_ELEPHANT',
+                ]
+            ),
+            fn (int $id) => $id !== 0
+        ));
 
         return $this->fromSpecialCardIdsToVelonimoCards($cardIds);
     }
@@ -1667,9 +1714,21 @@ class Velonimo extends Table
         $this->deck->moveAllCardsInLocation(self::CARD_LOCATION_PREVIOUS_PLAYED, self::CARD_LOCATION_DISCARD);
         $this->deck->moveAllCardsInLocation(self::CARD_LOCATION_PLAYED, self::CARD_LOCATION_DISCARD);
         self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_VALUE, 0);
-        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_SPECIAL_CARDS, '');
-        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_SPECIAL_CARDS, '');
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_JERSEY, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_JERSEY, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, 0);
         self::notifyAllPlayers('playedCardsDiscarded', '', []);
     }
