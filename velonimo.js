@@ -962,38 +962,38 @@ function (dojo, declare) {
                     return 35 + value - 1;
                 case COLOR_YELLOW:
                     return 42 + value - 1;
-                case COLOR_ADVENTURER:
-                    switch (value) {
-                        case VALUE_25:
-                            return 50;
-                        case VALUE_30:
-                            return 51;
-                        case VALUE_35:
-                            return 52;
-                        case VALUE_40:
-                            return 53;
-                        case VALUE_45:
-                            return 54;
-                        case VALUE_50:
-                            return 55;
-                        default:
-                            throw new Error('Unsupported');
-                    }
                 case COLOR_SPECIAL:
                     switch (value) {
                         case VALUE_JERSEY:
                             return 49;
                         case VALUE_LEGENDS_BROOM_WAGON:
-                            return 57;
-                        case VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR:
-                            return 58;
-                        case VALUE_LEGENDS_ELEPHANT_STOP:
-                            return 59;
+                            return 50;
                         case VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER:
-                            return 60;
+                            return 51;
                         case VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR:
-                            return 61;
+                            return 52;
                         case VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN:
+                            return 53;
+                        case VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR:
+                            return 54;
+                        case VALUE_LEGENDS_ELEPHANT_STOP:
+                            return 55;
+                        default:
+                            throw new Error('Unsupported');
+                    }
+                case COLOR_ADVENTURER:
+                    switch (value) {
+                        case VALUE_25:
+                            return 57;
+                        case VALUE_30:
+                            return 58;
+                        case VALUE_35:
+                            return 59;
+                        case VALUE_40:
+                            return 60;
+                        case VALUE_45:
+                            return 61;
+                        case VALUE_50:
                             return 62;
                         default:
                             throw new Error('Unsupported');
