@@ -59,6 +59,7 @@ $game_options = [
         'default' => 5,
     ],
     110 => [
+        // @TODO: better name/description
         'name' => totranslate('Extension "Legends"'),
         'values' => [
             0 => ['name' => totranslate('No')],

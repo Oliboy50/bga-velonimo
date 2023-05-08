@@ -496,7 +496,7 @@ Cards
 }
 .velonimo-card.front-side {
     background-image: url('img/cards.png'); /* background-position is dynamically computed */
-    background-size: 630px 1129px;
+    background-size: 630px 1134px; /* width = cardWidth * number of columns in sprite ; height = cardHeight * number of rows in sprite */
 }
 .velonimo-card.back-side {
     background-image: url('img/remaining_cards.png');

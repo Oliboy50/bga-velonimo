@@ -74,6 +74,10 @@ const CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN = -6;
 const CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR = -7;
 const CARD_ID_LEGENDS_ELEPHANT_STOP = -8;
 
+// Sprites
+const NUMBER_OF_COLUMNS_IN_CARDS_SPRITE = 7;
+const NUMBER_OF_ROWS_IN_CARDS_SPRITE = 9;
+
 // DOM IDs
 const DOM_ID_APP = 'velonimo-game';
 const DOM_ID_BOARD_CARPET = 'board-carpet';
@@ -333,9 +337,9 @@ function (dojo, declare) {
             // init playerHand "ebg.stock" component
             this.playerHand = new ebg.stock();
             this.playerHand.create(this, $(DOM_ID_PLAYER_HAND), CARD_WIDTH, CARD_HEIGHT);
-            this.playerHand.resizeItems(CARD_WIDTH, CARD_HEIGHT, CARD_WIDTH * 7, CARD_HEIGHT * 9);
+            this.playerHand.resizeItems(CARD_WIDTH, CARD_HEIGHT, CARD_WIDTH * NUMBER_OF_COLUMNS_IN_CARDS_SPRITE, CARD_HEIGHT * NUMBER_OF_ROWS_IN_CARDS_SPRITE);
             this.playerHand.setSelectionAppearance('class');
-            this.playerHand.image_items_per_row = 7;
+            this.playerHand.image_items_per_row = NUMBER_OF_COLUMNS_IN_CARDS_SPRITE;
             // create cards
             const cardsImageUrl = g_gamethemeurl+'img/cards.png';
             this.execFnForEachCardsInGame((color, value) => {
@@ -933,10 +937,10 @@ function (dojo, declare) {
             fn.bind(this)(COLOR_SPECIAL, VALUE_JERSEY);
         },
         /**
-         * This function gives the position of the card in the sprite "cards.png",
-         * it also gives weight to cards to sort them by color (blue-1, blue-2, ...) just like in the sprite,
-         * it also gives the type ID for the stock component.
-         *
+         * This function gives:
+         *  - the position of the card in the sprite "cards.png"
+         *  - weight to cards to sort them by color (blue-1, blue-2, ...) just like in the sprite
+         *  - the type ID for the stock component
          *
          * @param {number} color
          * @param {number} value
@@ -1049,14 +1053,14 @@ function (dojo, declare) {
          * @returns {number}
          */
         getAbsoluteCardBackgroundPositionXFromCardPosition: function (position) {
-            return (position % 7) * CARD_WIDTH;
+            return (position % NUMBER_OF_COLUMNS_IN_CARDS_SPRITE) * CARD_WIDTH;
         },
         /**
          * @param {number} position
          * @returns {number}
          */
         getAbsoluteCardBackgroundPositionYFromCardPosition: function (position) {
-            return Math.floor(position / 7) * CARD_HEIGHT;
+            return Math.floor(position / NUMBER_OF_COLUMNS_IN_CARDS_SPRITE) * CARD_HEIGHT;
         },
         /**
          *
@@ -2548,9 +2552,9 @@ function (dojo, declare) {
                 ['turnPassed', isReadOnly ? 1000 : 1],
                 ['playerHasFinishedRound', 1],
                 ['playedCardsDiscarded', 1],
-                ['cardsReceivedFromAnotherPlayer', isReadOnly ? 3000 : 1500],
-                ['cardsSentToAnotherPlayer', isReadOnly ? 3000 : 1500],
-                ['cardsMovedBetweenTwoOtherPlayers', isReadOnly ? 2000 : 1500, (notif) => (notif.args.receiverPlayerId === this.player_id || notif.args.senderPlayerId === this.player_id)],
+                ['cardsReceivedFromAnotherPlayer', 3000],
+                ['cardsSentToAnotherPlayer', 3000],
+                ['cardsMovedBetweenTwoOtherPlayers', 3000, (notif) => (notif.args.receiverPlayerId === this.player_id || notif.args.senderPlayerId === this.player_id)],
                 // /!\ 2P mode only
                 ['attackRewardCardsDiscarded', 1],
                 // /!\ 2P mode only
@@ -2560,7 +2564,7 @@ function (dojo, declare) {
                 // /!\ 2P mode only
                 ['cardsReceivedFromDeck', isReadOnly ? 2000 : 1000],
                 // /!\ 2P mode only
-                ['cardsMovedFromDeckToAnotherPlayer', isReadOnly ? 2000 : 1500, (notif) => notif.args.receiverPlayerId === this.player_id],
+                ['cardsMovedFromDeckToAnotherPlayer', isReadOnly ? 2000 : 1000, (notif) => notif.args.receiverPlayerId === this.player_id],
             ].forEach((notif) => {
                 const name = notif[0];
                 const lockDurationInMs = notif[1];
