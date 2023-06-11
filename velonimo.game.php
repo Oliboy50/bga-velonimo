@@ -531,7 +531,7 @@ class Velonimo extends Table
             'playedCardsPlayerId' => $currentPlayerId,
             'playedCards' => $formattedCards = $this->formatCardsForClient($playedCards),
             'cardsImage' => $cardsPlayedWithJersey
-                ? array_merge([$this->formatJerseyForClient()], $formattedCards)
+                ? array_merge($formattedCards, [$this->formatJerseyForClient()])
                 : $formattedCards,
             'player_name' => $currentPlayerName = self::getCurrentPlayerName(),
             'playedCardsValue' => $playedCardsValue,
@@ -998,13 +998,6 @@ class Velonimo extends Table
             ]);
         }
 
-        // if there is a loser, he plays first during this round
-        if ($currentLoser = $this->getCurrentLoser($players)) {
-            $this->gamestate->changeActivePlayer($currentLoser->getId());
-        } else {
-            self::activeNextPlayer();
-        }
-
         // if first round,
         // deal a coach of legends extension to each player
         if (
@@ -1026,6 +1019,13 @@ class Velonimo extends Table
 
                 $this->dealCoachCardToPlayer($player, $pickedCoachCard);
             }
+        }
+
+        // if there is a loser, he plays first during this round
+        if ($currentLoser = $this->getCurrentLoser($players)) {
+            $this->gamestate->changeActivePlayer($currentLoser->getId());
+        } else {
+            self::activeNextPlayer();
         }
 
         if ($this->is2PlayersMode($players)) {
@@ -1349,10 +1349,10 @@ class Velonimo extends Table
 
     private function fromSpecialCardIdToValue(int $cardId): int {
         if ($cardId === CARD_ID_JERSEY_PLUS_TEN) {
-            return VALUE_JERSEY;
+            return VALUE_JERSEY_PLUS_TEN;
         }
         if ($cardId === CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE) {
-            return VALUE_LEGENDS_BROOM_WAGON;
+            return VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE;
         }
         if ($cardId === CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER) {
             return VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER;
@@ -1391,7 +1391,7 @@ class Velonimo extends Table
         return [
             'id' => CARD_ID_JERSEY_PLUS_TEN,
             'color' => COLOR_SPECIAL,
-            'value' => VALUE_JERSEY,
+            'value' => VALUE_JERSEY_PLUS_TEN,
         ];
     }
 
@@ -1413,10 +1413,10 @@ class Velonimo extends Table
         }
 
         $addJerseyValueIfUsed = fn (int $value) => $value + (
-            $cardsPlayedWithJersey ? VALUE_JERSEY : 0
+            $cardsPlayedWithJersey ? VALUE_JERSEY_PLUS_TEN : 0
         );
         $addBroomWagonValueIfUsed = fn (int $value) => $value + (
-            $cardsPlayedWithLegendsBroomWagon ? VALUE_LEGENDS_BROOM_WAGON : 0
+            $cardsPlayedWithLegendsBroomWagon ? VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE : 0
         );
         $withJerseyAndBroomWagon = fn (int $value) => $addJerseyValueIfUsed($addBroomWagonValueIfUsed($value));
 
@@ -1772,9 +1772,10 @@ class Velonimo extends Table
             $player->getId()
         ));
 
-        self::notifyAllPlayers('extensionLegendsCoachCardDealt', clienttranslate('${player_name} receives coach ${cardsImage}'), [
+        self::notifyAllPlayers('legendsCoachCardDealt', clienttranslate('${player_name} receives coach ${coachName} ${cardsImage}'), [
             'cards' => $formattedCards = $this->formatCardsForClient([$coachCard]),
             'cardsImage' => $formattedCards,
+            'coachName' => $this->legends_coaches[$coachCard->getId()]['name'],
             'receiverPlayerId' => $player->getId(),
             'player_name' => $player->getName(),
         ]);
