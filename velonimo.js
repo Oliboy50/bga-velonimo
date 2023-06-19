@@ -107,24 +107,23 @@ const DOM_ID_ACTION_BUTTON_GIVE_CARDS = 'action-button-give-cards';
 const DOM_CLASS_PLAYER_TABLE = 'player-table';
 const DOM_CLASS_PLAYER_HAS_JERSEY = 'has-jersey';
 const DOM_CLASS_PLAYER_HAS_LEGENDS_BROOM_WAGON = 'has-legends-broom-wagon';
-const DOM_CLASS_PLAYER_HAS_LEGENDS_EAGLE = 'has-legends-eagle';
-const DOM_CLASS_PLAYER_HAS_LEGENDS_PANDA = 'has-legends-panda';
-const DOM_CLASS_PLAYER_HAS_LEGENDS_SHARK = 'has-legends-shark';
-const DOM_CLASS_PLAYER_HAS_LEGENDS_BADGER = 'has-legends-badger';
-const DOM_CLASS_PLAYER_HAS_LEGENDS_ELEPHANT = 'has-legends-elephant';
+const DOM_CLASS_PLAYER_HAS_LEGENDS_EAGLE = 'has-legends-coach-eagle';
+const DOM_CLASS_PLAYER_HAS_LEGENDS_PANDA = 'has-legends-coach-panda';
+const DOM_CLASS_PLAYER_HAS_LEGENDS_SHARK = 'has-legends-coach-shark';
+const DOM_CLASS_PLAYER_HAS_LEGENDS_BADGER = 'has-legends-coach-badger';
+const DOM_CLASS_PLAYER_HAS_LEGENDS_ELEPHANT = 'has-legends-coach-elephant';
 const DOM_CLASS_PLAYER_HAS_USED_JERSEY = 'has-used-jersey';
 const DOM_CLASS_PLAYER_HAS_USED_LEGENDS_BROOM_WAGON = 'has-used-legends-broom-wagon';
-const DOM_CLASS_PLAYER_HAS_USED_LEGENDS_EAGLE = 'has-used-legends-eagle';
-const DOM_CLASS_PLAYER_HAS_USED_LEGENDS_PANDA = 'has-used-legends-panda';
-const DOM_CLASS_PLAYER_HAS_USED_LEGENDS_SHARK = 'has-used-legends-shark';
-const DOM_CLASS_PLAYER_HAS_USED_LEGENDS_BADGER = 'has-used-legends-badger';
-const DOM_CLASS_PLAYER_HAS_USED_LEGENDS_ELEPHANT = 'has-used-legends-elephant';
+const DOM_CLASS_PLAYER_HAS_USED_LEGENDS_EAGLE = 'has-used-legends-coach-eagle';
+const DOM_CLASS_PLAYER_HAS_USED_LEGENDS_PANDA = 'has-used-legends-coach-panda';
+const DOM_CLASS_PLAYER_HAS_USED_LEGENDS_SHARK = 'has-used-legends-coach-shark';
+const DOM_CLASS_PLAYER_HAS_USED_LEGENDS_BADGER = 'has-used-legends-coach-badger';
+const DOM_CLASS_PLAYER_HAS_USED_LEGENDS_ELEPHANT = 'has-used-legends-coach-elephant';
 const DOM_CLASS_PLAYER_PANEL_CONTAINER = 'player-panel-velonimo-wrapper';
 const DOM_CLASS_PLAYER_PANEL_LEFT = 'player-panel-velonimo-left';
 const DOM_CLASS_PLAYER_PANEL_RIGHT = 'player-panel-velonimo-right';
 const DOM_CLASS_JERSEY_IN_PLAYER_PANEL = 'player-panel-jersey';
 const DOM_CLASS_LEGENDS_BROOM_WAGON_IN_PLAYER_PANEL = 'player-panel-legends-broom-wagon';
-const DOM_CLASS_LEGENDS_COACH_IN_PLAYER_PANEL = 'player-panel-legends-coach';
 const DOM_CLASS_LEGENDS_EAGLE_IN_PLAYER_PANEL = 'player-panel-legends-coach-eagle';
 const DOM_CLASS_LEGENDS_PANDA_IN_PLAYER_PANEL = 'player-panel-legends-coach-panda';
 const DOM_CLASS_LEGENDS_SHARK_IN_PLAYER_PANEL = 'player-panel-legends-coach-shark';
@@ -327,7 +326,9 @@ function (dojo, declare) {
                     `<div id="player-table-${player.id}" class="${DOM_CLASS_PLAYER_TABLE} ${isPositionTop ? 'player-position-top' : 'player-position-bottom'} ${hasJerseyOnLeft ? 'player-position-jersey-left' : 'player-position-jersey-right'}" style="width: ${PLAYER_TABLE_WIDTH}px; height: ${PLAYER_TABLE_HEIGHT}px; ${playerPosition.tableStyle}">
     <div class="player-table-name" style="color: ${playerColorRGB};"><span>${(player.name.length > 10 ? (player.name.substr(0,10) + '...') : player.name)}</span></div>
     <div id="player-table-${player.id}-hand" class="player-table-hand"><div id="player-table-${player.id}-hand-cards" class="player-table-hand-cards"></div></div>
+    <div id="player-table-${player.id}-legends-coach" class="player-table-legends-coach"></div>
     <div id="player-table-${player.id}-jersey" class="player-table-jersey"></div>
+    <div id="player-table-${player.id}-legends-broom-wagon" class="player-table-legends-broom-wagon"></div>
     <div id="player-table-${player.id}-finish-position" class="player-table-finish-position"></div>
     <div id="player-table-${player.id}-speech-bubble" class="${DOM_CLASS_SPEECH_BUBBLE} ${playerPosition.bubbleClass}" style="color: ${playerColorRGB};"></div>
 </div>`,
@@ -451,24 +452,34 @@ function (dojo, declare) {
             dojo.connect($(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON), 'onclick', this, 'onClickOnTogglePlayerHandSortButton');
             // setup currentPlayer cards
             this.addCardsToPlayerHand(
-                (this.currentPlayerHasJersey && !this.jerseyIsNotPlayable)
-                    ? this.addSpecialCardToCards(CARD_ID_JERSEY_PLUS_TEN, gamedatas.currentPlayerCards)
-                    : gamedatas.currentPlayerCards,
+                this.addSpecialCardIdsToCards(
+                    [
+                        [CARD_ID_JERSEY_PLUS_TEN, () => this.currentPlayerHasJersey && !this.jerseyIsNotPlayable],
+                        [CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE, () => this.currentPlayerHasLegendsBroomWagon && !this.legendsBroomWagonIsNotPlayable],
+                        [CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER, () => this.currentPlayerHasLegendsEagle && !this.legendsEagleIsNotPlayable],
+                        [CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR, () => this.currentPlayerHasLegendsPanda && !this.legendsPandaIsNotPlayable],
+                        [CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN, () => this.currentPlayerHasLegendsShark && !this.legendsSharkIsNotPlayable],
+                        [CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR, () => this.currentPlayerHasLegendsBadger && !this.legendsBadgerIsNotPlayable],
+                        [CARD_ID_LEGENDS_ELEPHANT_STOP, () => this.currentPlayerHasLegendsElephant && !this.legendsElephantIsNotPlayable],
+                    ].reduce((acc, cardIdAndPredicate) => {
+                        if (cardIdAndPredicate[1]()) {
+                            return acc.concat(cardIdAndPredicate[0]);
+                        }
+                        return acc;
+                    }, []),
+                    gamedatas.currentPlayerCards
+                ),
                 false
             );
 
             // setup cards played on table
             this.playedCardsValue = gamedatas.playedCardsValue;
             this.setupPreviousPlayedCards(
-                (gamedatas.previousPlayedCardsValue === (this.getCardsValue(gamedatas.previousPlayedCards) + VALUE_JERSEY_PLUS_TEN))
-                    ? this.addSpecialCardToCards(CARD_ID_JERSEY_PLUS_TEN, gamedatas.previousPlayedCards)
-                    : gamedatas.previousPlayedCards
+                gamedatas.previousPlayedCards.concat(gamedatas.previousPlayedSpecialCards)
             );
             this.moveCardsFromPlayerHandToTable(
                 gamedatas.playedCardsPlayerId,
-                (this.playedCardsValue === (this.getCardsValue(gamedatas.playedCards) + VALUE_JERSEY_PLUS_TEN))
-                    ? this.addSpecialCardToCards(CARD_ID_JERSEY_PLUS_TEN, gamedatas.playedCards)
-                    : gamedatas.playedCards
+                gamedatas.playedCards.concat(gamedatas.playedSpecialCards)
             );
             this.resetDisplayedNumberOfCardsByPlayerId();
             this.setupPlayersHiddenCards();
@@ -981,6 +992,10 @@ function (dojo, declare) {
          * @param {number=} previousLegendsBroomWagonHolderId
          */
         moveLegendsBroomWagonToLastLoser: function (previousLegendsBroomWagonHolderId) {
+            if (!this.isExtensionLegendsEnabled) {
+                return;
+            }
+
             const applyLegendsBroomWagon = (playerId) => {
                 dojo.addClass(`player-table-${playerId}`, DOM_CLASS_PLAYER_HAS_LEGENDS_BROOM_WAGON);
                 dojo.place(`<div id="player-panel-${playerId}-legends-broom-wagon" class="${DOM_CLASS_LEGENDS_BROOM_WAGON_IN_PLAYER_PANEL}"></div>`, `player-panel-${playerId}-velonimo-right`);
@@ -1019,6 +1034,10 @@ function (dojo, declare) {
             });
         },
         moveLegendsCoachToPlayers: function () {
+            if (!this.isExtensionLegendsEnabled) {
+                return;
+            }
+
             Object.entries(this.players).forEach((entry) => {
                 const player = entry[1];
                 const cardId = this.getLegendsCoachCardIdFromPlayerIfExists(player);
@@ -1071,14 +1090,14 @@ function (dojo, declare) {
                         throw new Error('Unsupported cardId for moveLegendsCoachToPlayers');
                 }
 
-                const card = this.addSpecialCardToCards(cardId, [])[0];
+                const card = this.addSpecialCardIdsToCards([cardId], [])[0];
                 const position = this.getCardPositionInSpriteByColorAndValue(card.color, card.value);
                 const backgroundX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position) + this.getLogHtmlBackgroundOffsetXForCard(card);
                 const backgroundY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position) + this.getLogHtmlBackgroundOffsetYForCard(card);
 
                 this[currentPlayerHasSpecialCardProperty] = this.player_id === player.id;
                 dojo.addClass(`player-table-${player.id}`, playerHasSpecialCardClass);
-                dojo.place(`<div id="player-panel-${player.id}-${specialCardDomSuffix}" class="${DOM_CLASS_LEGENDS_COACH_IN_PLAYER_PANEL} ${specialCardInPanelClass} velonimo-card front-side" style="width: ${this.getLogHtmlWidthForCard(card)}px; height: ${this.getLogHtmlHeightForCard(card)}px; background-position: -${backgroundX}px -${backgroundY}px;"></div>`, `player-panel-${player.id}-velonimo-right`);
+                dojo.place(`<div id="player-panel-${player.id}-${specialCardDomSuffix}" class="${specialCardInPanelClass} velonimo-card front-side" style="width: ${this.getLogHtmlWidthForCard(card)}px; height: ${this.getLogHtmlHeightForCard(card)}px; background-position: -${backgroundX}px -${backgroundY}px;"></div>`, `player-panel-${player.id}-velonimo-right`);
                 this.addTooltip(`player-panel-${player.id}-${specialCardDomSuffix}`, specialCardDescription, '');
             });
         },
@@ -1107,11 +1126,25 @@ function (dojo, declare) {
         /**
          * @returns {number|undefined}
          */
-        getCurrentJerseyWearerIdIfExists: function () {
+        getCurrentJerseyOwnerIdIfExists: function () {
             const players = Object.entries(this.players);
             for (let i = 0; i < players.length; i++) {
                 const player = players[i][1];
                 if (player.isWearingJersey) {
+                    return player.id;
+                }
+            }
+
+            return undefined;
+        },
+        /**
+         * @returns {number|undefined}
+         */
+        getCurrentLegendsBroomWagonOwnerIdIfExists: function () {
+            const players = Object.entries(this.players);
+            for (let i = 0; i < players.length; i++) {
+                const player = players[i][1];
+                if (player.hasCardLegendsBroomWagon) {
                     return player.id;
                 }
             }
@@ -1271,8 +1304,18 @@ function (dojo, declare) {
                 VALUE_50,
             ].forEach((value) => fn.bind(this)(COLOR_ADVENTURER, value));
 
-            // jersey card
+            // special cards
             fn.bind(this)(COLOR_SPECIAL, VALUE_JERSEY_PLUS_TEN);
+            if (this.isExtensionLegendsEnabled) {
+                [
+                    VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE,
+                    VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER,
+                    VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR,
+                    VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN,
+                    VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR,
+                    VALUE_LEGENDS_ELEPHANT_STOP,
+                ].forEach((value) => fn.bind(this)(COLOR_SPECIAL, value));
+            }
         },
         /**
          * This function gives:
@@ -1376,6 +1419,10 @@ function (dojo, declare) {
          * @returns {number}
          */
         getCardWeightForColorAndValueToSortThemByValue: function (color, value) {
+            if (color === COLOR_SPECIAL) {
+                return value + 1000;
+            }
+
             return (value * 100) + color;
         },
         sortPlayerCardsByValue: function () {
@@ -1674,33 +1721,69 @@ function (dojo, declare) {
          * @param {number} value
          * @param {Object[]} cards
          * @returns {Object[]}
+         * @TODO: support BroomWagon, Eagle, Panda, Badger
          */
         getCardsThatCanBePlayedWithCard: function (color, value, cards) {
             return cards.filter((card) => {
+                // Legends coach elephant card
                 if (
-                    color === COLOR_SPECIAL
-                    && value === VALUE_JERSEY_PLUS_TEN
+                    (color === COLOR_SPECIAL && value === VALUE_LEGENDS_ELEPHANT_STOP)
+                    || card.id === CARD_ID_LEGENDS_ELEPHANT_STOP
                 ) {
-                    return card.color !== COLOR_ADVENTURER
-                        && card.color !== COLOR_SPECIAL;
-                }
-                if (
-                    card.color === COLOR_SPECIAL
-                    && card.value === VALUE_JERSEY_PLUS_TEN
-                ) {
-                    return color !== COLOR_ADVENTURER
-                        && color !== COLOR_SPECIAL;
+                    return true;
                 }
 
+                // adventurer cards
                 if (color === COLOR_ADVENTURER && value !== card.value) {
                     return false;
                 }
 
+                // jersey card
+                if (color === COLOR_SPECIAL && value === VALUE_JERSEY_PLUS_TEN) {
+                    return (
+                        card.color !== COLOR_ADVENTURER
+                        && ![
+                            CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER,
+                            CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR,
+                            CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN,
+                            CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR,
+                            CARD_ID_LEGENDS_ELEPHANT_STOP,
+                        ].includes(card.id)
+                    );
+                }
+                if (card.id === CARD_ID_JERSEY_PLUS_TEN) {
+                    return (
+                        color !== COLOR_ADVENTURER
+                        && !(
+                            color === COLOR_SPECIAL
+                            && [
+                                VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER,
+                                VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR,
+                                VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN,
+                                VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR,
+                                VALUE_LEGENDS_ELEPHANT_STOP,
+                            ].includes(value)
+                        )
+                    );
+                }
+
+                // Legends coach shark card
+                if (color === COLOR_SPECIAL && value === VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN) {
+                    return (card.color === COLOR_RED || card.id === CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN);
+                }
+                if (card.id === CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN) {
+                    return (color === COLOR_RED || (color === COLOR_SPECIAL && value === VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN));
+                }
+
+                // simple cards
                 if (color === card.color) {
                     return true;
                 }
+                if (value === card.value) {
+                    return true;
+                }
 
-                return value === card.value;
+                return false;
             });
         },
         /**
@@ -1714,44 +1797,12 @@ function (dojo, declare) {
             }
 
             return cards.reduce(
-                (acc, card, i, cards) => acc.concat(
+                (acc, card, _i, cards) => acc.concat(
                     this.getCardsThatCanBePlayedWithCard(card.color, card.value, playerCards)
                         .filter((c) => acc.every((accCard) => c.id !== accCard.id))
                 ).filter((c) => cards.every((cardsCard) => c.id !== cardsCard.id)),
                 []
             );
-        },
-        /**
-         * @param {number} color
-         * @param {number} value
-         * @param {Object[]} cards
-         * @returns {Object[]}
-         */
-        getCardsThatCannotBePlayedWithCard: function (color, value, cards) {
-            return cards.filter((card) => {
-                if (
-                    color === COLOR_SPECIAL
-                    && value === VALUE_JERSEY_PLUS_TEN
-                ) {
-                    return card.color === COLOR_ADVENTURER;
-                }
-                if (
-                    card.color === COLOR_SPECIAL
-                    && card.value === VALUE_JERSEY_PLUS_TEN
-                ) {
-                    return color === COLOR_ADVENTURER;
-                }
-
-                if (color === COLOR_ADVENTURER && value !== card.value) {
-                    return true;
-                }
-
-                if (color === card.color) {
-                    return false;
-                }
-
-                return value !== card.value;
-            });
         },
         /**
          * @param {Object[]} cards
@@ -1764,10 +1815,13 @@ function (dojo, declare) {
 
             const playerCards = this.getAllPlayerCards();
 
+            // @TODO: Shark coach can only be played with 1 red
+            // @TODO: Eagle coach
+            // @TODO: Panda coach
+            // @TODO: Badger coach
             return cards.reduce(
                 (acc, card) => acc.concat(
-                    this.getCardsThatCannotBePlayedWithCard(card.color, card.value, playerCards)
-                        .filter((c) => acc.every((accCard) => c.id !== accCard.id))
+                    playerCards.filter((c) => !this.getCardsThatCanBePlayedWithCard(card.color, card.value, playerCards).some((playableCard) => c.id === playableCard.id))
                 ),
                 []
             );
@@ -1788,6 +1842,7 @@ function (dojo, declare) {
         },
         /**
          * @returns {Object[]}
+         * @TODO: support Legends
          */
         getPlayerCardsCombinationsSortedByHighestValue: function () {
             const playerCards = this.getAllPlayerCards();
@@ -1825,6 +1880,7 @@ function (dojo, declare) {
                     if (
                         i <= 0
                         || combinations[i - 1].value !== combination.value
+                        || combinations[i - 1].cards.length > combination.cards.length
                     ) {
                         return true;
                     }
@@ -1837,32 +1893,56 @@ function (dojo, declare) {
          * @returns {number}
          */
         getCardsValue: function (cards) {
-            const withJersey = cards.map((c) => c.id).includes(CARD_ID_JERSEY_PLUS_TEN);
-            const cardsWithoutJersey = cards.filter((c) => c.id !== CARD_ID_JERSEY_PLUS_TEN);
-            if (!cardsWithoutJersey.length) {
+            // detect special cards
+            const cardIds = cards.map((c) => c.id);
+            const withJersey = cardIds.includes(CARD_ID_JERSEY_PLUS_TEN);
+            const withLegendsBroomWagon = cardIds.includes(CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE);
+            const withLegendsShark = cardIds.includes(CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN);
+
+            // remove special cards
+            const cardsWithoutSpecialCards = cards.filter((c) => ![
+                CARD_ID_JERSEY_PLUS_TEN,
+                CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE,
+                CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER,
+                CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR,
+                CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN,
+                CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR,
+                CARD_ID_LEGENDS_ELEPHANT_STOP,
+            ].includes(c.id));
+            if (!cardsWithoutSpecialCards.length) {
                 return 0;
             }
 
             // an adventurer is only playable solo (and without jersey)
-            const adventurer = cardsWithoutJersey.find((c) => c.color === COLOR_ADVENTURER);
+            const adventurer = cardsWithoutSpecialCards.find((c) => c.color === COLOR_ADVENTURER);
             if (adventurer) {
                 return adventurer.value;
             }
 
+            // special cards rules
             const addJerseyValueIfUsed = (value) => value + (withJersey ? VALUE_JERSEY_PLUS_TEN : 0);
+            const addLegendsBroomWagonValueIfUsed = (value) => value + (withLegendsBroomWagon ? VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE : 0);
+            const addLegendsSharkValueIfUsed = (value) => (withLegendsShark ? value * 10 : value);
 
-            if (cardsWithoutJersey.length === 1) {
-                return addJerseyValueIfUsed(cardsWithoutJersey[0].value);
+            // if single non-special card
+            if (cardsWithoutSpecialCards.length === 1) {
+                return addLegendsBroomWagonValueIfUsed(
+                    addJerseyValueIfUsed(
+                        addLegendsSharkValueIfUsed(cardsWithoutSpecialCards[0].value)
+                    )
+                );
             }
 
+            // if multiple non-special cards
             let minCardValue = 1000;
-            cardsWithoutJersey.forEach((card) => {
+            cardsWithoutSpecialCards.forEach((card) => {
                 if (card.value < minCardValue) {
                     minCardValue = card.value;
                 }
             });
-
-            return addJerseyValueIfUsed((cardsWithoutJersey.length * 10) + minCardValue);
+            return addLegendsBroomWagonValueIfUsed(
+                addJerseyValueIfUsed((cardsWithoutSpecialCards.length * 10) + minCardValue)
+            );
         },
         /**
          * @returns {boolean}
@@ -1876,17 +1956,46 @@ function (dojo, declare) {
             return this.playedCardsValue < playerCardsCombinations[0].value;
         },
         setupPlayerHandSelectableCards: function () {
-            const selectedCards = this.getSelectedPlayerCards();
-
             if (
                 this.isCurrentPlayerActive()
                 && this.currentState === 'playerGiveCardsBackAfterPicking'
             ) {
+                // disable cards that cannot be given
                 if (this.playerHand.isSelected(CARD_ID_JERSEY_PLUS_TEN)) {
                     this.playerHand.unselectItem(CARD_ID_JERSEY_PLUS_TEN);
                 }
-                this.displayCardsAsNonSelectable(this.addSpecialCardToCards(CARD_ID_JERSEY_PLUS_TEN, []));
+                this.displayCardsAsNonSelectable(this.addSpecialCardIdsToCards([CARD_ID_JERSEY_PLUS_TEN], []));
+                if (this.isExtensionLegendsEnabled) {
+                    if (this.playerHand.isSelected(CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE)) {
+                        this.playerHand.unselectItem(CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE);
+                    }
+                    if (this.playerHand.isSelected(CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER)) {
+                        this.playerHand.unselectItem(CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER);
+                    }
+                    if (this.playerHand.isSelected(CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR)) {
+                        this.playerHand.unselectItem(CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR);
+                    }
+                    if (this.playerHand.isSelected(CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN)) {
+                        this.playerHand.unselectItem(CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN);
+                    }
+                    if (this.playerHand.isSelected(CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR)) {
+                        this.playerHand.unselectItem(CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR);
+                    }
+                    if (this.playerHand.isSelected(CARD_ID_LEGENDS_ELEPHANT_STOP)) {
+                        this.playerHand.unselectItem(CARD_ID_LEGENDS_ELEPHANT_STOP);
+                    }
+                    this.displayCardsAsNonSelectable(this.addSpecialCardIdsToCards([
+                        CARD_ID_JERSEY_PLUS_TEN,
+                        CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE,
+                        CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER,
+                        CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR,
+                        CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN,
+                        CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR,
+                        CARD_ID_LEGENDS_ELEPHANT_STOP,
+                    ], []));
+                }
             } else {
+                const selectedCards = this.getSelectedPlayerCards();
                 this.displayCardsAsNonSelectable(this.getPlayerCardsThatCannotBePlayedWithCards(selectedCards));
             }
         },
@@ -1894,11 +2003,11 @@ function (dojo, declare) {
          * @param {Object[]} cards
          */
         displayCardsAsNonSelectable: function (cards) {
-            this.getAllPlayerCards().forEach((playedCard) => {
+            this.getAllPlayerCards().forEach((playerCard) => {
                 dojo.toggleClass(
-                    `${DOM_ID_PLAYER_HAND}_item_${playedCard.id}`,
+                    `${DOM_ID_PLAYER_HAND}_item_${playerCard.id}`,
                     DOM_CLASS_NON_SELECTABLE_CARD,
-                    cards.map((card) => card.id).includes(playedCard.id)
+                    cards.map((c) => c.id).includes(playerCard.id)
                 );
             });
         },
@@ -2313,7 +2422,15 @@ function (dojo, declare) {
             if (playerId !== this.player_id) {
                 this.placeOnObject(`cards-stack-${topOfStackCardId}`, `player-table-${playerId}-hand`);
                 cards.forEach((card) => {
-                    if (card.id !== CARD_ID_JERSEY_PLUS_TEN) {
+                    if (![
+                        CARD_ID_JERSEY_PLUS_TEN,
+                        CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE,
+                        CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER,
+                        CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR,
+                        CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN,
+                        CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR,
+                        CARD_ID_LEGENDS_ELEPHANT_STOP,
+                    ].includes(card.id)) {
                         this.decreaseNumberOfCardsOfPlayer(playerId, 1);
                     }
                 });
@@ -2469,7 +2586,15 @@ function (dojo, declare) {
             cards.forEach((card) => {
                 if (
                     updateNumberOfCards
-                    && card.id !== CARD_ID_JERSEY_PLUS_TEN
+                    && ![
+                        CARD_ID_JERSEY_PLUS_TEN,
+                        CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE,
+                        CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER,
+                        CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR,
+                        CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN,
+                        CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR,
+                        CARD_ID_LEGENDS_ELEPHANT_STOP,
+                    ].includes(card.id)
                 ) {
                     if (fromDomId) {
                         setTimeout(
@@ -2504,7 +2629,15 @@ function (dojo, declare) {
                 }
             });
             this.playerHand.removeFromStockById(cardId);
-            if (cardId !== CARD_ID_JERSEY_PLUS_TEN) {
+            if (![
+                CARD_ID_JERSEY_PLUS_TEN,
+                CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE,
+                CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER,
+                CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR,
+                CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN,
+                CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR,
+                CARD_ID_LEGENDS_ELEPHANT_STOP,
+            ].includes(cardId)) {
                 this.decreaseNumberOfCardsOfPlayer(this.player_id, 1);
             }
             this.setupPlayerHandSelectableCards();
@@ -2512,43 +2645,45 @@ function (dojo, declare) {
             this.setupSelectedCardsValueInPlayerHand();
         },
         /**
-         * @param {number} cardId
+         * @param {number[]} cardIds
          * @param {Object[]} cards
          */
-        addSpecialCardToCards: function (cardId, cards) {
-            let value;
-            switch (cardId) {
-                case CARD_ID_JERSEY_PLUS_TEN:
-                    value = VALUE_JERSEY_PLUS_TEN;
-                    break;
-                case CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE:
-                    value = VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE;
-                    break;
-                case CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER:
-                    value = VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER;
-                    break;
-                case CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR:
-                    value = VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR;
-                    break;
-                case CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN:
-                    value = VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN;
-                    break;
-                case CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR:
-                    value = VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR;
-                    break;
-                case CARD_ID_LEGENDS_ELEPHANT_STOP:
-                    value = VALUE_LEGENDS_ELEPHANT_STOP;
-                    break;
-                default:
-                    throw new Error('Unsupported cardId for addSpecialCardToCards');
-            }
+        addSpecialCardIdsToCards: function (cardIds, cards) {
+            const specialCards = cardIds.map((cardId) => {
+                let value;
+                switch (cardId) {
+                    case CARD_ID_JERSEY_PLUS_TEN:
+                        value = VALUE_JERSEY_PLUS_TEN;
+                        break;
+                    case CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE:
+                        value = VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE;
+                        break;
+                    case CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER:
+                        value = VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER;
+                        break;
+                    case CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR:
+                        value = VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR;
+                        break;
+                    case CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN:
+                        value = VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN;
+                        break;
+                    case CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR:
+                        value = VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR;
+                        break;
+                    case CARD_ID_LEGENDS_ELEPHANT_STOP:
+                        value = VALUE_LEGENDS_ELEPHANT_STOP;
+                        break;
+                    default:
+                        throw new Error('Unsupported cardId for addSpecialCardIdsToCards');
+                }
 
-            return cards.concat(
-                this.getCardObjectFromPositionInSpriteAndId(
+                return this.getCardObjectFromPositionInSpriteAndId(
                     this.getCardPositionInSpriteByColorAndValue(COLOR_SPECIAL, value),
                     cardId
-                )
-            );
+                );
+            });
+
+            return cards.concat(specialCards);
         },
         movePlayedCardsToPreviousPlayedCards: function () {
             dojo.query(`.${DOM_CLASS_CARDS_STACK_PREVIOUS_PLAYED}`).forEach(this.fadeOutAndDestroy);
@@ -2943,9 +3078,24 @@ function (dojo, declare) {
         notif_cardsDealt: function (data) {
             this.playerHand.removeAll();
             this.resetCardsGroups();
-            this.addCardsToPlayerHand((this.currentPlayerHasJersey && !this.jerseyIsNotPlayable)
-                ? this.addSpecialCardToCards(CARD_ID_JERSEY_PLUS_TEN, data.args.cards)
-                : data.args.cards,
+            this.addCardsToPlayerHand(
+                this.addSpecialCardIdsToCards(
+                    [
+                        [CARD_ID_JERSEY_PLUS_TEN, () => this.currentPlayerHasJersey && !this.jerseyIsNotPlayable],
+                        [CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE, () => this.currentPlayerHasLegendsBroomWagon && !this.legendsBroomWagonIsNotPlayable],
+                        [CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER, () => this.currentPlayerHasLegendsEagle && !this.legendsEagleIsNotPlayable],
+                        [CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR, () => this.currentPlayerHasLegendsPanda && !this.legendsPandaIsNotPlayable],
+                        [CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN, () => this.currentPlayerHasLegendsShark && !this.legendsSharkIsNotPlayable],
+                        [CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR, () => this.currentPlayerHasLegendsBadger && !this.legendsBadgerIsNotPlayable],
+                        [CARD_ID_LEGENDS_ELEPHANT_STOP, () => this.currentPlayerHasLegendsElephant && !this.legendsElephantIsNotPlayable],
+                    ].reduce((acc, cardIdAndPredicate) => {
+                        if (cardIdAndPredicate[1]()) {
+                            return acc.concat(cardIdAndPredicate[0]);
+                        }
+                        return acc;
+                    }, []),
+                    data.args.cards,
+                ),
                 false
             );
             this.sortPlayerCardsByCurrentSortingMode();
@@ -2976,14 +3126,48 @@ function (dojo, declare) {
 
             // place new played cards
             this.playedCardsValue = data.args.playedCardsValue;
-            const playedCardsWithJersey = data.args.withJersey
-                ? this.addSpecialCardToCards(CARD_ID_JERSEY_PLUS_TEN, data.args.playedCards)
-                : data.args.playedCards;
-            this.moveCardsFromPlayerHandToTable(data.args.playedCardsPlayerId, playedCardsWithJersey);
+            this.moveCardsFromPlayerHandToTable(
+                data.args.playedCardsPlayerId,
+                this.addSpecialCardIdsToCards(
+                    [
+                        [CARD_ID_JERSEY_PLUS_TEN, () => data.args.withJersey],
+                        [CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE, () => data.args.withLegendsBroomWagon],
+                        [CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER, () => data.args.withLegendsEagle],
+                        [CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR, () => data.args.withLegendsPanda],
+                        [CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN, () => data.args.withLegendsShark],
+                        [CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR, () => data.args.withLegendsBadger],
+                        [CARD_ID_LEGENDS_ELEPHANT_STOP, () => data.args.withLegendsElephant],
+                    ].reduce((acc, cardIdAndPredicate) => {
+                        if (cardIdAndPredicate[1]()) {
+                            return acc.concat(cardIdAndPredicate[0]);
+                        }
+                        return acc;
+                    }, []),
+                    data.args.playedCards,
+                )
+            );
 
-            // update jersey state if it has been used
+            // update special cards state if used
             if (data.args.withJersey) {
                 this.useSpecialCardForCurrentRound(CARD_ID_JERSEY_PLUS_TEN);
+            }
+            if (data.args.withLegendsBroomWagon) {
+                this.useSpecialCardForCurrentRound(CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE);
+            }
+            if (data.args.withLegendsEagle) {
+                this.useSpecialCardForCurrentRound(CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER);
+            }
+            if (data.args.withLegendsPanda) {
+                this.useSpecialCardForCurrentRound(CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR);
+            }
+            if (data.args.withLegendsShark) {
+                this.useSpecialCardForCurrentRound(CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN);
+            }
+            if (data.args.withLegendsBadger) {
+                this.useSpecialCardForCurrentRound(CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR);
+            }
+            if (data.args.withLegendsElephant) {
+                this.useSpecialCardForCurrentRound(CARD_ID_LEGENDS_ELEPHANT_STOP);
             }
         },
         notif_turnPassed: function (data) {
@@ -3009,20 +3193,28 @@ function (dojo, declare) {
             this.players = data.args.players;
             this.moveCardsBetweenTwoOtherPlayers(data.args.senderPlayerId, data.args.receiverPlayerId, data.args.numberOfCards);
         },
+        /**
+         * Note about special cards: the special cards are restored and moved to their next owner before the next round begins,
+         *                           so, when the game ends, the winner will visibly own the jersey, and the last loser will visibly own the legends broom wagon
+         */
         notif_roundEnded: function (data) {
-            // restore and move jersey before the next round begin,
-            // in order to have a beautiful jersey for the winner of the game (at the very end)
-            if (
-                this.currentPlayerHasJersey
-                && !this.jerseyIsNotPlayable
-            ) {
+            // remove special cards (that can move) from current player hand
+            if (this.currentPlayerHasJersey && !this.jerseyIsNotPlayable) {
                 this.removeCardFromPlayerHand(CARD_ID_JERSEY_PLUS_TEN);
             }
-            const previousJerseyWearerId = this.getCurrentJerseyWearerIdIfExists();
+            if (this.currentPlayerHasLegendsBroomWagon && !this.legendsBroomWagonIsNotPlayable) {
+                this.removeCardFromPlayerHand(CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE);
+            }
+
+            const previousJerseyWearerId = this.getCurrentJerseyOwnerIdIfExists();
+            const previousLegendsBroomWagonOwnerId = this.getCurrentLegendsBroomWagonOwnerIdIfExists();
             this.players = data.args.players;
             this.resetDisplayedNumberOfCardsByPlayerId();
             this.setupPlayersHiddenCards();
-            this.restoreSpecialCardForCurrentRound(CARD_ID_JERSEY_PLUS_TEN);
+            data.args.specialCardIdsToRestore.forEach((cardId) => {
+                this.restoreSpecialCardForCurrentRound(cardId);
+            });
+            this.moveLegendsBroomWagonToLastLoser(previousLegendsBroomWagonOwnerId);
             this.moveJerseyToCurrentWinner(previousJerseyWearerId);
 
             this.setupPlayersScore();

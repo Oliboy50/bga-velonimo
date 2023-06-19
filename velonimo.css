@@ -275,6 +275,7 @@ Board
     width: 65px;
     height: 90px;
     background-size: 65px 90px;
+    /* @TODO: replace jersey card with small jersey token */
     background-image: url('img/jersey.png');
     background-repeat: no-repeat;
     background-position: center center;
@@ -299,7 +300,28 @@ Board
     right: -40px;
 }
 .player-table.has-jersey.has-used-jersey .player-table-jersey {
-    /* @TODO: the card should be removed from the board */
+    /* @TODO: remove from the board */
+    opacity: 0.5;
+}
+.player-table.has-legends-broom-wagon .player-table-jersey {
+    position: absolute;
+    width: 65px;
+    height: 90px;
+    background-size: 65px 90px;
+    /* @TODO: replace jersey card with small jersey token */
+    background-image: url('img/jersey.png');
+    background-repeat: no-repeat;
+    background-position: center center;
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: 0.5s;
+}
+.player-table.selectable .player-table-jersey,
+.player-table.selectable-for-card-picking .player-table-jersey {
+    pointer-events: none;
+}
+.player-table.has-legends-broom-wagon.has-used-jersey .player-table-jersey {
+    /* @TODO: remove from the board */
     opacity: 0.5;
 }
 .player-table .player-table-finish-position {
@@ -653,19 +675,23 @@ Player panel HTML
     filter: grayscale(1);
 }
 .player-panel-legends-broom-wagon {
-    /* @TODO: */
+    /* @TODO: small broom-wagon token */
 }
 .has-used-legends-broom-wagon .player-panel-legends-broom-wagon {
     filter: grayscale(1);
 }
-.player-panel-legends-coach.velonimo-card {
+.player-panel-legends-coach-eagle.velonimo-card,
+.player-panel-legends-coach-panda.velonimo-card,
+.player-panel-legends-coach-shark.velonimo-card,
+.player-panel-legends-coach-badger.velonimo-card,
+.player-panel-legends-coach-elephant.velonimo-card {
     border-radius: 50%;
 }
-.has-used-legends-eagle .player-panel-legends-coach,
-.has-used-legends-panda .player-panel-legends-coach,
-.has-used-legends-shark .player-panel-legends-coach,
-.has-used-legends-badger .player-panel-legends-coach,
-.has-used-legends-elephant .player-panel-legends-coach {
+.has-used-legends-coach-eagle .player-panel-legends-coach-eagle,
+.has-used-legends-coach-panda .player-panel-legends-coach-panda,
+.has-used-legends-coach-shark .player-panel-legends-coach-shark,
+.has-used-legends-coach-badger .player-panel-legends-coach-badger,
+.has-used-legends-coach-elephant .player-panel-legends-coach-elephant {
     filter: grayscale(1);
 }
 /**
