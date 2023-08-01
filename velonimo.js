@@ -43,6 +43,8 @@ const COLOR_YELLOW = 70;
 const COLOR_ADVENTURER = 80;
 const COLOR_SPECIAL = 90;
 
+const SIMPLE_COLORS = [COLOR_BLUE, COLOR_BROWN, COLOR_GRAY, COLOR_GREEN, COLOR_PINK, COLOR_RED, COLOR_YELLOW];
+
 // Cards value
 const VALUE_1 = 1;
 const VALUE_2 = 2;
@@ -452,7 +454,7 @@ function (dojo, declare) {
             dojo.connect($(DOM_ID_PLAYER_HAND_TOGGLE_SORT_BUTTON), 'onclick', this, 'onClickOnTogglePlayerHandSortButton');
             // setup currentPlayer cards
             this.addCardsToPlayerHand(
-                this.addSpecialCardIdsToCards(
+                this.addSpecialCardsToCards(
                     [
                         [CARD_ID_JERSEY_PLUS_TEN, () => this.currentPlayerHasJersey && !this.jerseyIsNotPlayable],
                         [CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE, () => this.currentPlayerHasLegendsBroomWagon && !this.legendsBroomWagonIsNotPlayable],
@@ -610,7 +612,7 @@ function (dojo, declare) {
                 const backgroundX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position) + this.getLogHtmlBackgroundOffsetXForCard(card);
                 const backgroundY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position) + this.getLogHtmlBackgroundOffsetYForCard(card);
 
-                return `<div class="velonimo-card front-side" style="width: ${this.getLogHtmlWidthForCard(card)}px; height: ${this.getLogHtmlHeightForCard(card)}px; background-position: -${backgroundX}px -${backgroundY}px;"></div>`;
+                return `<div class="velonimo-card front-side" style="width: ${this.getLogHtmlWidthForCard(card)}px; height: 24px; background-position: -${backgroundX}px -${backgroundY}px;"></div>`;
             }).join(' ');
         },
         getLogHtmlWidthForCard: function (card) {
@@ -621,7 +623,6 @@ function (dojo, declare) {
                 card.color === COLOR_SPECIAL
                 && [
                     VALUE_JERSEY_PLUS_TEN,
-                    VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE,
                 ].includes(card.value)
             ) {
                 return 25;
@@ -629,6 +630,7 @@ function (dojo, declare) {
             if (
                 card.color === COLOR_SPECIAL
                 && [
+                    VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE,
                     VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER,
                     VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR,
                     VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN,
@@ -639,21 +641,6 @@ function (dojo, declare) {
                 return 30;
             }
             return 17;
-        },
-        getLogHtmlHeightForCard: function (card) {
-            if (
-                card.color === COLOR_SPECIAL
-                && [
-                    VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER,
-                    VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR,
-                    VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN,
-                    VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR,
-                    VALUE_LEGENDS_ELEPHANT_STOP,
-                ].includes(card.value)
-            ) {
-                return 30;
-            }
-            return 24;
         },
         getLogHtmlBackgroundOffsetXForCard: function (card) {
             if (card.color === COLOR_ADVENTURER) {
@@ -676,6 +663,12 @@ function (dojo, declare) {
             }
             if (
                 card.color === COLOR_SPECIAL
+                && card.value === VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE
+            ) {
+                return 1;
+            }
+            if (
+                card.color === COLOR_SPECIAL
                 && [
                     VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER,
                     VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR,
@@ -691,6 +684,12 @@ function (dojo, declare) {
         getLogHtmlBackgroundOffsetYForCard: function (card) {
             if (card.color === COLOR_ADVENTURER) {
                 return 8;
+            }
+            if (
+                card.color === COLOR_SPECIAL
+                && card.value === VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE
+            ) {
+                return 1;
             }
             if (
                 card.color === COLOR_SPECIAL
@@ -950,6 +949,7 @@ function (dojo, declare) {
          */
         moveJerseyToCurrentWinner: function (previousJerseyWearerId) {
             const applyJersey = (playerId) => {
+                // @TODO: use jersey card instead of special image
                 dojo.addClass(`player-table-${playerId}`, DOM_CLASS_PLAYER_HAS_JERSEY);
                 dojo.place(`<div id="player-panel-${playerId}-jersey" class="${DOM_CLASS_JERSEY_IN_PLAYER_PANEL}"></div>`, `player-panel-${playerId}-velonimo-right`);
                 this.addTooltip(`player-panel-${playerId}-jersey`, _('Current leader of the game'), '');
@@ -997,8 +997,13 @@ function (dojo, declare) {
             }
 
             const applyLegendsBroomWagon = (playerId) => {
+                const card = this.addSpecialCardsToCards([CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE], [])[0];
+                const position = this.getCardPositionInSpriteByColorAndValue(card.color, card.value);
+                const backgroundX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position) + this.getLogHtmlBackgroundOffsetXForCard(card);
+                const backgroundY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position) + this.getLogHtmlBackgroundOffsetYForCard(card);
+
                 dojo.addClass(`player-table-${playerId}`, DOM_CLASS_PLAYER_HAS_LEGENDS_BROOM_WAGON);
-                dojo.place(`<div id="player-panel-${playerId}-legends-broom-wagon" class="${DOM_CLASS_LEGENDS_BROOM_WAGON_IN_PLAYER_PANEL}"></div>`, `player-panel-${playerId}-velonimo-right`);
+                dojo.place(`<div id="player-panel-${playerId}-legends-broom-wagon" class="${DOM_CLASS_LEGENDS_BROOM_WAGON_IN_PLAYER_PANEL} velonimo-card front-side" style="width: ${this.getLogHtmlWidthForCard(card)}px; height: 30px; background-position: -${backgroundX}px -${backgroundY}px;"></div>`, `player-panel-${playerId}-velonimo-right`);
                 this.addTooltip(`player-panel-${playerId}-legends-broom-wagon`, _('Loser of the previous round'), '');
             };
             const removeLegendsBroomWagon = (playerId) => {
@@ -1090,14 +1095,14 @@ function (dojo, declare) {
                         throw new Error('Unsupported cardId for moveLegendsCoachToPlayers');
                 }
 
-                const card = this.addSpecialCardIdsToCards([cardId], [])[0];
+                const card = this.addSpecialCardsToCards([cardId], [])[0];
                 const position = this.getCardPositionInSpriteByColorAndValue(card.color, card.value);
                 const backgroundX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position) + this.getLogHtmlBackgroundOffsetXForCard(card);
                 const backgroundY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position) + this.getLogHtmlBackgroundOffsetYForCard(card);
 
                 this[currentPlayerHasSpecialCardProperty] = this.player_id === player.id;
                 dojo.addClass(`player-table-${player.id}`, playerHasSpecialCardClass);
-                dojo.place(`<div id="player-panel-${player.id}-${specialCardDomSuffix}" class="${specialCardInPanelClass} velonimo-card front-side" style="width: ${this.getLogHtmlWidthForCard(card)}px; height: ${this.getLogHtmlHeightForCard(card)}px; background-position: -${backgroundX}px -${backgroundY}px;"></div>`, `player-panel-${player.id}-velonimo-right`);
+                dojo.place(`<div id="player-panel-${player.id}-${specialCardDomSuffix}" class="${specialCardInPanelClass} velonimo-card front-side" style="width: ${this.getLogHtmlWidthForCard(card)}px; height: 30px; background-position: -${backgroundX}px -${backgroundY}px;"></div>`, `player-panel-${player.id}-velonimo-right`);
                 this.addTooltip(`player-panel-${player.id}-${specialCardDomSuffix}`, specialCardDescription, '');
             });
         },
@@ -1274,15 +1279,7 @@ function (dojo, declare) {
          */
         execFnForEachCardsInGame: function (fn) {
             // colored cards
-            [
-                COLOR_BLUE,
-                COLOR_BROWN,
-                COLOR_GRAY,
-                COLOR_GREEN,
-                COLOR_PINK,
-                COLOR_RED,
-                COLOR_YELLOW,
-            ].forEach((color) => {
+            SIMPLE_COLORS.forEach((color) => {
                 [
                     VALUE_1,
                     VALUE_2,
@@ -1405,6 +1402,7 @@ function (dojo, declare) {
             }
         },
         sortPlayerCardsByColor: function () {
+            // @TODO: cut the function in 2, so we can pass cards as input
             const cardsWeightByPosition = {};
             this.execFnForEachCardsInGame((color, value) => {
                 const cardPositionAndWeight = this.getCardPositionInSpriteByColorAndValue(color, value);
@@ -1426,6 +1424,7 @@ function (dojo, declare) {
             return (value * 100) + color;
         },
         sortPlayerCardsByValue: function () {
+            // @TODO: cut the function in 2, so we can pass cards as input
             const cardsWeightByPosition = {};
             this.execFnForEachCardsInGame((color, value) => {
                 cardsWeightByPosition[this.getCardPositionInSpriteByColorAndValue(color, value)] = this.getCardWeightForColorAndValueToSortThemByValue(color, value);
@@ -1721,11 +1720,10 @@ function (dojo, declare) {
          * @param {number} value
          * @param {Object[]} cards
          * @returns {Object[]}
-         * @TODO: support BroomWagon, Eagle, Panda, Badger
          */
         getCardsThatCanBePlayedWithCard: function (color, value, cards) {
             return cards.filter((card) => {
-                // Legends coach elephant card
+                // legends coach elephant
                 if (
                     (color === COLOR_SPECIAL && value === VALUE_LEGENDS_ELEPHANT_STOP)
                     || card.id === CARD_ID_LEGENDS_ELEPHANT_STOP
@@ -1733,12 +1731,23 @@ function (dojo, declare) {
                     return true;
                 }
 
-                // adventurer cards
-                if (color === COLOR_ADVENTURER && value !== card.value) {
+                // adventurer
+                if (
+                    (color === COLOR_ADVENTURER || card.color === COLOR_ADVENTURER)
+                    && value !== card.value
+                ) {
                     return false;
                 }
 
-                // jersey card
+                // legends broom wagon
+                if (color === COLOR_SPECIAL && value === VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE) {
+                    return card.color !== COLOR_ADVENTURER;
+                }
+                if (card.id === CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE) {
+                    return color !== COLOR_ADVENTURER;
+                }
+
+                // jersey
                 if (color === COLOR_SPECIAL && value === VALUE_JERSEY_PLUS_TEN) {
                     return (
                         card.color !== COLOR_ADVENTURER
@@ -1767,12 +1776,54 @@ function (dojo, declare) {
                     );
                 }
 
-                // Legends coach shark card
+                // legends coach shark
                 if (color === COLOR_SPECIAL && value === VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN) {
                     return (card.color === COLOR_RED || card.id === CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN);
                 }
                 if (card.id === CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN) {
                     return (color === COLOR_RED || (color === COLOR_SPECIAL && value === VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN));
+                }
+
+                // legends coach eagle
+                if (color === COLOR_SPECIAL && value === VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER) {
+                    return (
+                        card.id === CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER
+                        || SIMPLE_COLORS.includes(card.color)
+                    );
+                }
+                if (card.id === CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER) {
+                    return (
+                        (color === COLOR_SPECIAL && value === VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER)
+                        || SIMPLE_COLORS.includes(color)
+                    );
+                }
+
+                // legends coach panda
+                if (color === COLOR_SPECIAL && value === VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR) {
+                    return (
+                        card.id === CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR
+                        || SIMPLE_COLORS.includes(card.color)
+                    );
+                }
+                if (card.id === CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR) {
+                    return (
+                        (color === COLOR_SPECIAL && value === VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR)
+                        || SIMPLE_COLORS.includes(color)
+                    );
+                }
+
+                // legends coach badger
+                if (color === COLOR_SPECIAL && value === VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR) {
+                    return (
+                        card.id === CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR
+                        || SIMPLE_COLORS.includes(card.color)
+                    );
+                }
+                if (card.id === CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR) {
+                    return (
+                        (color === COLOR_SPECIAL && value === VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR)
+                        || SIMPLE_COLORS.includes(color)
+                    );
                 }
 
                 // simple cards
@@ -1783,26 +1834,9 @@ function (dojo, declare) {
                     return true;
                 }
 
+                // everything else
                 return false;
             });
-        },
-        /**
-         * @param {Object[]} cards
-         * @returns {Object[]}
-         */
-        getPlayerCardsThatCanBePlayedWithCards: function (cards) {
-            const playerCards = this.getAllPlayerCards();
-            if (cards.length === 0) {
-                return playerCards;
-            }
-
-            return cards.reduce(
-                (acc, card, _i, cards) => acc.concat(
-                    this.getCardsThatCanBePlayedWithCard(card.color, card.value, playerCards)
-                        .filter((c) => acc.every((accCard) => c.id !== accCard.id))
-                ).filter((c) => cards.every((cardsCard) => c.id !== cardsCard.id)),
-                []
-            );
         },
         /**
          * @param {Object[]} cards
@@ -1814,17 +1848,136 @@ function (dojo, declare) {
             }
 
             const playerCards = this.getAllPlayerCards();
+            const playerCardIds = playerCards.map((c) => c.id);
+            const cardIds = cards.map((c) => c.id);
 
-            // @TODO: Shark coach can only be played with 1 red
-            // @TODO: Eagle coach
-            // @TODO: Panda coach
-            // @TODO: Badger coach
-            return cards.reduce(
+            /** @var {Object[]} nonPlayableCards */
+            let nonPlayableCards = cards.reduce(
                 (acc, card) => acc.concat(
                     playerCards.filter((c) => !this.getCardsThatCanBePlayedWithCard(card.color, card.value, playerCards).some((playableCard) => c.id === playableCard.id))
                 ),
                 []
             );
+            const nonPlayableCardIds = nonPlayableCards.map((c) => c.id);
+
+            if (
+                playerCardIds.includes(CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN)
+                && !nonPlayableCardIds.includes(CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN)
+            ) {
+                const numberOfSelectedRedCards = cards.filter((c) => c.color === COLOR_RED).length;
+                if (numberOfSelectedRedCards > 1) {
+                    nonPlayableCards = this.addSpecialCardsToCards([CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN], nonPlayableCards);
+                }
+            } else if (
+                playerCardIds.includes(CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER)
+                && !nonPlayableCardIds.includes(CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER)
+            ) {
+                const selectedSimpleCards = cards.filter((c) => SIMPLE_COLORS.includes(c.color));
+                const selectedSimpleCardValues = selectedSimpleCards.map((c) => c.value);
+                const numberOfDifferentValues = [...new Set(selectedSimpleCardValues)].length;
+                const selectedSimpleCardsGroupedBySameValue = Object.entries(selectedSimpleCards.reduce((acc, c) => {
+                    return {
+                        ...acc,
+                        [c.value]: [...(acc[c.value] || []), c],
+                    };
+                }, {})).sort(([_value1, cards1], [_value2, cards2]) => cards2.length - cards1.length);
+                if (
+                    numberOfDifferentValues > 2
+                    || (
+                        numberOfDifferentValues === 2
+                        && selectedSimpleCardsGroupedBySameValue[0][1].length > 1
+                        && selectedSimpleCardsGroupedBySameValue[1][1].length > 1
+                    )
+                ) {
+                    nonPlayableCards = this.addSpecialCardsToCards([CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER], nonPlayableCards);
+                } else if (cardIds.includes(CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER)) {
+                    const selectedSimpleCardIds = selectedSimpleCards.map((c) => c.id);
+                    const playerSimpleCardIds = playerCards.filter((c) => SIMPLE_COLORS.includes(c.color)).map((c) => c.id);
+                    const nonPlayablePlayerSimpleCardIds = playerCards
+                        .filter((c) => SIMPLE_COLORS.includes(c.color))
+                        .filter((c) =>
+                            !selectedSimpleCardIds.includes(c.id)
+                            && numberOfDifferentValues > 1
+                            && (
+                                (
+                                    selectedSimpleCardsGroupedBySameValue[0][1].length === 1
+                                    && !selectedSimpleCardValues.includes(c.value)
+                                ) || (
+                                    selectedSimpleCardsGroupedBySameValue[0][1].length > 1
+                                    && c.value !== parseInt(selectedSimpleCardsGroupedBySameValue[0][0], 10)
+                                )
+                            )
+                        )
+                        .map((c) => c.id);
+                    nonPlayableCards = playerCards
+                        .filter((c) => nonPlayablePlayerSimpleCardIds.includes(c.id) || (nonPlayableCardIds.includes(c.id) && !playerSimpleCardIds.includes(c.id)));
+                }
+            } else if (
+                playerCardIds.includes(CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR)
+                && !nonPlayableCardIds.includes(CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR)
+            ) {
+                const selectedSimpleCards = cards.filter((c) => SIMPLE_COLORS.includes(c.color));
+                const selectedSimpleCardColors = selectedSimpleCards.map((c) => c.color);
+                const numberOfDifferentColors = [...new Set(selectedSimpleCardColors)].length;
+                const selectedSimpleCardsGroupedBySameColor = Object.entries(selectedSimpleCards.reduce((acc, c) => {
+                    return {
+                        ...acc,
+                        [c.color]: [...(acc[c.color] || []), c],
+                    };
+                }, {})).sort(([_color1, cards1], [_color2, cards2]) => cards2.length - cards1.length);
+                if (
+                    numberOfDifferentColors > 2
+                    || (
+                        numberOfDifferentColors === 2
+                        && selectedSimpleCardsGroupedBySameColor[0][1].length > 1
+                        && selectedSimpleCardsGroupedBySameColor[1][1].length > 1
+                    )
+                ) {
+                    nonPlayableCards = this.addSpecialCardsToCards([CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR], nonPlayableCards);
+                } else if (cardIds.includes(CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR)) {
+                    const selectedSimpleCardIds = selectedSimpleCards.map((c) => c.id);
+                    const playerSimpleCardIds = playerCards.filter((c) => SIMPLE_COLORS.includes(c.color)).map((c) => c.id);
+                    const nonPlayablePlayerSimpleCardIds = playerCards
+                        .filter((c) => SIMPLE_COLORS.includes(c.color))
+                        .filter((c) =>
+                            !selectedSimpleCardIds.includes(c.id)
+                            && numberOfDifferentColors > 1
+                            && (
+                                (
+                                    selectedSimpleCardsGroupedBySameColor[0][1].length === 1
+                                    && !selectedSimpleCardColors.includes(c.color)
+                                ) || (
+                                    selectedSimpleCardsGroupedBySameColor[0][1].length > 1
+                                    && c.color !== parseInt(selectedSimpleCardsGroupedBySameColor[0][0], 10)
+                                )
+                            )
+                        )
+                        .map((c) => c.id);
+                    nonPlayableCards = playerCards
+                        .filter((c) => nonPlayablePlayerSimpleCardIds.includes(c.id) || (nonPlayableCardIds.includes(c.id) && !playerSimpleCardIds.includes(c.id)));
+                }
+            } else if (
+                playerCardIds.includes(CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR)
+                && !nonPlayableCardIds.includes(CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR)
+            ) {
+                const selectedSimpleCards = cards.filter((c) => SIMPLE_COLORS.includes(c.color));
+                const selectedSimpleCardColors = selectedSimpleCards.map((c) => c.color);
+                const numberOfDifferentColors = [...new Set(selectedSimpleCardColors)].length;
+                if (numberOfDifferentColors !== selectedSimpleCardColors.length) {
+                    nonPlayableCards = this.addSpecialCardsToCards([CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR], nonPlayableCards);
+                } else if (cardIds.includes(CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR)) {
+                    const selectedSimpleCardIds = selectedSimpleCards.map((c) => c.id);
+                    const playerSimpleCardIds = playerCards.filter((c) => SIMPLE_COLORS.includes(c.color)).map((c) => c.id);
+                    const nonPlayablePlayerSimpleCardIds = playerCards
+                        .filter((c) => SIMPLE_COLORS.includes(c.color))
+                        .filter((c) => !selectedSimpleCardIds.includes(c.id) && selectedSimpleCardColors.includes(c.color))
+                        .map((c) => c.id);
+                    nonPlayableCards = playerCards
+                        .filter((c) => nonPlayablePlayerSimpleCardIds.includes(c.id) || (nonPlayableCardIds.includes(c.id) && !playerSimpleCardIds.includes(c.id)));
+                }
+            }
+
+            return nonPlayableCards;
         },
         /**
          * @returns {Object[]}
@@ -1842,27 +1995,112 @@ function (dojo, declare) {
         },
         /**
          * @returns {Object[]}
-         * @TODO: support Legends
          */
         getPlayerCardsCombinationsSortedByHighestValue: function () {
             const playerCards = this.getAllPlayerCards();
             const sortCardsById = (a, b) => a.id - b.id;
+            const sortCardsByHighestValue = (a, b) => b.value - a.value;
             const highestPlayableGroupOfCards = playerCards.reduce((acc, card) => {
-                const cardsThatCanBePlayedWithCard = this.getPlayerCardsThatCanBePlayedWithCards([card]);
+                if (card.id === CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN) {
+                    const redCardsSortedByHighestValue = playerCards.filter((c) => c.color === COLOR_RED).sort(sortCardsByHighestValue);
+                    if (redCardsSortedByHighestValue.length) {
+                        return [
+                            ...acc,
+                            [card, ...playerCards.filter((c) => [
+                                redCardsSortedByHighestValue[0].id,
+                                CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE,
+                            ].includes(c.id))].sort(sortCardsById),
+                        ];
+                    }
+                } else if (card.id === CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER) {
+                    const simpleCards = playerCards.filter((c) => SIMPLE_COLORS.includes(c.color)).sort(sortCardsByHighestValue);
+                    const simpleCardColors = simpleCards.map((c) => c.color);
+                    const differentColors = [...new Set(simpleCardColors)];
+                    const simpleCardValues = simpleCards.map((c) => c.value);
+                    const differentValues = [...new Set(simpleCardValues)];
+                    if (differentColors.length >= 2 && differentValues.length >= 2) {
+                        const simpleCardIdsWithHighestNumberOfCardsOfSameValue = Object.entries(simpleCards.reduce((acc, c) => {
+                            return {
+                                ...acc,
+                                [c.value]: [...(acc[c.value] || []), c],
+                            };
+                        }, {})).sort(([_value1, cards1], [_value2, cards2]) => cards2.length - cards1.length)[0][1].map((c) => c.id);
+                        const otherSimpleCardIdWithHighestValue = simpleCards.filter((c) => !simpleCardIdsWithHighestNumberOfCardsOfSameValue.includes(c.id))[0].id;
 
-                if (!cardsThatCanBePlayedWithCard.length) {
-                    // add single card combination
-                    return [...acc, [card]];
+                        return [
+                            ...acc,
+                            [card, ...playerCards.filter((c) => [
+                                ...simpleCardIdsWithHighestNumberOfCardsOfSameValue,
+                                otherSimpleCardIdWithHighestValue,
+                                CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE,
+                            ].includes(c.id))].sort(sortCardsById),
+                        ];
+                    }
+                } else if (card.id === CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR) {
+                    const simpleCards = playerCards.filter((c) => SIMPLE_COLORS.includes(c.color)).sort(sortCardsByHighestValue);
+                    const simpleCardColors = simpleCards.map((c) => c.color);
+                    const differentColors = [...new Set(simpleCardColors)];
+                    const simpleCardValues = simpleCards.map((c) => c.value);
+                    const differentValues = [...new Set(simpleCardValues)];
+                    if (differentColors.length >= 2 && differentValues.length >= 2) {
+                        const simpleCardIdsWithHighestNumberOfCardsOfSameColor = Object.entries(simpleCards.reduce((acc, c) => {
+                            return {
+                                ...acc,
+                                [c.color]: [...(acc[c.color] || []), c],
+                            };
+                        }, {})).sort(([_color1, cards1], [_color2, cards2]) => cards2.length - cards1.length)[0][1].map((c) => c.id);
+                        const otherSimpleCardIdWithHighestValue = simpleCards.filter((c) => !simpleCardIdsWithHighestNumberOfCardsOfSameColor.includes(c.id))[0].id;
+
+                        return [
+                            ...acc,
+                            [card, ...playerCards.filter((c) => [
+                                ...simpleCardIdsWithHighestNumberOfCardsOfSameColor,
+                                otherSimpleCardIdWithHighestValue,
+                                CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE,
+                            ].includes(c.id))].sort(sortCardsById),
+                        ];
+                    }
+                } else if (card.id === CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR) {
+                    const simpleCards = playerCards.filter((c) => SIMPLE_COLORS.includes(c.color)).sort(sortCardsByHighestValue);
+                    const simpleCardColors = simpleCards.map((c) => c.color);
+                    const differentColors = [...new Set(simpleCardColors)];
+                    const simpleCardValues = simpleCards.map((c) => c.value);
+                    const differentValues = [...new Set(simpleCardValues)];
+                    if (differentColors.length >= 2 && differentValues.length >= 2) {
+                        const simpleCardIdsOfHighestValueOfEachColor = Object.entries(simpleCards.reduce((acc, c) => {
+                            if ((acc[c.color] || []).length) {
+                                return acc;
+                            }
+
+                            return {
+                                ...acc,
+                                [c.color]: [c],
+                            };
+                        }, {})).map(([_color, cards]) => cards[0].id);
+
+                        return [
+                            ...acc,
+                            [card, ...playerCards.filter((c) => [
+                                ...simpleCardIdsOfHighestValueOfEachColor,
+                                CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE,
+                            ].includes(c.id))].sort(sortCardsById),
+                        ];
+                    }
+                } else {
+                    let cardsThatCanBePlayedWithCard = this.getCardsThatCanBePlayedWithCard(card.color, card.value, playerCards).filter((c) => card.id !== c.id);
+                    if (!cardsThatCanBePlayedWithCard.length) {
+                        // add single card combination
+                        return [...acc, [card]];
+                    }
+
+                    return [
+                        ...acc,
+                        // add the highest color combination
+                        [card, ...cardsThatCanBePlayedWithCard].filter((c) => c.color === card.color || c.id === CARD_ID_JERSEY_PLUS_TEN || c.id === CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE).sort(sortCardsById),
+                        // add the highest value combination
+                        [card, ...cardsThatCanBePlayedWithCard].filter((c) => c.value === card.value || c.id === CARD_ID_JERSEY_PLUS_TEN || c.id === CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE).sort(sortCardsById),
+                    ];
                 }
-
-                return [
-                    ...acc,
-                    // add the highest color combination
-                    [card, ...cardsThatCanBePlayedWithCard].filter((c) => c.color === card.color || c.id === CARD_ID_JERSEY_PLUS_TEN).sort(sortCardsById),
-                    // add the highest value combination
-                    [card, ...cardsThatCanBePlayedWithCard].filter((c) => c.value === card.value || c.id === CARD_ID_JERSEY_PLUS_TEN).sort(sortCardsById),
-                ];
-
             }, []);
 
             return highestPlayableGroupOfCards
@@ -1964,7 +2202,7 @@ function (dojo, declare) {
                 if (this.playerHand.isSelected(CARD_ID_JERSEY_PLUS_TEN)) {
                     this.playerHand.unselectItem(CARD_ID_JERSEY_PLUS_TEN);
                 }
-                this.displayCardsAsNonSelectable(this.addSpecialCardIdsToCards([CARD_ID_JERSEY_PLUS_TEN], []));
+                this.displayCardsAsNonSelectable(this.addSpecialCardsToCards([CARD_ID_JERSEY_PLUS_TEN], []));
                 if (this.isExtensionLegendsEnabled) {
                     if (this.playerHand.isSelected(CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE)) {
                         this.playerHand.unselectItem(CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE);
@@ -1984,7 +2222,7 @@ function (dojo, declare) {
                     if (this.playerHand.isSelected(CARD_ID_LEGENDS_ELEPHANT_STOP)) {
                         this.playerHand.unselectItem(CARD_ID_LEGENDS_ELEPHANT_STOP);
                     }
-                    this.displayCardsAsNonSelectable(this.addSpecialCardIdsToCards([
+                    this.displayCardsAsNonSelectable(this.addSpecialCardsToCards([
                         CARD_ID_JERSEY_PLUS_TEN,
                         CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE,
                         CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER,
@@ -2053,73 +2291,11 @@ function (dojo, declare) {
             this.setupPlayCardsActionButtonIfNeeded();
         },
         /**
-         * @param {number} color
-         * @param {number} value
-         * @returns {boolean}
-         */
-        isJersey: function (color, value) {
-            return color === COLOR_SPECIAL
-                && value === VALUE_JERSEY_PLUS_TEN;
-        },
-        /**
-         * @param {number} color
-         * @param {number} value
-         * @returns {boolean}
-         */
-        isLegendsBroomWagon: function (color, value) {
-            return color === COLOR_SPECIAL
-                && value === VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE;
-        },
-        /**
-         * @param {number} color
-         * @param {number} value
-         * @returns {boolean}
-         */
-        isLegendsBadger: function (color, value) {
-            return color === COLOR_SPECIAL
-                && value === VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR;
-        },
-        /**
-         * @param {number} color
-         * @param {number} value
-         * @returns {boolean}
-         */
-        isLegendsElephant: function (color, value) {
-            return color === COLOR_SPECIAL
-                && value === VALUE_LEGENDS_ELEPHANT_STOP;
-        },
-        /**
-         * @param {number} color
-         * @param {number} value
-         * @returns {boolean}
-         */
-        isLegendsEagle: function (color, value) {
-            return color === COLOR_SPECIAL
-                && value === VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER;
-        },
-        /**
-         * @param {number} color
-         * @param {number} value
-         * @returns {boolean}
-         */
-        isLegendsPanda: function (color, value) {
-            return color === COLOR_SPECIAL
-                && value === VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR;
-        },
-        /**
-         * @param {number} color
-         * @param {number} value
-         * @returns {boolean}
-         */
-        isLegendsShark: function (color, value) {
-            return color === COLOR_SPECIAL
-                && value === VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN;
-        },
-        /**
          * @param {Object[]} cards
          * @returns {Object[]}
          */
         sortPlayedCards: function (cards) {
+            // @TODO: keep sorting by value but move the +5/+10 just before the coach
             return [...cards].sort((a, b) => b.value - a.value);
         },
         /**
@@ -2475,7 +2651,10 @@ function (dojo, declare) {
                 return;
             }
 
-            // sort cards to always send them from right to left (to avoid a visual bug in player hand)
+            // sort cards like the ones in player hand but reversed,
+            // to always send them from right to left,
+            // in order to avoid a visual bug in player hand when cards leave the hand one by one
+            // @TODO: use the same sorting functions as the one used for player hand (after cut) + .reverse()
             const currentSortingMode = this.getCurrentPlayerCardsSortingMode();
             const sortedCards = [...cards].sort((a, b) => {
                 switch (currentSortingMode) {
@@ -2488,9 +2667,8 @@ function (dojo, declare) {
                 }
             });
 
-            this.removeCardFromPlayerHand(sortedCards[0].id);
-
             let animations = [];
+            this.removeCardFromPlayerHand(sortedCards[0].id);
             for (let i = 0; i < sortedCards.length; i++) {
                 const position = this.getCardPositionInSpriteByColorAndValue(sortedCards[i].color, sortedCards[i].value);
                 const backgroundPositionX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position);
@@ -2645,11 +2823,11 @@ function (dojo, declare) {
             this.setupSelectedCardsValueInPlayerHand();
         },
         /**
-         * @param {number[]} cardIds
+         * @param {number[]} specialCardIds
          * @param {Object[]} cards
          */
-        addSpecialCardIdsToCards: function (cardIds, cards) {
-            const specialCards = cardIds.map((cardId) => {
+        addSpecialCardsToCards: function (specialCardIds, cards) {
+            const specialCards = specialCardIds.map((cardId) => {
                 let value;
                 switch (cardId) {
                     case CARD_ID_JERSEY_PLUS_TEN:
@@ -2674,7 +2852,7 @@ function (dojo, declare) {
                         value = VALUE_LEGENDS_ELEPHANT_STOP;
                         break;
                     default:
-                        throw new Error('Unsupported cardId for addSpecialCardIdsToCards');
+                        throw new Error('Unsupported cardId for addSpecialCardsToCards');
                 }
 
                 return this.getCardObjectFromPositionInSpriteAndId(
@@ -2873,11 +3051,8 @@ function (dojo, declare) {
                 if (selectedCardsWithoutLastSelectedCardGroups.length > 0) {
                     this.unselectCards(selectedCardsWithoutLastSelectedCard);
                 } else {
-                    const playerCardsThatCannotBePlayedWithSelectedCards = this.getPlayerCardsThatCannotBePlayedWithCards(selectedCards);
-                    this.unselectCards(selectedCards.filter(
-                        (card) => playerCardsThatCannotBePlayedWithSelectedCards.map((c) => c.id).includes(card.id)
-                            && cardId !== card.id
-                    ));
+                    const playerCardIdsThatCannotBePlayedWithSelectedCards = this.getPlayerCardsThatCannotBePlayedWithCards(selectedCards).map((c) => c.id);
+                    this.unselectCards(selectedCards.filter((c) => playerCardIdsThatCannotBePlayedWithSelectedCards.includes(c.id) && cardId !== c.id));
                 }
             }
         },
@@ -2885,7 +3060,16 @@ function (dojo, declare) {
          * @param {number} cardId
          */
         onPlayerCardUnselected: function (cardId) {
-            this.unselectCards(this.getAllPlayerCards().filter((card) => card.id === cardId));
+            const playerCards = this.getAllPlayerCards();
+            if ([
+                CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER,
+                CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR,
+                CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR,
+            ].includes(cardId)) {
+                this.unselectCards(playerCards.filter((c) => c.id === cardId || c.color !== COLOR_SPECIAL));
+            } else {
+                this.unselectCards(playerCards.filter((c) => c.id === cardId));
+            }
         },
         onClickOnTogglePlayerHandSortButton: function () {
             const currentSortingMode = this.getCurrentPlayerCardsSortingMode();
@@ -3079,7 +3263,7 @@ function (dojo, declare) {
             this.playerHand.removeAll();
             this.resetCardsGroups();
             this.addCardsToPlayerHand(
-                this.addSpecialCardIdsToCards(
+                this.addSpecialCardsToCards(
                     [
                         [CARD_ID_JERSEY_PLUS_TEN, () => this.currentPlayerHasJersey && !this.jerseyIsNotPlayable],
                         [CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE, () => this.currentPlayerHasLegendsBroomWagon && !this.legendsBroomWagonIsNotPlayable],
@@ -3128,7 +3312,7 @@ function (dojo, declare) {
             this.playedCardsValue = data.args.playedCardsValue;
             this.moveCardsFromPlayerHandToTable(
                 data.args.playedCardsPlayerId,
-                this.addSpecialCardIdsToCards(
+                this.addSpecialCardsToCards(
                     [
                         [CARD_ID_JERSEY_PLUS_TEN, () => data.args.withJersey],
                         [CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE, () => data.args.withLegendsBroomWagon],

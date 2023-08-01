@@ -671,15 +671,7 @@ Player panel HTML
     background-image: url('img/jersey_player_panel.png');
     background-repeat: no-repeat;
 }
-.has-used-jersey .player-panel-jersey {
-    filter: grayscale(1);
-}
-.player-panel-legends-broom-wagon {
-    /* @TODO: small broom-wagon token */
-}
-.has-used-legends-broom-wagon .player-panel-legends-broom-wagon {
-    filter: grayscale(1);
-}
+.player-panel-legends-broom-wagon,
 .player-panel-legends-coach-eagle.velonimo-card,
 .player-panel-legends-coach-panda.velonimo-card,
 .player-panel-legends-coach-shark.velonimo-card,
@@ -687,12 +679,15 @@ Player panel HTML
 .player-panel-legends-coach-elephant.velonimo-card {
     border-radius: 50%;
 }
+.has-used-jersey .player-panel-jersey,
+.has-used-legends-broom-wagon .player-panel-legends-broom-wagon,
 .has-used-legends-coach-eagle .player-panel-legends-coach-eagle,
 .has-used-legends-coach-panda .player-panel-legends-coach-panda,
 .has-used-legends-coach-shark .player-panel-legends-coach-shark,
 .has-used-legends-coach-badger .player-panel-legends-coach-badger,
 .has-used-legends-coach-elephant .player-panel-legends-coach-elephant {
     filter: grayscale(1);
+    opacity: 0.5;
 }
 /**
 END Player panel HTML
