@@ -107,6 +107,9 @@ const DOM_ID_ACTION_BUTTON_GIVE_CARDS = 'action-button-give-cards';
 
 // DOM classes
 const DOM_CLASS_PLAYER_TABLE = 'player-table';
+const DOM_CLASS_PLAYER_JERSEY = 'player-table-jersey';
+const DOM_CLASS_PLAYER_LEGENDS_BROOM_WAGON = 'player-table-legends-broom-wagon';
+const DOM_CLASS_PLAYER_LEGENDS_COACH = 'player-table-legends-coach';
 const DOM_CLASS_PLAYER_HAS_JERSEY = 'has-jersey';
 const DOM_CLASS_PLAYER_HAS_LEGENDS_BROOM_WAGON = 'has-legends-broom-wagon';
 const DOM_CLASS_PLAYER_HAS_LEGENDS_EAGLE = 'has-legends-coach-eagle';
@@ -145,6 +148,11 @@ const DOM_CLASS_SPEECH_BUBBLE_RIGHT = 'speech-bubble-on-right';
 const DOM_CLASS_CARDS_GROUP_CARD = 'cards-group-card';
 const DOM_CLASS_CARDS_GROUP_CARD_LEFT = 'cards-group-card-left';
 const DOM_CLASS_CARDS_GROUP_CARD_RIGHT = 'cards-group-card-right';
+const DOM_CLASS_VELONIMO_CARD = 'velonimo-card';
+const DOM_CLASS_CARD_FRONT_SIDE = 'front-side';
+const DOM_CLASS_CARD_BACK_SIDE = 'back-side';
+const DOM_CLASS_MOVING_CARD = 'moving-card';
+const DOM_CLASS_MOVING_SPECIAL_CARD = 'moving-special-card';
 
 // Player hand sorting modes
 const PLAYER_HAND_SORT_BY_COLOR = 'color';
@@ -321,16 +329,13 @@ function (dojo, declare) {
                 const playerPosition = playersPlace[index];
                 const playerColorRGB = `#${player.color}`;
                 const isPositionTop = playerPosition.tableStyle.indexOf('top') !== -1;
-                const hasJerseyOnLeft = playerPosition.bubbleClass.indexOf('left') !== -1;
 
                 // setup player on board
                 dojo.place(
-                    `<div id="player-table-${player.id}" class="${DOM_CLASS_PLAYER_TABLE} ${isPositionTop ? 'player-position-top' : 'player-position-bottom'} ${hasJerseyOnLeft ? 'player-position-jersey-left' : 'player-position-jersey-right'}" style="width: ${PLAYER_TABLE_WIDTH}px; height: ${PLAYER_TABLE_HEIGHT}px; ${playerPosition.tableStyle}">
-    <div class="player-table-name" style="color: ${playerColorRGB};"><span>${(player.name.length > 10 ? (player.name.substr(0,10) + '...') : player.name)}</span></div>
+                    `<div id="player-table-${player.id}" class="${DOM_CLASS_PLAYER_TABLE} ${isPositionTop ? 'player-position-top' : 'player-position-bottom'}" style="width: ${PLAYER_TABLE_WIDTH}px; height: ${PLAYER_TABLE_HEIGHT}px; ${playerPosition.tableStyle}">
+    <div class="player-table-name" style="color: ${playerColorRGB};"><span>${(player.name.length > 10 ? (player.name.substring(0,10) + '...') : player.name)}</span></div>
     <div id="player-table-${player.id}-hand" class="player-table-hand"><div id="player-table-${player.id}-hand-cards" class="player-table-hand-cards"></div></div>
-    <div id="player-table-${player.id}-legends-coach" class="player-table-legends-coach"></div>
-    <div id="player-table-${player.id}-jersey" class="player-table-jersey"></div>
-    <div id="player-table-${player.id}-legends-broom-wagon" class="player-table-legends-broom-wagon"></div>
+    <div id="player-table-${player.id}-special-cards" class="player-special-cards"></div>
     <div id="player-table-${player.id}-finish-position" class="player-table-finish-position"></div>
     <div id="player-table-${player.id}-speech-bubble" class="${DOM_CLASS_SPEECH_BUBBLE} ${playerPosition.bubbleClass}" style="color: ${playerColorRGB};"></div>
 </div>`,
@@ -612,7 +617,7 @@ function (dojo, declare) {
                 const backgroundX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position) + this.getLogHtmlBackgroundOffsetXForCard(card);
                 const backgroundY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position) + this.getLogHtmlBackgroundOffsetYForCard(card);
 
-                return `<div class="velonimo-card front-side" style="width: ${this.getLogHtmlWidthForCard(card)}px; height: 24px; background-position: -${backgroundX}px -${backgroundY}px;"></div>`;
+                return `<div class="${DOM_CLASS_VELONIMO_CARD} ${DOM_CLASS_CARD_FRONT_SIDE}" style="width: ${this.getLogHtmlWidthForCard(card)}px; height: 24px; background-position: -${backgroundX}px -${backgroundY}px;"></div>`;
             }).join(' ');
         },
         getLogHtmlWidthForCard: function (card) {
@@ -647,7 +652,7 @@ function (dojo, declare) {
                 return 6;
             }
             if (card.value === VALUE_1) {
-                return 12;
+                return 11;
             }
             if (card.value === VALUE_2) {
                 return 63;
@@ -659,7 +664,7 @@ function (dojo, declare) {
                 card.color === COLOR_SPECIAL
                 && card.value === VALUE_JERSEY_PLUS_TEN
             ) {
-                return 6;
+                return 4;
             }
             if (
                 card.color === COLOR_SPECIAL
@@ -684,6 +689,12 @@ function (dojo, declare) {
         getLogHtmlBackgroundOffsetYForCard: function (card) {
             if (card.color === COLOR_ADVENTURER) {
                 return 8;
+            }
+            if (
+                card.color === COLOR_SPECIAL
+                && card.value === VALUE_JERSEY_PLUS_TEN
+            ) {
+                return 5;
             }
             if (
                 card.color === COLOR_SPECIAL
@@ -833,7 +844,7 @@ function (dojo, declare) {
 
                 const playerCardsHtml = [];
                 for (let i = 0; i < howManyCards; i++) {
-                    playerCardsHtml.push(`<div id="player-table-${playerId}-card-${i}" class="velonimo-card back-side" style="transform: rotate(${getCardRotateDeg(howManyCards, i)}deg);"></div>`);
+                    playerCardsHtml.push(`<div id="player-table-${playerId}-card-${i}" class="${DOM_CLASS_VELONIMO_CARD} ${DOM_CLASS_CARD_BACK_SIDE}" style="transform: rotate(${getCardRotateDeg(howManyCards, i)}deg);"></div>`);
                 }
                 $(`player-table-${playerId}-hand-cards`).innerHTML = playerCardsHtml.join('');
                 $(`player-panel-${playerId}-remaining-cards-number`).innerHTML = howManyCards;
@@ -948,11 +959,18 @@ function (dojo, declare) {
          * @param {number=} previousJerseyWearerId
          */
         moveJerseyToCurrentWinner: function (previousJerseyWearerId) {
+            const tooltipText = _('Current winner of the game');
+            const card = this.addSpecialCardsToCards([CARD_ID_JERSEY_PLUS_TEN], [])[0];
+            const position = this.getCardPositionInSpriteByColorAndValue(card.color, card.value);
+            const backgroundX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position) + this.getLogHtmlBackgroundOffsetXForCard(card);
+            const backgroundY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position) + this.getLogHtmlBackgroundOffsetYForCard(card);
+
             const applyJersey = (playerId) => {
-                // @TODO: use jersey card instead of special image
+                dojo.place(`<div id="player-table-${playerId}-jersey" class="${DOM_CLASS_PLAYER_JERSEY}" style="background-position: -${backgroundX}px -${backgroundY}px;"></div>`, `player-table-${playerId}-special-cards`);
+                this.addTooltip(`player-table-${playerId}-jersey`, tooltipText, '');
                 dojo.addClass(`player-table-${playerId}`, DOM_CLASS_PLAYER_HAS_JERSEY);
-                dojo.place(`<div id="player-panel-${playerId}-jersey" class="${DOM_CLASS_JERSEY_IN_PLAYER_PANEL}"></div>`, `player-panel-${playerId}-velonimo-right`);
-                this.addTooltip(`player-panel-${playerId}-jersey`, _('Current leader of the game'), '');
+                dojo.place(`<div id="player-panel-${playerId}-jersey" class="${DOM_CLASS_JERSEY_IN_PLAYER_PANEL} ${DOM_CLASS_VELONIMO_CARD} ${DOM_CLASS_CARD_FRONT_SIDE}" style="width: ${this.getLogHtmlWidthForCard(card)}px; height: 30px; background-position: -${backgroundX}px -${backgroundY}px;"></div>`, `player-panel-${playerId}-velonimo-right`);
+                this.addTooltip(`player-panel-${playerId}-jersey`, tooltipText, '');
             };
             const removeJersey = (playerId) => {
                 dojo.removeClass(`player-table-${playerId}`, DOM_CLASS_PLAYER_HAS_JERSEY);
@@ -967,13 +985,11 @@ function (dojo, declare) {
 
                     if (!dojo.hasClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_HAS_JERSEY)) {
                         if (previousJerseyWearerId) {
-                            // move jersey from player A to player B,
-                            // then add isWearingJersey class to player B at the end of the animation
                             const animation = this.slideTemporaryObject(
-                                `<div class="moving-jersey"></div>`,
-                                `player-table-${previousJerseyWearerId}-jersey`,
-                                `player-table-${previousJerseyWearerId}-jersey`,
-                                `player-table-${player.id}-jersey`
+                                `<div id="player-table-${player.id}-jersey" class="${DOM_CLASS_PLAYER_JERSEY} ${DOM_CLASS_MOVING_SPECIAL_CARD}" style="background-position: -${backgroundX}px -${backgroundY}px;"></div>`,
+                                `player-table-${previousJerseyWearerId}-special-cards`,
+                                `player-table-${previousJerseyWearerId}-special-cards`,
+                                `player-table-${player.id}-special-cards`
                             );
                             dojo.connect(animation, 'onEnd', () => applyJersey(player.id));
                             animation.play();
@@ -996,15 +1012,18 @@ function (dojo, declare) {
                 return;
             }
 
-            const applyLegendsBroomWagon = (playerId) => {
-                const card = this.addSpecialCardsToCards([CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE], [])[0];
-                const position = this.getCardPositionInSpriteByColorAndValue(card.color, card.value);
-                const backgroundX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position) + this.getLogHtmlBackgroundOffsetXForCard(card);
-                const backgroundY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position) + this.getLogHtmlBackgroundOffsetYForCard(card);
+            const tooltipText = _('Loser of the previous round');
+            const card = this.addSpecialCardsToCards([CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE], [])[0];
+            const position = this.getCardPositionInSpriteByColorAndValue(card.color, card.value);
+            const backgroundX = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position) + this.getLogHtmlBackgroundOffsetXForCard(card);
+            const backgroundY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position) + this.getLogHtmlBackgroundOffsetYForCard(card);
 
+            const applyLegendsBroomWagon = (playerId) => {
+                dojo.place(`<div id="player-table-${playerId}-legends-broom-wagon" class="${DOM_CLASS_PLAYER_LEGENDS_BROOM_WAGON}" style="background-position: -${backgroundX}px -${backgroundY}px;"></div>`, `player-table-${playerId}-special-cards`);
+                this.addTooltip(`player-table-${playerId}-legends-broom-wagon`, tooltipText, '');
                 dojo.addClass(`player-table-${playerId}`, DOM_CLASS_PLAYER_HAS_LEGENDS_BROOM_WAGON);
-                dojo.place(`<div id="player-panel-${playerId}-legends-broom-wagon" class="${DOM_CLASS_LEGENDS_BROOM_WAGON_IN_PLAYER_PANEL} velonimo-card front-side" style="width: ${this.getLogHtmlWidthForCard(card)}px; height: 30px; background-position: -${backgroundX}px -${backgroundY}px;"></div>`, `player-panel-${playerId}-velonimo-right`);
-                this.addTooltip(`player-panel-${playerId}-legends-broom-wagon`, _('Loser of the previous round'), '');
+                dojo.place(`<div id="player-panel-${playerId}-legends-broom-wagon" class="${DOM_CLASS_LEGENDS_BROOM_WAGON_IN_PLAYER_PANEL} ${DOM_CLASS_VELONIMO_CARD} ${DOM_CLASS_CARD_FRONT_SIDE}" style="width: ${this.getLogHtmlWidthForCard(card)}px; height: 30px; background-position: -${backgroundX}px -${backgroundY}px;"></div>`, `player-panel-${playerId}-velonimo-right`);
+                this.addTooltip(`player-panel-${playerId}-legends-broom-wagon`, tooltipText, '');
             };
             const removeLegendsBroomWagon = (playerId) => {
                 dojo.removeClass(`player-table-${playerId}`, DOM_CLASS_PLAYER_HAS_LEGENDS_BROOM_WAGON);
@@ -1020,10 +1039,10 @@ function (dojo, declare) {
                     if (!dojo.hasClass(`player-table-${player.id}`, DOM_CLASS_PLAYER_HAS_LEGENDS_BROOM_WAGON)) {
                         if (previousLegendsBroomWagonHolderId) {
                             const animation = this.slideTemporaryObject(
-                                `<div class="moving-legends-broom-wagon"></div>`,
-                                `player-table-${previousLegendsBroomWagonHolderId}-legends-broom-wagon`,
-                                `player-table-${previousLegendsBroomWagonHolderId}-legends-broom-wagon`,
-                                `player-table-${player.id}-legends-broom-wagon`
+                                `<div id="player-table-${player.id}-legends-broom-wagon" class="${DOM_CLASS_PLAYER_LEGENDS_BROOM_WAGON} ${DOM_CLASS_MOVING_SPECIAL_CARD}" style="background-position: -${backgroundX}px -${backgroundY}px;"></div>`,
+                                `player-table-${previousLegendsBroomWagonHolderId}-special-cards`,
+                                `player-table-${previousLegendsBroomWagonHolderId}-special-cards`,
+                                `player-table-${player.id}-special-cards`
                             );
                             dojo.connect(animation, 'onEnd', () => applyLegendsBroomWagon(player.id));
                             animation.play();
@@ -1101,8 +1120,10 @@ function (dojo, declare) {
                 const backgroundY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position) + this.getLogHtmlBackgroundOffsetYForCard(card);
 
                 this[currentPlayerHasSpecialCardProperty] = this.player_id === player.id;
+                dojo.place(`<div id="player-table-${player.id}-legends-coach" class="${DOM_CLASS_PLAYER_LEGENDS_COACH}" style="background-position: -${backgroundX}px -${backgroundY}px;"></div>`, `player-table-${player.id}-special-cards`);
                 dojo.addClass(`player-table-${player.id}`, playerHasSpecialCardClass);
-                dojo.place(`<div id="player-panel-${player.id}-${specialCardDomSuffix}" class="${specialCardInPanelClass} velonimo-card front-side" style="width: ${this.getLogHtmlWidthForCard(card)}px; height: 30px; background-position: -${backgroundX}px -${backgroundY}px;"></div>`, `player-panel-${player.id}-velonimo-right`);
+                this.addTooltip(`player-table-${player.id}-legends-coach`, specialCardDescription, '');
+                dojo.place(`<div id="player-panel-${player.id}-${specialCardDomSuffix}" class="${specialCardInPanelClass} ${DOM_CLASS_VELONIMO_CARD} ${DOM_CLASS_CARD_FRONT_SIDE}" style="width: ${this.getLogHtmlWidthForCard(card)}px; height: 30px; background-position: -${backgroundX}px -${backgroundY}px;"></div>`, `player-panel-${player.id}-velonimo-right`);
                 this.addTooltip(`player-panel-${player.id}-${specialCardDomSuffix}`, specialCardDescription, '');
             });
         },
@@ -2014,6 +2035,7 @@ function (dojo, declare) {
          * @returns {Object[]}
          */
         getPlayerCardsCombinationsSortedByHighestValue: function () {
+            // @TODO: check Panda and Badger sorted cards to make sure that it will work as expected
             const playerCards = this.getAllPlayerCards();
             const sortCardsById = (a, b) => a.id - b.id;
             const sortCardsByHighestValue = (a, b) => b.value - a.value;
@@ -2041,7 +2063,7 @@ function (dojo, declare) {
                                 ...acc,
                                 [c.value]: [...(acc[c.value] || []), c],
                             };
-                        }, {})).sort(([_value1, cards1], [_value2, cards2]) => cards2.length - cards1.length)[0][1].map((c) => c.id);
+                        }, {})).sort(([value1, _cards1], [value2, _cards2]) => parseInt(value2, 10) - parseInt(value1, 10)).sort(([_value1, cards1], [_value2, cards2]) => cards2.length - cards1.length)[0][1].map((c) => c.id);
                         const otherSimpleCardIdWithHighestValue = simpleCards.filter((c) => !simpleCardIdsWithHighestNumberOfCardsOfSameValue.includes(c.id))[0].id;
 
                         return [
@@ -2312,8 +2334,46 @@ function (dojo, declare) {
          * @returns {Object[]}
          */
         sortPlayedCards: function (cards) {
-            // @TODO: keep sorting by value but move the +5/+10 just before the coach
-            return [...cards].sort((a, b) => b.value - a.value);
+            return [...cards].sort((a, b) => {
+                // coach at the end
+                if ([
+                    CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER,
+                    CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR,
+                    CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN,
+                    CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR,
+                    CARD_ID_LEGENDS_ELEPHANT_STOP,
+                ].includes(b.id)) {
+                    return -1;
+                }
+                if ([
+                    CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER,
+                    CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR,
+                    CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN,
+                    CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR,
+                    CARD_ID_LEGENDS_ELEPHANT_STOP,
+                ].includes(a.id)) {
+                    return 1;
+                }
+
+                // then jersey
+                if (b.id === CARD_ID_JERSEY_PLUS_TEN) {
+                    return -1;
+                }
+                if (a.id === CARD_ID_JERSEY_PLUS_TEN) {
+                    return 1;
+                }
+
+                // then broom wagon
+                if (b.id === CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE) {
+                    return -1;
+                }
+                if (a.id === CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE) {
+                    return 1;
+                }
+
+                // then smallest values
+                return b.value - a.value;
+            });
         },
         /**
          * @param {Object[]} players
@@ -2363,7 +2423,7 @@ function (dojo, declare) {
                 const x = this.getAbsoluteCardBackgroundPositionXFromCardPosition(position);
                 const y = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position);
                 dojo.place(
-                    `<div id="card-in-stack-${card.id}" class="velonimo-card front-side" style="background-position: -${x}px -${y}px;"></div>`,
+                    `<div id="card-in-stack-${card.id}" class="${DOM_CLASS_VELONIMO_CARD} ${DOM_CLASS_CARD_FRONT_SIDE}" style="background-position: -${x}px -${y}px;"></div>`,
                     `cards-stack-${topOfStackCardId}`
                 );
             });
@@ -2421,7 +2481,7 @@ function (dojo, declare) {
             let animations = [];
             for (let i = 0; i < numberOfCards; i++) {
                 animations[i] = this.slideTemporaryObject(
-                    `<div class="velonimo-card back-side moving-card" style="position: absolute; z-index: ${100 - i};"></div>`,
+                    `<div class="${DOM_CLASS_VELONIMO_CARD} ${DOM_CLASS_CARD_BACK_SIDE} ${DOM_CLASS_MOVING_CARD}" style="position: absolute; z-index: ${100 - i};"></div>`,
                     fromDomId,
                     fromDomId,
                     toDomId,
@@ -2692,7 +2752,7 @@ function (dojo, declare) {
                 const backgroundPositionY = this.getAbsoluteCardBackgroundPositionYFromCardPosition(position);
                 const animationStartDomId = $(`${DOM_ID_PLAYER_HAND}_item_${sortedCards[i].id}`) ? `${DOM_ID_PLAYER_HAND}_item_${sortedCards[i].id}` : `player-table-${this.player_id}-hand`;
                 animations[i] = this.slideTemporaryObject(
-                    `<div class="velonimo-card front-side moving-card" style="position: absolute; background-position: -${backgroundPositionX}px -${backgroundPositionY}px; z-index: ${100 - i};"></div>`,
+                    `<div class="${DOM_CLASS_VELONIMO_CARD} ${DOM_CLASS_CARD_FRONT_SIDE} ${DOM_CLASS_MOVING_CARD}" style="position: absolute; background-position: -${backgroundPositionX}px -${backgroundPositionY}px; z-index: ${100 - i};"></div>`,
                     `player-table-${this.player_id}-hand`,
                     animationStartDomId,
                     `player-table-${receiverId}-hand`,
@@ -2936,7 +2996,7 @@ function (dojo, declare) {
                     this.addTooltip(DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON, '', _('Click this button to stop grouping selected cards.'));
                     this.connect($(DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON), 'onclick', 'onClickOnUngroupCardsButton');
                 }
-            } else if (selectedCards.length > 1) {
+            } else if (selectedCards.length > 1 && this.getCardsValue(selectedCards) > 0) {
                 if (!$(DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON)) {
                     dojo.place(
                         `<a href="javascript:void(0)" id="${DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON}" class="bgabutton bgabutton_blue"><span>${_('Group cards')}</span></a>`,

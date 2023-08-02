@@ -47,12 +47,8 @@
 /**
 Override BGA elements style
  */
-#page-title {
-    z-index: 97;
-}
-#log_history_status {
-    z-index: 97;
-}
+#page-title,
+#log_history_status,
 #maingameview_menuheader {
     z-index: 97;
 }
@@ -119,7 +115,7 @@ Board
     font-weight: bold;
     border: 2px solid transparent;
     box-sizing: border-box;
-    z-index: 5;
+    z-index: 6;
 }
 .player-table.selectable .player-table-name,
 .player-table.selectable-for-card-picking .player-table-name {
@@ -270,59 +266,60 @@ Board
 .player-table-speech-bubble.show-bubble {
     opacity: 1;
 }
-.player-table.has-jersey .player-table-jersey {
+.player-table .player-special-cards {
     position: absolute;
-    width: 65px;
-    height: 90px;
-    background-size: 65px 90px;
-    /* @TODO: replace jersey card with small jersey token */
-    background-image: url('img/jersey.png');
-    background-repeat: no-repeat;
-    background-position: center center;
-    opacity: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+}
+.player-table.player-position-top .player-special-cards {
+    top: 50px;
+}
+.player-table.player-position-bottom .player-special-cards {
+    bottom: 50px;
+}
+.player-table-jersey,
+.player-table-legends-broom-wagon,
+.player-table-legends-coach {
+    width: 30px;
+    height: 30px;
+    background-image: url('img/cards.png'); /* background-position is dynamically computed */
+    background-size: 630px 1134px; /* width = cardWidth * number of columns in sprite ; height = cardHeight * number of rows in sprite */
+    border-radius: 50%;
+    opacity: 0;
     transition-property: opacity;
     transition-duration: 0.5s;
+    z-index: 5;
 }
-.player-table.selectable .player-table-jersey,
-.player-table.selectable-for-card-picking .player-table-jersey {
-    pointer-events: none;
-}
-.player-table.player-position-bottom .player-table-jersey {
-    bottom: 0;
-}
-.player-table.player-position-top .player-table-jersey {
-    top: 0;
-}
-.player-table.player-position-jersey-left .player-table-jersey {
-    left: -40px;
-}
-.player-table.player-position-jersey-right .player-table-jersey {
-    right: -40px;
-}
-.player-table.has-jersey.has-used-jersey .player-table-jersey {
-    /* @TODO: remove from the board */
-    opacity: 0.5;
-}
-.player-table.has-legends-broom-wagon .player-table-jersey {
-    position: absolute;
-    width: 65px;
-    height: 90px;
-    background-size: 65px 90px;
-    /* @TODO: replace jersey card with small jersey token */
-    background-image: url('img/jersey.png');
-    background-repeat: no-repeat;
-    background-position: center center;
+.player-table.has-jersey .player-table-jersey,
+.player-table.has-legends-broom-wagon .player-table-legends-broom-wagon,
+.player-table.has-legends-coach-eagle .player-table-legends-coach,
+.player-table.has-legends-coach-panda .player-table-legends-coach,
+.player-table.has-legends-coach-shark .player-table-legends-coach,
+.player-table.has-legends-coach-badger .player-table-legends-coach,
+.player-table.has-legends-coach-elephant .player-table-legends-coach {
     opacity: 1;
-    transition-property: opacity;
-    transition-duration: 0.5s;
+}
+.player-table.has-jersey.has-used-jersey .player-table-jersey,
+.player-table.has-legends-broom-wagon.has-used-legends-broom-wagon .player-table-legends-broom-wagon,
+.player-table.has-legends-coach-eagle.has-used-legends-coach-eagle .player-table-legends-coach,
+.player-table.has-legends-coach-panda.has-used-legends-coach-panda .player-table-legends-coach,
+.player-table.has-legends-coach-shark.has-used-legends-coach-shark .player-table-legends-coach,
+.player-table.has-legends-coach-badger.has-used-legends-coach-badger .player-table-legends-coach,
+.player-table.has-legends-coach-elephant.has-used-legends-coach-elephant .player-table-legends-coach {
+    opacity: 0;
 }
 .player-table.selectable .player-table-jersey,
-.player-table.selectable-for-card-picking .player-table-jersey {
+.player-table.selectable-for-card-picking .player-table-jersey,
+.player-table.selectable .player-table-legends-broom-wagon,
+.player-table.selectable-for-card-picking .player-table-legends-broom-wagon,
+.player-table.selectable .player-table-legends-coach,
+.player-table.selectable-for-card-picking .player-table-legends-coach {
     pointer-events: none;
-}
-.player-table.has-legends-broom-wagon.has-used-jersey .player-table-jersey {
-    /* @TODO: remove from the board */
-    opacity: 0.5;
 }
 .player-table .player-table-finish-position {
     display: none;
@@ -618,13 +615,10 @@ Animations
 .moving-card {
     z-index: 100;
 }
-.moving-jersey {
-    position: absolute;
-    width: 65px;
-    height: 90px;
-    background-size: 65px 90px;
-    background-image: url('img/jersey.png');
-    background-repeat: no-repeat;
+.moving-special-card.player-table-jersey,
+.moving-special-card.player-table-legends-broom-wagon,
+.moving-special-card.player-table-legends-coach {
+    opacity: 1;
     z-index: 100;
 }
 /**
