@@ -566,35 +566,47 @@ Cards
     bottom: -2px;
     right: -3px;
 }
+#my-hand .stockitem_selected.cards-group-card.cards-group-1,
+#my-hand .stockitem.cards-group-card.cards-group-1:hover,
 .cards-group-card.cards-group-1::after,
 .cards-group-card-left.cards-group-1::before,
 .cards-group-card-right.cards-group-1::before {
-    border-color: green;
+    border-color: green !important;
 }
+#my-hand .stockitem_selected.cards-group-card.cards-group-2,
+#my-hand .stockitem.cards-group-card.cards-group-2:hover,
 .cards-group-card.cards-group-2::after,
 .cards-group-card-left.cards-group-2::before,
 .cards-group-card-right.cards-group-2::before {
-    border-color: red;
+    border-color: red !important;
 }
+#my-hand .stockitem_selected.cards-group-card.cards-group-3,
+#my-hand .stockitem.cards-group-card.cards-group-3:hover,
 .cards-group-card.cards-group-3::after,
 .cards-group-card-left.cards-group-3::before,
 .cards-group-card-right.cards-group-3::before {
-    border-color: blue;
+    border-color: blue !important;
 }
+#my-hand .stockitem_selected.cards-group-card.cards-group-4,
+#my-hand .stockitem.cards-group-card.cards-group-4:hover,
 .cards-group-card.cards-group-4::after,
 .cards-group-card-left.cards-group-4::before,
 .cards-group-card-right.cards-group-4::before {
-    border-color: orange;
+    border-color: orange !important;
 }
+#my-hand .stockitem_selected.cards-group-card.cards-group-5,
+#my-hand .stockitem.cards-group-card.cards-group-5:hover,
 .cards-group-card.cards-group-5::after,
 .cards-group-card-left.cards-group-5::before,
 .cards-group-card-right.cards-group-5::before {
-    border-color: hotpink;
+    border-color: hotpink !important;
 }
+#my-hand .stockitem_selected.cards-group-card.cards-group-6,
+#my-hand .stockitem.cards-group-card.cards-group-6:hover,
 .cards-group-card.cards-group-6::after,
 .cards-group-card-left.cards-group-6::before,
 .cards-group-card-right.cards-group-6::before {
-    border-color: royalblue;
+    border-color: royalblue !important;
 }
 /**
 END Cards
