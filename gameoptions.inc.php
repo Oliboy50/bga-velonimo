@@ -59,14 +59,15 @@ $game_options = [
         'default' => 5,
     ],
     110 => [
-        // @TODO: better name
-        'name' => totranslate('Extension "Legends"'),
+        'name' => totranslate('With "Legend" cards'),
         'values' => [
             0 => ['name' => totranslate('No')],
-            1 => ['name' => totranslate('Yes')],
+            1 => [
+                'name' => totranslate('Yes'),
+                'description' => totranslate('Permanently give a coach to each player. Also give the broom wagon to the loser of the previous round.'),
+            ],
         ],
         'default' => 0,
-        'description' => totranslate('Permanently give a coach to each player. Also give the broom wagon to the loser of the previous round.'),
         'nobeginner' => true,
     ],
 ];
