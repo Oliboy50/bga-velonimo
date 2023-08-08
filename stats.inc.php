@@ -47,17 +47,63 @@
 
 */
 
+$numberOfRoundsWonName = totranslate('Rounds won');
+$minValueName = totranslate('Minimum value played');
+$maxValueName = totranslate('Maximum value played');
+$numberOfJerseyPlayedName = totranslate('Number of Jersey played');
+$numberOfLegendsBroomWagonPlayedName = totranslate('Number of Broom Wagon played');
+$numberOfLegendsEaglePlayedName = totranslate('Number of coach Eagle played');
+$numberOfLegendsPandaPlayedName = totranslate('Number of coach Panda played');
+$numberOfLegendsSharkPlayedName = totranslate('Number of coach Shark played');
+$numberOfLegendsBadgerPlayedName = totranslate('Number of coach Badger played');
+$numberOfLegendsElephantPlayedName = totranslate('Number of coach Elephant played');
+
 $stats_type = [
     // Statistics global to table
     'table' => [
         'minValue' => [
             'id' => 13,
-            'name' => totranslate('Minimum value played'),
+            'name' => $minValueName,
             'type' => 'int',
         ],
         'maxValue' => [
             'id' => 14,
-            'name' => totranslate('Maximum value played'),
+            'name' => $maxValueName,
+            'type' => 'int',
+        ],
+        'numberOfJerseyPlayed' => [
+            'id' => 15,
+            'name' => $numberOfJerseyPlayedName,
+            'type' => 'int',
+        ],
+        'numberOfLegendsBroomWagonPlayed' => [
+            'id' => 16,
+            'name' => $numberOfLegendsBroomWagonPlayedName,
+            'type' => 'int',
+        ],
+        'numberOfLegendsEaglePlayed' => [
+            'id' => 17,
+            'name' => $numberOfLegendsEaglePlayedName,
+            'type' => 'int',
+        ],
+        'numberOfLegendsPandaPlayed' => [
+            'id' => 18,
+            'name' => $numberOfLegendsPandaPlayedName,
+            'type' => 'int',
+        ],
+        'numberOfLegendsSharkPlayed' => [
+            'id' => 19,
+            'name' => $numberOfLegendsSharkPlayedName,
+            'type' => 'int',
+        ],
+        'numberOfLegendsBadgerPlayed' => [
+            'id' => 20,
+            'name' => $numberOfLegendsBadgerPlayedName,
+            'type' => 'int',
+        ],
+        'numberOfLegendsElephantPlayed' => [
+            'id' => 21,
+            'name' => $numberOfLegendsElephantPlayedName,
             'type' => 'int',
         ],
     ],
@@ -66,17 +112,52 @@ $stats_type = [
     'player' => [
         'numberOfRoundsWon' => [
             'id' => 12,
-            'name' => totranslate('Rounds won'),
+            'name' => $numberOfRoundsWonName,
             'type' => 'int',
         ],
         'minValue' => [
             'id' => 13,
-            'name' => totranslate('Minimum value played'),
+            'name' => $minValueName,
             'type' => 'int',
         ],
         'maxValue' => [
             'id' => 14,
-            'name' => totranslate('Maximum value played'),
+            'name' => $maxValueName,
+            'type' => 'int',
+        ],
+        'numberOfJerseyPlayed' => [
+            'id' => 15,
+            'name' => $numberOfJerseyPlayedName,
+            'type' => 'int',
+        ],
+        'numberOfLegendsBroomWagonPlayed' => [
+            'id' => 16,
+            'name' => $numberOfLegendsBroomWagonPlayedName,
+            'type' => 'int',
+        ],
+        'numberOfLegendsEaglePlayed' => [
+            'id' => 17,
+            'name' => $numberOfLegendsEaglePlayedName,
+            'type' => 'int',
+        ],
+        'numberOfLegendsPandaPlayed' => [
+            'id' => 18,
+            'name' => $numberOfLegendsPandaPlayedName,
+            'type' => 'int',
+        ],
+        'numberOfLegendsSharkPlayed' => [
+            'id' => 19,
+            'name' => $numberOfLegendsSharkPlayedName,
+            'type' => 'int',
+        ],
+        'numberOfLegendsBadgerPlayed' => [
+            'id' => 20,
+            'name' => $numberOfLegendsBadgerPlayedName,
+            'type' => 'int',
+        ],
+        'numberOfLegendsElephantPlayed' => [
+            'id' => 21,
+            'name' => $numberOfLegendsElephantPlayedName,
             'type' => 'int',
         ],
     ],

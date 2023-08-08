@@ -290,9 +290,8 @@ Board
 .player-table.player-position-bottom .player-special-cards {
     bottom: 50px;
 }
-.player-table-jersey,
-.player-table-legends-broom-wagon,
-.player-table-legends-coach {
+.player-special-cards div {
+    display: block;
     width: 30px;
     height: 30px;
     background-image: url('img/cards.png'); /* background-position is dynamically computed */
@@ -319,25 +318,21 @@ Board
 .player-table.has-legends-coach-shark.has-used-legends-coach-shark .player-table-legends-coach,
 .player-table.has-legends-coach-badger.has-used-legends-coach-badger .player-table-legends-coach,
 .player-table.has-legends-coach-elephant.has-used-legends-coach-elephant .player-table-legends-coach {
-    opacity: 0;
+    display: none;
 }
-.player-table.selectable .player-table-jersey,
-.player-table.selectable-for-card-picking .player-table-jersey,
-.player-table.selectable .player-table-legends-broom-wagon,
-.player-table.selectable-for-card-picking .player-table-legends-broom-wagon,
-.player-table.selectable .player-table-legends-coach,
-.player-table.selectable-for-card-picking .player-table-legends-coach {
+.player-table.selectable .player-special-cards div,
+.player-table.selectable-for-card-picking .player-special-cards div {
     pointer-events: none;
 }
 .player-table .player-table-finish-position {
     display: none;
     position: absolute;
-    left: 75px;
-    width: 50px;
-    height: 90px;
+    left: 25px;
+    width: 150px;
+    height: 150px;
     background-repeat: no-repeat;
     background-image: url('img/finish.png');
-    background-size: 150px 90px;
+    background-size: 600px 150px;
     background-position-y: center;
 }
 .player-table.selectable .player-table-finish-position,
@@ -345,24 +340,34 @@ Board
     pointer-events: none;
 }
 .player-table.player-position-top .player-table-finish-position {
-    bottom: 0;
+    bottom: -20px;
 }
 .player-table.player-position-bottom .player-table-finish-position {
-    top: 0;
+    top: -20px;
 }
 .player-table.has-finished-1 .player-table-finish-position,
 .player-table.has-finished-2 .player-table-finish-position,
-.player-table.has-finished-3 .player-table-finish-position {
+.player-table.has-finished-3 .player-table-finish-position,
+.player-table.has-finished-4 .player-table-finish-position {
     display: block;
 }
+.player-table.has-finished-1 .player-special-cards div,
+.player-table.has-finished-2 .player-special-cards div,
+.player-table.has-finished-3 .player-special-cards div,
+.player-table.has-finished-4 .player-special-cards div {
+    display: none;
+}
 .player-table.has-finished-1 .player-table-finish-position {
-    background-position-x: left;
+    background-position-x: 0;
 }
 .player-table.has-finished-2 .player-table-finish-position {
-    background-position-x: center;
+    background-position-x: 150px;
 }
 .player-table.has-finished-3 .player-table-finish-position {
-    background-position-x: right;
+    background-position-x: 300px;
+}
+.player-table.has-finished-4 .player-table-finish-position {
+    background-position-x: 450px;
 }
 /**
 END Board

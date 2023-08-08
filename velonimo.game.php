@@ -201,10 +201,24 @@ class Velonimo extends Table
         // Table statistics
         self::initStat('table', 'minValue', 0);
         self::initStat('table', 'maxValue', 0);
+        self::initStat('table', 'numberOfJerseyPlayed', 0);
+        self::initStat('table', 'numberOfLegendsBroomWagonPlayed', 0);
+        self::initStat('table', 'numberOfLegendsEaglePlayed', 0);
+        self::initStat('table', 'numberOfLegendsPandaPlayed', 0);
+        self::initStat('table', 'numberOfLegendsSharkPlayed', 0);
+        self::initStat('table', 'numberOfLegendsBadgerPlayed', 0);
+        self::initStat('table', 'numberOfLegendsElephantPlayed', 0);
         // Player statistics (init for all players)
+        self::initStat('player', 'numberOfRoundsWon', 0);
         self::initStat('player', 'minValue', 0);
         self::initStat('player', 'maxValue', 0);
-        self::initStat('player', 'numberOfRoundsWon', 0);
+        self::initStat('player', 'numberOfJerseyPlayed', 0);
+        self::initStat('player', 'numberOfLegendsBroomWagonPlayed', 0);
+        self::initStat('player', 'numberOfLegendsEaglePlayed', 0);
+        self::initStat('player', 'numberOfLegendsPandaPlayed', 0);
+        self::initStat('player', 'numberOfLegendsSharkPlayed', 0);
+        self::initStat('player', 'numberOfLegendsBadgerPlayed', 0);
+        self::initStat('player', 'numberOfLegendsElephantPlayed', 0);
 
         // Create cards
         $cards = [];
@@ -486,24 +500,38 @@ class Velonimo extends Table
         $this->deck->moveCards($playedCardIds, self::CARD_LOCATION_PLAYED, $currentPlayerId);
         if ($cardsPlayedWithJersey) {
             self::setGameStateValue(self::GAME_STATE_JERSEY_IS_NOT_PLAYABLE, 1);
+            $this->incStat(1, 'numberOfJerseyPlayed');
+            $this->incStat(1, 'numberOfJerseyPlayed', $currentPlayerId);
         }
         if ($cardsPlayedWithLegendsBroomWagon) {
             self::setGameStateValue(self::GAME_STATE_LEGENDS_BROOM_WAGON_IS_NOT_PLAYABLE, 1);
+            $this->incStat(1, 'numberOfLegendsBroomWagonPlayed');
+            $this->incStat(1, 'numberOfLegendsBroomWagonPlayed', $currentPlayerId);
         }
         if ($cardsPlayedWithLegendsEagle) {
             self::setGameStateValue(self::GAME_STATE_LEGENDS_EAGLE_IS_NOT_PLAYABLE, 1);
+            $this->incStat(1, 'numberOfLegendsEaglePlayed');
+            $this->incStat(1, 'numberOfLegendsEaglePlayed', $currentPlayerId);
         }
         if ($cardsPlayedWithLegendsPanda) {
             self::setGameStateValue(self::GAME_STATE_LEGENDS_PANDA_IS_NOT_PLAYABLE, 1);
+            $this->incStat(1, 'numberOfLegendsPandaPlayed');
+            $this->incStat(1, 'numberOfLegendsPandaPlayed', $currentPlayerId);
         }
         if ($cardsPlayedWithLegendsShark) {
             self::setGameStateValue(self::GAME_STATE_LEGENDS_SHARK_IS_NOT_PLAYABLE, 1);
+            $this->incStat(1, 'numberOfLegendsSharkPlayed');
+            $this->incStat(1, 'numberOfLegendsSharkPlayed', $currentPlayerId);
         }
         if ($cardsPlayedWithLegendsBadger) {
             self::setGameStateValue(self::GAME_STATE_LEGENDS_BADGER_IS_NOT_PLAYABLE, 1);
+            $this->incStat(1, 'numberOfLegendsBadgerPlayed');
+            $this->incStat(1, 'numberOfLegendsBadgerPlayed', $currentPlayerId);
         }
         if ($cardsPlayedWithLegendsElephant) {
             self::setGameStateValue(self::GAME_STATE_LEGENDS_ELEPHANT_IS_NOT_PLAYABLE, 1);
+            $this->incStat(1, 'numberOfLegendsElephantPlayed');
+            $this->incStat(1, 'numberOfLegendsElephantPlayed', $currentPlayerId);
         }
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, $currentPlayerId);
         self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_VALUE, $lastPlayedCardsValue);

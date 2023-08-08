@@ -860,6 +860,7 @@ function (dojo, declare) {
                 dojo.removeClass(`player-table-${player.id}`, `has-finished-1`);
                 dojo.removeClass(`player-table-${player.id}`, `has-finished-2`);
                 dojo.removeClass(`player-table-${player.id}`, `has-finished-3`);
+                dojo.removeClass(`player-table-${player.id}`, `has-finished-4`);
                 if (playerCurrentRoundRank) {
                     dojo.addClass(`player-table-${player.id}`, `has-finished-${playerCurrentRoundRank}`);
                 }
