@@ -1203,6 +1203,12 @@ class Velonimo extends Table
         $headers = [
             '', // the first column of headers is empty
         ];
+        $previousPoints = [
+            [
+                'str' => clienttranslate('Previous score'),
+                'args' => [],
+            ],
+        ];
         $roundPoints = [
             [
                 'str' => clienttranslate('Round points'),
@@ -1211,7 +1217,7 @@ class Velonimo extends Table
         ];
         $totalPoints = [
             [
-                'str' => clienttranslate('Total points'),
+                'str' => clienttranslate('New score'),
                 'args' => [],
             ],
         ];
@@ -1223,18 +1229,20 @@ class Velonimo extends Table
                 ],
                 'type' => 'header'
             ];
-            $roundPoints[] = $player->getLastNumberOfPointsEarned();
+            $previousPoints[] = $player->getScore() - $player->getLastNumberOfPointsEarned();
+            $roundPoints[] = $player->getLastNumberOfPointsEarned() === 0 ? '0' : sprintf('+%s', $player->getLastNumberOfPointsEarned());
             $totalPoints[] = $player->getScore();
         }
         $this->notifyAllPlayers('tableWindow', '', [
             'id' => 'finalScoring',
-            'title' =>  sprintf(
+            'title' => sprintf(
                 clienttranslate('Results of round %s/%s'),
                 $currentRound,
                 $howManyRounds
             ),
             'table' => [
                 $headers,
+                $previousPoints,
                 $roundPoints,
                 $totalPoints
             ],

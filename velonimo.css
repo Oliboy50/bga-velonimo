@@ -55,6 +55,14 @@ Override BGA elements style
 .tableWindow table {
     width: 100%;
 }
+.tableWindow table th {
+    text-align: center;
+}
+.tableWindow table tr:last-child td {
+    border-bottom: none;
+    text-transform: uppercase;
+    font-weight: bold;
+}
 /**
 END Override BGA elements style
  */
@@ -670,13 +678,7 @@ Player panel HTML
     margin-right: 10px;
     text-align: center;
 }
-.player-panel-jersey {
-    width: 30px;
-    height: 30px;
-    background-size: 30px 30px;
-    background-image: url('img/jersey_player_panel.png');
-    background-repeat: no-repeat;
-}
+.player-panel-jersey,
 .player-panel-legends-broom-wagon,
 .player-panel-legends-coach-eagle.velonimo-card,
 .player-panel-legends-coach-panda.velonimo-card,
