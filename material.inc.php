@@ -20,3 +20,21 @@
  */
 
 require_once('modules/constants.inc.php');
+
+$this->legends_coaches = [
+    CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER => [
+        'name' => clienttranslate('Eagle'),
+    ],
+    CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR => [
+        'name' => clienttranslate('Panda'),
+    ],
+    CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN => [
+        'name' => clienttranslate('Shark'),
+    ],
+    CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR => [
+        'name' => clienttranslate('Badger'),
+    ],
+    CARD_ID_LEGENDS_ELEPHANT_STOP => [
+        'name' => clienttranslate('Elephant'),
+    ],
+];

@@ -47,17 +47,21 @@
 /**
 Override BGA elements style
  */
-#page-title {
-    z-index: 97;
-}
-#log_history_status {
-    z-index: 97;
-}
+#page-title,
+#log_history_status,
 #maingameview_menuheader {
     z-index: 97;
 }
 .tableWindow table {
     width: 100%;
+}
+.tableWindow table th {
+    text-align: center;
+}
+.tableWindow table tr:last-child td {
+    border-bottom: none;
+    text-transform: uppercase;
+    font-weight: bold;
 }
 /**
 END Override BGA elements style
@@ -119,7 +123,7 @@ Board
     font-weight: bold;
     border: 2px solid transparent;
     box-sizing: border-box;
-    z-index: 5;
+    z-index: 6;
 }
 .player-table.selectable .player-table-name,
 .player-table.selectable-for-card-picking .player-table-name {
@@ -270,46 +274,65 @@ Board
 .player-table-speech-bubble.show-bubble {
     opacity: 1;
 }
-.player-table.is-wearing-jersey .player-table-jersey {
+.player-table .player-special-cards {
     position: absolute;
-    width: 65px;
-    height: 90px;
-    background-size: 65px 90px;
-    background-image: url('img/jersey.png');
-    background-repeat: no-repeat;
-    background-position: center center;
-    opacity: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+}
+.player-table.player-position-top .player-special-cards {
+    top: 50px;
+}
+.player-table.player-position-bottom .player-special-cards {
+    bottom: 50px;
+}
+.player-special-cards div {
+    display: block;
+    width: 30px;
+    height: 30px;
+    background-image: url('img/cards.png'); /* background-position is dynamically computed */
+    background-size: 630px 1134px; /* width = cardWidth * number of columns in sprite ; height = cardHeight * number of rows in sprite */
+    border-radius: 50%;
+    opacity: 0;
     transition-property: opacity;
     transition-duration: 0.5s;
+    z-index: 5;
 }
-.player-table.selectable .player-table-jersey,
-.player-table.selectable-for-card-picking .player-table-jersey {
+.player-table.has-jersey .player-table-jersey,
+.player-table.has-legends-broom-wagon .player-table-legends-broom-wagon,
+.player-table.has-legends-coach-eagle .player-table-legends-coach,
+.player-table.has-legends-coach-panda .player-table-legends-coach,
+.player-table.has-legends-coach-shark .player-table-legends-coach,
+.player-table.has-legends-coach-badger .player-table-legends-coach,
+.player-table.has-legends-coach-elephant .player-table-legends-coach {
+    opacity: 1;
+}
+.player-table.has-jersey.has-used-jersey .player-table-jersey,
+.player-table.has-legends-broom-wagon.has-used-legends-broom-wagon .player-table-legends-broom-wagon,
+.player-table.has-legends-coach-eagle.has-used-legends-coach-eagle .player-table-legends-coach,
+.player-table.has-legends-coach-panda.has-used-legends-coach-panda .player-table-legends-coach,
+.player-table.has-legends-coach-shark.has-used-legends-coach-shark .player-table-legends-coach,
+.player-table.has-legends-coach-badger.has-used-legends-coach-badger .player-table-legends-coach,
+.player-table.has-legends-coach-elephant.has-used-legends-coach-elephant .player-table-legends-coach {
+    display: none;
+}
+.player-table.selectable .player-special-cards div,
+.player-table.selectable-for-card-picking .player-special-cards div {
     pointer-events: none;
-}
-.player-table.player-position-bottom .player-table-jersey {
-    bottom: 0;
-}
-.player-table.player-position-top .player-table-jersey {
-    top: 0;
-}
-.player-table.player-position-jersey-left .player-table-jersey {
-    left: -40px;
-}
-.player-table.player-position-jersey-right .player-table-jersey {
-    right: -40px;
-}
-.player-table.is-wearing-jersey.has-used-jersey .player-table-jersey {
-    opacity: 0.5;
 }
 .player-table .player-table-finish-position {
     display: none;
     position: absolute;
-    left: 75px;
-    width: 50px;
-    height: 90px;
+    left: 25px;
+    width: 150px;
+    height: 150px;
     background-repeat: no-repeat;
     background-image: url('img/finish.png');
-    background-size: 150px 90px;
+    background-size: 600px 150px;
     background-position-y: center;
 }
 .player-table.selectable .player-table-finish-position,
@@ -317,24 +340,34 @@ Board
     pointer-events: none;
 }
 .player-table.player-position-top .player-table-finish-position {
-    bottom: 0;
+    bottom: -20px;
 }
 .player-table.player-position-bottom .player-table-finish-position {
-    top: 0;
+    top: -20px;
 }
 .player-table.has-finished-1 .player-table-finish-position,
 .player-table.has-finished-2 .player-table-finish-position,
-.player-table.has-finished-3 .player-table-finish-position {
+.player-table.has-finished-3 .player-table-finish-position,
+.player-table.has-finished-4 .player-table-finish-position {
     display: block;
 }
+.player-table.has-finished-1 .player-special-cards div,
+.player-table.has-finished-2 .player-special-cards div,
+.player-table.has-finished-3 .player-special-cards div,
+.player-table.has-finished-4 .player-special-cards div {
+    display: none;
+}
 .player-table.has-finished-1 .player-table-finish-position {
-    background-position-x: left;
+    background-position-x: 0;
 }
 .player-table.has-finished-2 .player-table-finish-position {
-    background-position-x: center;
+    background-position-x: 150px;
 }
 .player-table.has-finished-3 .player-table-finish-position {
-    background-position-x: right;
+    background-position-x: 300px;
+}
+.player-table.has-finished-4 .player-table-finish-position {
+    background-position-x: 450px;
 }
 /**
 END Board
@@ -496,7 +529,7 @@ Cards
 }
 .velonimo-card.front-side {
     background-image: url('img/cards.png'); /* background-position is dynamically computed */
-    background-size: 630px 1008px;
+    background-size: 630px 1134px; /* width = cardWidth * number of columns in sprite ; height = cardHeight * number of rows in sprite */
 }
 .velonimo-card.back-side {
     background-image: url('img/remaining_cards.png');
@@ -543,35 +576,47 @@ Cards
     bottom: -2px;
     right: -3px;
 }
+#my-hand .stockitem_selected.cards-group-card.cards-group-1,
+#my-hand .stockitem.cards-group-card.cards-group-1:hover,
 .cards-group-card.cards-group-1::after,
 .cards-group-card-left.cards-group-1::before,
 .cards-group-card-right.cards-group-1::before {
-    border-color: green;
+    border-color: green !important;
 }
+#my-hand .stockitem_selected.cards-group-card.cards-group-2,
+#my-hand .stockitem.cards-group-card.cards-group-2:hover,
 .cards-group-card.cards-group-2::after,
 .cards-group-card-left.cards-group-2::before,
 .cards-group-card-right.cards-group-2::before {
-    border-color: red;
+    border-color: red !important;
 }
+#my-hand .stockitem_selected.cards-group-card.cards-group-3,
+#my-hand .stockitem.cards-group-card.cards-group-3:hover,
 .cards-group-card.cards-group-3::after,
 .cards-group-card-left.cards-group-3::before,
 .cards-group-card-right.cards-group-3::before {
-    border-color: blue;
+    border-color: blue !important;
 }
+#my-hand .stockitem_selected.cards-group-card.cards-group-4,
+#my-hand .stockitem.cards-group-card.cards-group-4:hover,
 .cards-group-card.cards-group-4::after,
 .cards-group-card-left.cards-group-4::before,
 .cards-group-card-right.cards-group-4::before {
-    border-color: orange;
+    border-color: orange !important;
 }
+#my-hand .stockitem_selected.cards-group-card.cards-group-5,
+#my-hand .stockitem.cards-group-card.cards-group-5:hover,
 .cards-group-card.cards-group-5::after,
 .cards-group-card-left.cards-group-5::before,
 .cards-group-card-right.cards-group-5::before {
-    border-color: hotpink;
+    border-color: hotpink !important;
 }
+#my-hand .stockitem_selected.cards-group-card.cards-group-6,
+#my-hand .stockitem.cards-group-card.cards-group-6:hover,
 .cards-group-card.cards-group-6::after,
 .cards-group-card-left.cards-group-6::before,
 .cards-group-card-right.cards-group-6::before {
-    border-color: royalblue;
+    border-color: royalblue !important;
 }
 /**
 END Cards
@@ -583,13 +628,10 @@ Animations
 .moving-card {
     z-index: 100;
 }
-.moving-jersey {
-    position: absolute;
-    width: 65px;
-    height: 90px;
-    background-size: 65px 90px;
-    background-image: url('img/jersey.png');
-    background-repeat: no-repeat;
+.moving-special-card.player-table-jersey,
+.moving-special-card.player-table-legends-broom-wagon,
+.moving-special-card.player-table-legends-coach {
+    opacity: 1;
     z-index: 100;
 }
 /**
@@ -633,7 +675,7 @@ Player panel HTML
     flex-wrap: wrap;
     justify-content: flex-start;
     align-content: center;
-    align-items: center;
+    align-items: flex-end;
 }
 .player-panel-number-of-remaining-cards {
     width: 40px;
@@ -641,12 +683,24 @@ Player panel HTML
     margin-right: 10px;
     text-align: center;
 }
-.player-panel-jersey {
-    width: 40px;
-    height: 40px;
-    background-size: 40px 40px;
-    background-image: url('img/jersey_player_panel.png');
-    background-repeat: no-repeat;
+.player-panel-jersey,
+.player-panel-legends-broom-wagon,
+.player-panel-legends-coach-eagle.velonimo-card,
+.player-panel-legends-coach-panda.velonimo-card,
+.player-panel-legends-coach-shark.velonimo-card,
+.player-panel-legends-coach-badger.velonimo-card,
+.player-panel-legends-coach-elephant.velonimo-card {
+    border-radius: 50%;
+}
+.has-used-jersey .player-panel-jersey,
+.has-used-legends-broom-wagon .player-panel-legends-broom-wagon,
+.has-used-legends-coach-eagle .player-panel-legends-coach-eagle,
+.has-used-legends-coach-panda .player-panel-legends-coach-panda,
+.has-used-legends-coach-shark .player-panel-legends-coach-shark,
+.has-used-legends-coach-badger .player-panel-legends-coach-badger,
+.has-used-legends-coach-elephant .player-panel-legends-coach-elephant {
+    filter: grayscale(1);
+    opacity: 0.5;
 }
 /**
 END Player panel HTML

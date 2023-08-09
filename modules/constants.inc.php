@@ -29,7 +29,7 @@ define('COLOR_PINK', 50);
 define('COLOR_RED', 60);
 define('COLOR_YELLOW', 70);
 define('COLOR_ADVENTURER', 80);
-define('COLOR_JERSEY', 90);
+define('COLOR_SPECIAL', 90);
 
 // Cards value
 define('VALUE_1', 1);
@@ -45,8 +45,13 @@ define('VALUE_35', 35);
 define('VALUE_40', 40);
 define('VALUE_45', 45);
 define('VALUE_50', 50);
-define('VALUE_JERSEY', 10);
-define('VALUE_LEGENDS_BROOM_WAGON', 5);
+define('VALUE_JERSEY_PLUS_TEN', 10);
+define('VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE', 5);
+define('VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER', -4);
+define('VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR', -5);
+define('VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN', -6);
+define('VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR', -7);
+define('VALUE_LEGENDS_ELEPHANT_STOP', -8);
 
 // Special cards ID
 define('CARD_ID_JERSEY_PLUS_TEN', -2);

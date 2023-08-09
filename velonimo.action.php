@@ -52,7 +52,6 @@ class action_velonimo extends APP_GameAction
         $withLegendsBadgerArg = (bool) self::getArg('withLegendsBadger', AT_bool, true);
         $withLegendsElephantArg = (bool) self::getArg('withLegendsElephant', AT_bool, true);
 
-        // @TODO: support extension legends
         $this->game->playCards(
             array_map(fn ($id) => (int) $id, $cardIds),
             $withJerseyArg,

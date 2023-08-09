@@ -36,7 +36,21 @@ class Velonimo extends Table
     private const GAME_STATE_LEGENDS_BADGER_IS_NOT_PLAYABLE = 'legendsBadgerIsNotPlayable';
     private const GAME_STATE_LEGENDS_ELEPHANT_IS_NOT_PLAYABLE = 'legendsElephantIsNotPlayable';
     private const GAME_STATE_PREVIOUS_PLAYED_CARDS_VALUE = 'previousValueToBeat';
+    private const GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_JERSEY = 'previousPlayedCardsContainJersey';
+    private const GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON = 'previousPlayedCardsContainLegendsBroomWagon';
+    private const GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE = 'previousPlayedCardsContainLegendsEagle';
+    private const GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA = 'previousPlayedCardsContainLegendsPanda';
+    private const GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK = 'previousPlayedCardsContainLegendsShark';
+    private const GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER = 'previousPlayedCardsContainLegendsBadger';
+    private const GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT = 'previousPlayedCardsContainLegendsElephant';
     private const GAME_STATE_LAST_PLAYED_CARDS_VALUE = 'valueToBeat';
+    private const GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_JERSEY = 'lastPlayedCardsContainJersey';
+    private const GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON = 'lastPlayedCardsContainLegendsBroomWagon';
+    private const GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE = 'lastPlayedCardsContainLegendsEagle';
+    private const GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA = 'lastPlayedCardsContainLegendsPanda';
+    private const GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK = 'lastPlayedCardsContainLegendsShark';
+    private const GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER = 'lastPlayedCardsContainLegendsBadger';
+    private const GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT = 'lastPlayedCardsContainLegendsElephant';
     private const GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID = 'playerIdForValueToBeat';
     private const GAME_STATE_LAST_SELECTED_NEXT_PLAYER_ID = 'selectedNextPlayerId';
     private const GAME_STATE_LAST_NUMBER_OF_CARDS_TO_PICK = 'numberOfCardsToPick';
@@ -84,8 +98,22 @@ class Velonimo extends Table
             self::GAME_STATE_LEGENDS_SHARK_IS_NOT_PLAYABLE => 23,
             self::GAME_STATE_LEGENDS_BADGER_IS_NOT_PLAYABLE => 24,
             self::GAME_STATE_LEGENDS_ELEPHANT_IS_NOT_PLAYABLE => 25,
+            self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_JERSEY => 26,
+            self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON => 27,
+            self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE => 28,
+            self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA => 29,
+            self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK => 30,
+            self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER => 31,
+            self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT => 32,
+            self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_JERSEY => 33,
+            self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON => 34,
+            self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE => 35,
+            self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA => 36,
+            self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK => 37,
+            self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER => 38,
+            self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT => 39,
             self::GAME_OPTION_HOW_MANY_ROUNDS => 100,
-//            self::GAME_OPTION_ENABLE_EXTENSION_LEGENDS => 110,
+            self::GAME_OPTION_ENABLE_EXTENSION_LEGENDS => 110,
         ]);
 
         $this->deck = self::getNew('module.common.deck');
@@ -139,7 +167,21 @@ class Velonimo extends Table
         // Init global values with their initial values
         self::setGameStateValue(self::GAME_STATE_CURRENT_ROUND, 0);
         self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_VALUE, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_JERSEY, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_JERSEY, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_SELECTED_NEXT_PLAYER_ID, 0);
         self::setGameStateValue(self::GAME_STATE_JERSEY_IS_NOT_PLAYABLE, 0);
@@ -159,10 +201,24 @@ class Velonimo extends Table
         // Table statistics
         self::initStat('table', 'minValue', 0);
         self::initStat('table', 'maxValue', 0);
+        self::initStat('table', 'numberOfJerseyPlayed', 0);
+        self::initStat('table', 'numberOfLegendsBroomWagonPlayed', 0);
+        self::initStat('table', 'numberOfLegendsEaglePlayed', 0);
+        self::initStat('table', 'numberOfLegendsPandaPlayed', 0);
+        self::initStat('table', 'numberOfLegendsSharkPlayed', 0);
+        self::initStat('table', 'numberOfLegendsBadgerPlayed', 0);
+        self::initStat('table', 'numberOfLegendsElephantPlayed', 0);
         // Player statistics (init for all players)
+        self::initStat('player', 'numberOfRoundsWon', 0);
         self::initStat('player', 'minValue', 0);
         self::initStat('player', 'maxValue', 0);
-        self::initStat('player', 'numberOfRoundsWon', 0);
+        self::initStat('player', 'numberOfJerseyPlayed', 0);
+        self::initStat('player', 'numberOfLegendsBroomWagonPlayed', 0);
+        self::initStat('player', 'numberOfLegendsEaglePlayed', 0);
+        self::initStat('player', 'numberOfLegendsPandaPlayed', 0);
+        self::initStat('player', 'numberOfLegendsSharkPlayed', 0);
+        self::initStat('player', 'numberOfLegendsBadgerPlayed', 0);
+        self::initStat('player', 'numberOfLegendsElephantPlayed', 0);
 
         // Create cards
         $cards = [];
@@ -242,10 +298,16 @@ class Velonimo extends Table
         $result['playedCards'] = $this->formatCardsForClient(
             $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYED))
         );
+        $result['playedSpecialCards'] = $this->formatCardsForClient(
+            $this->fromSpecialPlayedCardsToVelonimoCards('LAST')
+        );
         $result['playedCardsValue'] = (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE);
         $result['playedCardsPlayerId'] = (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID);
         $result['previousPlayedCards'] = $this->formatCardsForClient(
             $this->fromBgaCardsToVelonimoCards($this->deck->getCardsInLocation(self::CARD_LOCATION_PREVIOUS_PLAYED))
+        );
+        $result['previousPlayedSpecialCards'] = $this->formatCardsForClient(
+            $this->fromSpecialPlayedCardsToVelonimoCards('PREVIOUS')
         );
         $result['previousPlayedCardsValue'] = (int) self::getGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_VALUE);
 
@@ -257,6 +319,7 @@ class Velonimo extends Table
         }
 
         if ($this->isExtensionLegendsEnabled()) {
+            $result['isExtensionLegendsEnabled'] = true;
             $result['legendsBroomWagonIsNotPlayable'] = $this->isLegendsBroomWagonNotPlayable();
             $result['legendsEagleIsNotPlayable'] = $this->isLegendsEagleNotPlayable();
             $result['legendsPandaIsNotPlayable'] = $this->isLegendsPandaNotPlayable();
@@ -315,9 +378,8 @@ class Velonimo extends Table
             $currentPlayerCards,
         ] = $this->hydratePlayedCards($playedCardIds);
 
-        $legendsExtensionIsEnabled = $this->isExtensionLegendsEnabled();
         if (
-            !$legendsExtensionIsEnabled
+            !$this->isExtensionLegendsEnabled()
             && (
                 $cardsPlayedWithLegendsBroomWagon
                 || $cardsPlayedWithLegendsEagle
@@ -333,62 +395,76 @@ class Velonimo extends Table
         // check that player is allowed to use special cards
         $players = $this->getPlayersFromDatabase();
         $currentPlayer = $this->getPlayerById($currentPlayerId, $players);
+        $currentPlayerIsWearingJersey = $currentPlayer->isWearingJersey();
         if ($cardsPlayedWithJersey) {
             if ($this->isJerseyNotPlayable()) {
                 $this->throwPlayedCardNotPlayable();
             }
-            if (!$currentPlayer->isWearingJersey()) {
+            if (!$currentPlayerIsWearingJersey) {
                 $this->throwPlayedCardNotInPlayerHand();
             }
         }
-        if ($legendsExtensionIsEnabled) {
-            if ($cardsPlayedWithLegendsBroomWagon) {
-                if ($this->isLegendsBroomWagonNotPlayable()) {
-                    $this->throwPlayedCardNotPlayable();
-                }
-                if (!$currentPlayer->hasCardLegendsBroomWagon()) {
-                    $this->throwPlayedCardNotInPlayerHand();
-                }
+        if ($cardsPlayedWithLegendsBroomWagon) {
+            if ($this->isLegendsBroomWagonNotPlayable()) {
+                $this->throwPlayedCardNotPlayable();
             }
-            if ($cardsPlayedWithLegendsEagle) {
-                if ($this->isLegendsEagleNotPlayable()) {
-                    $this->throwPlayedCardNotPlayable();
-                }
-                if (!$currentPlayer->hasCardLegendsEagle()) {
-                    $this->throwPlayedCardNotInPlayerHand();
-                }
+            if (!$currentPlayer->hasCardLegendsBroomWagon()) {
+                $this->throwPlayedCardNotInPlayerHand();
             }
-            if ($cardsPlayedWithLegendsPanda) {
-                if ($this->isLegendsPandaNotPlayable()) {
-                    $this->throwPlayedCardNotPlayable();
-                }
-                if (!$currentPlayer->hasCardLegendsPanda()) {
-                    $this->throwPlayedCardNotInPlayerHand();
-                }
+        }
+        if ($cardsPlayedWithLegendsEagle) {
+            if (
+                $currentPlayerIsWearingJersey
+                || $this->isLegendsEagleNotPlayable()
+            ) {
+                $this->throwPlayedCardNotPlayable();
             }
-            if ($cardsPlayedWithLegendsShark) {
-                if ($this->isLegendsSharkNotPlayable()) {
-                    $this->throwPlayedCardNotPlayable();
-                }
-                if (!$currentPlayer->hasCardLegendsShark()) {
-                    $this->throwPlayedCardNotInPlayerHand();
-                }
+            if (!$currentPlayer->hasCardLegendsEagle()) {
+                $this->throwPlayedCardNotInPlayerHand();
             }
-            if ($cardsPlayedWithLegendsBadger) {
-                if ($this->isLegendsBadgerNotPlayable()) {
-                    $this->throwPlayedCardNotPlayable();
-                }
-                if (!$currentPlayer->hasCardLegendsBadger()) {
-                    $this->throwPlayedCardNotInPlayerHand();
-                }
+        }
+        if ($cardsPlayedWithLegendsPanda) {
+            if (
+                $currentPlayerIsWearingJersey
+                || $this->isLegendsPandaNotPlayable()
+            ) {
+                $this->throwPlayedCardNotPlayable();
             }
-            if ($cardsPlayedWithLegendsElephant) {
-                if ($this->isLegendsElephantNotPlayable()) {
-                    $this->throwPlayedCardNotPlayable();
-                }
-                if (!$currentPlayer->hasCardLegendsElephant()) {
-                    $this->throwPlayedCardNotInPlayerHand();
-                }
+            if (!$currentPlayer->hasCardLegendsPanda()) {
+                $this->throwPlayedCardNotInPlayerHand();
+            }
+        }
+        if ($cardsPlayedWithLegendsShark) {
+            if (
+                $currentPlayerIsWearingJersey
+                || $this->isLegendsSharkNotPlayable()
+            ) {
+                $this->throwPlayedCardNotPlayable();
+            }
+            if (!$currentPlayer->hasCardLegendsShark()) {
+                $this->throwPlayedCardNotInPlayerHand();
+            }
+        }
+        if ($cardsPlayedWithLegendsBadger) {
+            if (
+                $currentPlayerIsWearingJersey
+                || $this->isLegendsBadgerNotPlayable()
+            ) {
+                $this->throwPlayedCardNotPlayable();
+            }
+            if (!$currentPlayer->hasCardLegendsBadger()) {
+                $this->throwPlayedCardNotInPlayerHand();
+            }
+        }
+        if ($cardsPlayedWithLegendsElephant) {
+            if (
+                $currentPlayerIsWearingJersey
+                || $this->isLegendsElephantNotPlayable()
+            ) {
+                $this->throwPlayedCardNotPlayable();
+            }
+            if (!$currentPlayer->hasCardLegendsElephant()) {
+                $this->throwPlayedCardNotInPlayerHand();
             }
         }
 
@@ -409,11 +485,7 @@ class Velonimo extends Table
             $playedCards,
             $cardsPlayedWithJersey,
             $cardsPlayedWithLegendsBroomWagon,
-            $cardsPlayedWithLegendsEagle,
-            $cardsPlayedWithLegendsPanda,
-            $cardsPlayedWithLegendsShark,
-            $cardsPlayedWithLegendsBadger,
-            $cardsPlayedWithLegendsElephant
+            $cardsPlayedWithLegendsShark
         );
         if ($playedCardsValue <= $lastPlayedCardsValue) {
             throw new BgaUserException(sprintf(
@@ -428,40 +500,79 @@ class Velonimo extends Table
         $this->deck->moveCards($playedCardIds, self::CARD_LOCATION_PLAYED, $currentPlayerId);
         if ($cardsPlayedWithJersey) {
             self::setGameStateValue(self::GAME_STATE_JERSEY_IS_NOT_PLAYABLE, 1);
+            $this->incStat(1, 'numberOfJerseyPlayed');
+            $this->incStat(1, 'numberOfJerseyPlayed', $currentPlayerId);
         }
-        if ($legendsExtensionIsEnabled) {
-            if ($cardsPlayedWithLegendsBroomWagon) {
-                self::setGameStateValue(self::GAME_STATE_LEGENDS_BROOM_WAGON_IS_NOT_PLAYABLE, 1);
-            }
-            if ($cardsPlayedWithLegendsEagle) {
-                self::setGameStateValue(self::GAME_STATE_LEGENDS_EAGLE_IS_NOT_PLAYABLE, 1);
-            }
-            if ($cardsPlayedWithLegendsPanda) {
-                self::setGameStateValue(self::GAME_STATE_LEGENDS_PANDA_IS_NOT_PLAYABLE, 1);
-            }
-            if ($cardsPlayedWithLegendsShark) {
-                self::setGameStateValue(self::GAME_STATE_LEGENDS_SHARK_IS_NOT_PLAYABLE, 1);
-            }
-            if ($cardsPlayedWithLegendsBadger) {
-                self::setGameStateValue(self::GAME_STATE_LEGENDS_BADGER_IS_NOT_PLAYABLE, 1);
-            }
-            if ($cardsPlayedWithLegendsElephant) {
-                self::setGameStateValue(self::GAME_STATE_LEGENDS_ELEPHANT_IS_NOT_PLAYABLE, 1);
-            }
+        if ($cardsPlayedWithLegendsBroomWagon) {
+            self::setGameStateValue(self::GAME_STATE_LEGENDS_BROOM_WAGON_IS_NOT_PLAYABLE, 1);
+            $this->incStat(1, 'numberOfLegendsBroomWagonPlayed');
+            $this->incStat(1, 'numberOfLegendsBroomWagonPlayed', $currentPlayerId);
+        }
+        if ($cardsPlayedWithLegendsEagle) {
+            self::setGameStateValue(self::GAME_STATE_LEGENDS_EAGLE_IS_NOT_PLAYABLE, 1);
+            $this->incStat(1, 'numberOfLegendsEaglePlayed');
+            $this->incStat(1, 'numberOfLegendsEaglePlayed', $currentPlayerId);
+        }
+        if ($cardsPlayedWithLegendsPanda) {
+            self::setGameStateValue(self::GAME_STATE_LEGENDS_PANDA_IS_NOT_PLAYABLE, 1);
+            $this->incStat(1, 'numberOfLegendsPandaPlayed');
+            $this->incStat(1, 'numberOfLegendsPandaPlayed', $currentPlayerId);
+        }
+        if ($cardsPlayedWithLegendsShark) {
+            self::setGameStateValue(self::GAME_STATE_LEGENDS_SHARK_IS_NOT_PLAYABLE, 1);
+            $this->incStat(1, 'numberOfLegendsSharkPlayed');
+            $this->incStat(1, 'numberOfLegendsSharkPlayed', $currentPlayerId);
+        }
+        if ($cardsPlayedWithLegendsBadger) {
+            self::setGameStateValue(self::GAME_STATE_LEGENDS_BADGER_IS_NOT_PLAYABLE, 1);
+            $this->incStat(1, 'numberOfLegendsBadgerPlayed');
+            $this->incStat(1, 'numberOfLegendsBadgerPlayed', $currentPlayerId);
+        }
+        if ($cardsPlayedWithLegendsElephant) {
+            self::setGameStateValue(self::GAME_STATE_LEGENDS_ELEPHANT_IS_NOT_PLAYABLE, 1);
+            $this->incStat(1, 'numberOfLegendsElephantPlayed');
+            $this->incStat(1, 'numberOfLegendsElephantPlayed', $currentPlayerId);
         }
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, $currentPlayerId);
         self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_VALUE, $lastPlayedCardsValue);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_JERSEY, (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_JERSEY));
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON, (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON));
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE, (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE));
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA, (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA));
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK, (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK));
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER, (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER));
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT, (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT));
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, $playedCardsValue);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_JERSEY, $cardsPlayedWithJersey ? CARD_ID_JERSEY_PLUS_TEN : 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON, $cardsPlayedWithLegendsBroomWagon ? CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE : 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE, $cardsPlayedWithLegendsEagle ? CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER : 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA, $cardsPlayedWithLegendsPanda ? CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR : 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK, $cardsPlayedWithLegendsShark ? CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN : 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER, $cardsPlayedWithLegendsBadger ? CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR : 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT, $cardsPlayedWithLegendsElephant ? CARD_ID_LEGENDS_ELEPHANT_STOP : 0);
         self::notifyAllPlayers('cardsPlayed', clienttranslate('${player_name} attacks with ${cardsImage}'), [
             'players' => $this->formatPlayersForClient($players),
             'playedCardsPlayerId' => $currentPlayerId,
             'playedCards' => $formattedCards = $this->formatCardsForClient($playedCards),
-            'cardsImage' => $cardsPlayedWithJersey
-                ? array_merge([$this->formatJerseyForClient()], $formattedCards)
-                : $formattedCards,
+            'cardsImage' => [
+                ...$formattedCards,
+                ...($cardsPlayedWithJersey ? $this->formatCardsForClient($this->fromSpecialCardIdsToVelonimoCards([CARD_ID_JERSEY_PLUS_TEN])) : []),
+                ...($cardsPlayedWithLegendsBroomWagon ? $this->formatCardsForClient($this->fromSpecialCardIdsToVelonimoCards([CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE])) : []),
+                ...($cardsPlayedWithLegendsEagle ? $this->formatCardsForClient($this->fromSpecialCardIdsToVelonimoCards([CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER])) : []),
+                ...($cardsPlayedWithLegendsPanda ? $this->formatCardsForClient($this->fromSpecialCardIdsToVelonimoCards([CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR])) : []),
+                ...($cardsPlayedWithLegendsShark ? $this->formatCardsForClient($this->fromSpecialCardIdsToVelonimoCards([CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN])) : []),
+                ...($cardsPlayedWithLegendsBadger ? $this->formatCardsForClient($this->fromSpecialCardIdsToVelonimoCards([CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR])) : []),
+                ...($cardsPlayedWithLegendsElephant ? $this->formatCardsForClient($this->fromSpecialCardIdsToVelonimoCards([CARD_ID_LEGENDS_ELEPHANT_STOP])) : []),
+            ],
             'player_name' => $currentPlayerName = self::getCurrentPlayerName(),
             'playedCardsValue' => $playedCardsValue,
             'withJersey' => $cardsPlayedWithJersey,
+            'withLegendsBroomWagon' => $cardsPlayedWithLegendsBroomWagon,
+            'withLegendsEagle' => $cardsPlayedWithLegendsEagle,
+            'withLegendsPanda' => $cardsPlayedWithLegendsPanda,
+            'withLegendsShark' => $cardsPlayedWithLegendsShark,
+            'withLegendsBadger' => $cardsPlayedWithLegendsBadger,
+            'withLegendsElephant' => $cardsPlayedWithLegendsElephant,
         ]);
 
         // update player's min/max value played
@@ -759,6 +870,19 @@ class Velonimo extends Table
         if (count($selectedCardIds) !== $numberOfCardsToGiveBack) {
             throw new BgaUserException(sprintf(self::_('You must select exactly %s cards.'), $numberOfCardsToGiveBack));
         }
+        foreach ($selectedCardIds as $id) {
+            if (in_array($id, [
+                CARD_ID_JERSEY_PLUS_TEN,
+                CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE,
+                CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER,
+                CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR,
+                CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN,
+                CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR,
+                CARD_ID_LEGENDS_ELEPHANT_STOP,
+            ], true)) {
+                throw new BgaUserException(self::_('This card cannot be given.'));
+            }
+        }
 
         [
             $selectedCards,
@@ -924,6 +1048,29 @@ class Velonimo extends Table
             ]);
         }
 
+        // if first round,
+        // deal a coach of legends extension to each player
+        if (
+            $this->isExtensionLegendsEnabled()
+            && $newRound === 1
+        ) {
+            $availableCoachCards = $this->fromSpecialCardIdsToVelonimoCards([
+                CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER,
+                CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR,
+                CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN,
+                CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR,
+                CARD_ID_LEGENDS_ELEPHANT_STOP,
+            ]);
+            foreach ($players as $player)
+            {
+                $pickedCoachKey = array_rand($availableCoachCards, 1);
+                $pickedCoachCard = $availableCoachCards[$pickedCoachKey];
+                unset($availableCoachCards[$pickedCoachKey]);
+
+                $this->dealCoachCardToPlayer($player, $pickedCoachCard);
+            }
+        }
+
         // if there is a loser, he plays first during this round
         if ($currentLoser = $this->getCurrentLoser($players)) {
             $this->gamestate->changeActivePlayer($currentLoser->getId());
@@ -931,15 +1078,15 @@ class Velonimo extends Table
             self::activeNextPlayer();
         }
 
+        if ($this->is2PlayersMode($players)) {
+            $this->revealNewAttackRewardCardsIfEnoughCardsInDeck();
+        }
+
         self::notifyAllPlayers('roundStarted', clienttranslate('Round #${currentRound} starts'), [
             'currentRound' => $newRound,
             'players' => $this->formatPlayersForClient($players),
             'numberOfCardsInDeck' => $this->getNumberOfCardsInDeck(),
         ]);
-
-        if ($this->is2PlayersMode($players)) {
-            $this->revealNewAttackRewardCardsIfEnoughCardsInDeck();
-        }
 
         $this->gamestate->nextState('firstPlayerTurn');
     }
@@ -954,8 +1101,12 @@ class Velonimo extends Table
         $playerIdWhoPlayedTheLastCards = (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID);
 
         // activate next players until we find one who can play
-        foreach ($players as $ignored) {
-            $nextPlayerId = self::activeNextPlayer();
+        for ($i = 0; $i < count($players); $i++) {
+            // if the last player played the coach Elephant, then he is the next player,
+            // otherwise the next player is the next one in the "natural" order
+            $nextPlayerId = $this->lastPlayedCardsContainLegendsElephant()
+                ? $playerIdWhoPlayedTheLastCards
+                : self::activeNextPlayer();
             $nextPlayerCanPlay = in_array($nextPlayerId, $playersWhoCanPlayIds, true);
             // if the next player is the one who played the last played cards
             if ($nextPlayerId === $playerIdWhoPlayedTheLastCards) {
@@ -998,30 +1149,68 @@ class Velonimo extends Table
     function stEndRound() {
         // update players score and jersey
         $players = $this->getPlayersFromDatabase();
+        $numberOfPlayers = count($players);
         $currentRound = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
         foreach ($players as $k => $player) {
             $players[$k] = $player->addPoints($player->getLastNumberOfPointsEarned());
         }
         $newWinner = $this->getCurrentWinner($players);
-        foreach ($players as $k => $player) {
-            $players[$k] = $player->setIsWearingJersey(
-                $newWinner && $newWinner->getId() === $player->getId()
-            );
+        $newLoserIds = array_map(
+            fn (VelonimoPlayer $p) => $p->getId(),
+            $this->getCurrentLosers($players)
+        );
 
-            self::DbQuery(sprintf(
-                'UPDATE player SET player_score=%s, has_card_jersey=%s WHERE player_id=%s',
-                $player->getScore(),
-                $player->isWearingJersey() ? 1 : 0,
-                $player->getId()
-            ));
+        // check if all coaches have been used
+        $allCoachesAreNotPlayable = true;
+        foreach ($players as $player) {
+            if (
+                ($coachCardId = $player->getCoachCardId())
+                && 0 === (int) self::getGameStateValue($this->fromSpecialCardIdToIsNotPlayableGameStateKey($coachCardId))
+            ) {
+                $allCoachesAreNotPlayable = false;
+                break;
+            }
         }
 
-        // re-allow the jersey to be used
+        $restoredCoachCardIds = [];
+        foreach ($players as $k => $player) {
+            // update player state
+            $players[$k] = $player->setIsWearingJersey(
+                $newWinner && $newWinner->getId() === $player->getId()
+            )->setHasCardLegendsBroomWagon(
+                $player->isLastRoundLoser($numberOfPlayers)
+            );
+            self::DbQuery(sprintf(
+                'UPDATE player SET player_score=%s, %s=%s, %s=%s WHERE player_id=%s',
+                $player->getScore(),
+                $this->fromSpecialCardIdToPlayerTableKey(CARD_ID_JERSEY_PLUS_TEN),
+                $player->isWearingJersey() ? 1 : 0,
+                $this->fromSpecialCardIdToPlayerTableKey(CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE),
+                $player->hasCardLegendsBroomWagon() ? 1 : 0,
+                $player->getId()
+            ));
+
+            // mark player coach card as reusable if needed
+            if (
+                ($coachCardId = $player->getCoachCardId())
+                && (
+                    $allCoachesAreNotPlayable
+                    || in_array($player->getId(), $newLoserIds, true)
+                )
+            ) {
+                $restoredCoachCardIds[] = $coachCardId;
+                self::setGameStateValue($this->fromSpecialCardIdToIsNotPlayableGameStateKey($coachCardId), 0);
+            }
+        }
+
+        // re-allow the jersey/broom_wagon to be used
         self::setGameStateValue(self::GAME_STATE_JERSEY_IS_NOT_PLAYABLE, 0);
+        self::setGameStateValue(self::GAME_STATE_LEGENDS_BROOM_WAGON_IS_NOT_PLAYABLE, 0);
 
         self::notifyAllPlayers('roundEnded', clienttranslate('Round #${currentRound} ends'), [
             'currentRound' => $currentRound,
             'players' => $this->formatPlayersForClient($players),
+            'specialCardIdsToRestore' => [CARD_ID_JERSEY_PLUS_TEN, CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE, ...$restoredCoachCardIds],
         ]);
 
         // notify points earned by each player
@@ -1042,6 +1231,12 @@ class Velonimo extends Table
         $headers = [
             '', // the first column of headers is empty
         ];
+        $previousPoints = [
+            [
+                'str' => clienttranslate('Previous score'),
+                'args' => [],
+            ],
+        ];
         $roundPoints = [
             [
                 'str' => clienttranslate('Round points'),
@@ -1050,7 +1245,7 @@ class Velonimo extends Table
         ];
         $totalPoints = [
             [
-                'str' => clienttranslate('Total points'),
+                'str' => clienttranslate('New score'),
                 'args' => [],
             ],
         ];
@@ -1062,23 +1257,25 @@ class Velonimo extends Table
                 ],
                 'type' => 'header'
             ];
-            $roundPoints[] = $player->getLastNumberOfPointsEarned();
+            $previousPoints[] = $player->getScore() - $player->getLastNumberOfPointsEarned();
+            $roundPoints[] = $player->getLastNumberOfPointsEarned() === 0 ? '0' : sprintf('+%s', $player->getLastNumberOfPointsEarned());
             $totalPoints[] = $player->getScore();
         }
-        $this->notifyAllPlayers( 'tableWindow', '', array(
+        $this->notifyAllPlayers('tableWindow', '', [
             'id' => 'finalScoring',
-            'title' =>  sprintf(
+            'title' => sprintf(
                 clienttranslate('Results of round %s/%s'),
                 $currentRound,
                 $howManyRounds
             ),
             'table' => [
                 $headers,
+                $previousPoints,
                 $roundPoints,
                 $totalPoints
             ],
             'closing' => $isGameOver ? clienttranslate('End of game') : clienttranslate('Next round')
-        ));
+        ]);
 
         // update global min/max value played stats
         if ($isGameOver) {
@@ -1174,6 +1371,78 @@ class Velonimo extends Table
     }
 
     /**
+     * @return VelonimoCard[]
+     */
+    private function fromSpecialPlayedCardsToVelonimoCards(string $playedCardsType): array {
+        if (!in_array($playedCardsType, [
+            'LAST',
+            'PREVIOUS',
+        ], true)) {
+            throw new BgaVisibleSystemException('Invalid argument for ' . __FUNCTION__);
+        }
+
+        $cardIds = array_values(array_filter(
+            array_map(
+                fn (string $cardKey) => (int) self::getGameStateValue(constant('self::GAME_STATE_'.$playedCardsType.'_PLAYED_CARDS_CONTAIN_'.$cardKey)),
+                [
+                    'JERSEY',
+                    'LEGENDS_BROOM_WAGON',
+                    'LEGENDS_EAGLE',
+                    'LEGENDS_PANDA',
+                    'LEGENDS_SHARK',
+                    'LEGENDS_BADGER',
+                    'LEGENDS_ELEPHANT',
+                ]
+            ),
+            fn (int $id) => $id !== 0
+        ));
+
+        return $this->fromSpecialCardIdsToVelonimoCards($cardIds);
+    }
+
+    /**
+     * @param int[] $cardIds
+     *
+     * @return VelonimoCard[]
+     */
+    private function fromSpecialCardIdsToVelonimoCards(array $cardIds): array {
+        return array_map(
+            fn (int $id) => new VelonimoCard(
+                $id,
+                COLOR_SPECIAL,
+                $this->fromSpecialCardIdToValue($id)
+            ),
+            $cardIds
+        );
+    }
+
+    private function fromSpecialCardIdToValue(int $cardId): int {
+        if ($cardId === CARD_ID_JERSEY_PLUS_TEN) {
+            return VALUE_JERSEY_PLUS_TEN;
+        }
+        if ($cardId === CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE) {
+            return VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE;
+        }
+        if ($cardId === CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER) {
+            return VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER;
+        }
+        if ($cardId === CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR) {
+            return VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR;
+        }
+        if ($cardId === CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN) {
+            return VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN;
+        }
+        if ($cardId === CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR) {
+            return VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR;
+        }
+        if ($cardId === CARD_ID_LEGENDS_ELEPHANT_STOP) {
+            return VALUE_LEGENDS_ELEPHANT_STOP;
+        }
+
+        throw new BgaVisibleSystemException('Unsupported special card.');
+    }
+
+    /**
      * @param VelonimoCard[] $cards
      */
     private function formatCardsForClient(array $cards): array {
@@ -1187,14 +1456,6 @@ class Velonimo extends Table
         );
     }
 
-    private function formatJerseyForClient(): array {
-        return [
-            'id' => CARD_ID_JERSEY_PLUS_TEN,
-            'color' => COLOR_JERSEY,
-            'value' => VALUE_JERSEY,
-        ];
-    }
-
     /**
      * @param VelonimoCard[] $cards
      */
@@ -1202,29 +1463,27 @@ class Velonimo extends Table
         array $cards,
         bool $cardsPlayedWithJersey,
         bool $cardsPlayedWithLegendsBroomWagon,
-        bool $cardsPlayedWithLegendsEagle,
-        bool $cardsPlayedWithLegendsPanda,
-        bool $cardsPlayedWithLegendsShark,
-        bool $cardsPlayedWithLegendsBadger,
-        bool $cardsPlayedWithLegendsElephant
+        bool $cardsPlayedWithLegendsShark
     ): int {
         if (count($cards) <= 0) {
             return 0;
         }
 
-        $addJerseyOrBroomWagonValueIfUsed = fn (int $value) => $value + (
-            $cardsPlayedWithJersey ? VALUE_JERSEY : (
-                $cardsPlayedWithLegendsBroomWagon ? VALUE_LEGENDS_BROOM_WAGON : 0
-            )
+        $addJerseyValueIfUsed = fn (int $value) => $value + (
+            $cardsPlayedWithJersey ? VALUE_JERSEY_PLUS_TEN : 0
         );
+        $addBroomWagonValueIfUsed = fn (int $value) => $value + (
+            $cardsPlayedWithLegendsBroomWagon ? VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE : 0
+        );
+        $withJerseyAndBroomWagon = fn (int $value) => $addJerseyValueIfUsed($addBroomWagonValueIfUsed($value));
 
         if (count($cards) === 1) {
             $uniqueCardValue = current($cards)->getValue();
             if ($cardsPlayedWithLegendsShark) {
-                return $addJerseyOrBroomWagonValueIfUsed($uniqueCardValue * 10);
+                return $withJerseyAndBroomWagon($uniqueCardValue * 10);
             }
 
-            return $addJerseyOrBroomWagonValueIfUsed($uniqueCardValue);
+            return $withJerseyAndBroomWagon($uniqueCardValue);
         }
 
         $minCardValue = 1000;
@@ -1234,7 +1493,7 @@ class Velonimo extends Table
             }
         }
 
-        return $addJerseyOrBroomWagonValueIfUsed((count($cards) * 10) + $minCardValue);
+        return $withJerseyAndBroomWagon((count($cards) * 10) + $minCardValue);
     }
 
     /**
@@ -1254,13 +1513,13 @@ class Velonimo extends Table
                 (int) $player['player_score'],
                 (int) $player['player_score_aux'],
                 VelonimoPlayer::deserializeRoundsRanking($player['rounds_ranking']),
-                ((int) $player['has_card_jersey']) === 1,
-                ((int) $player['has_card_legends_broom_wagon']) === 1,
-                ((int) $player['has_card_legends_eagle']) === 1,
-                ((int) $player['has_card_legends_panda']) === 1,
-                ((int) $player['has_card_legends_shark']) === 1,
-                ((int) $player['has_card_legends_badger']) === 1,
-                ((int) $player['has_card_legends_elephant']) === 1
+                ((int) $player[$this->fromSpecialCardIdToPlayerTableKey(CARD_ID_JERSEY_PLUS_TEN)]) === 1,
+                ((int) $player[$this->fromSpecialCardIdToPlayerTableKey(CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE)]) === 1,
+                ((int) $player[$this->fromSpecialCardIdToPlayerTableKey(CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER)]) === 1,
+                ((int) $player[$this->fromSpecialCardIdToPlayerTableKey(CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR)]) === 1,
+                ((int) $player[$this->fromSpecialCardIdToPlayerTableKey(CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN)]) === 1,
+                ((int) $player[$this->fromSpecialCardIdToPlayerTableKey(CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR)]) === 1,
+                ((int) $player[$this->fromSpecialCardIdToPlayerTableKey(CARD_ID_LEGENDS_ELEPHANT_STOP)]) === 1
             ),
             $players
         );
@@ -1355,7 +1614,7 @@ class Velonimo extends Table
     }
 
     /**
-     * @param array<int, VelonimoPlayer> $players Indexed by player ID
+     * @param VelonimoPlayer[] $players Indexed by player ID
      */
     private function formatPlayersForClient(array $players): array {
         $result = [];
@@ -1369,6 +1628,12 @@ class Velonimo extends Table
                 'lastNumberOfPointsEarned' => $player->getLastNumberOfPointsEarned(),
                 'roundsRanking' => $player->getRoundsRanking(),
                 'isWearingJersey' => $player->isWearingJersey(),
+                'hasCardLegendsBroomWagon' => $player->hasCardLegendsBroomWagon(),
+                'hasCardLegendsEagle' => $player->hasCardLegendsEagle(),
+                'hasCardLegendsPanda' => $player->hasCardLegendsPanda(),
+                'hasCardLegendsShark' => $player->hasCardLegendsShark(),
+                'hasCardLegendsBadger' => $player->hasCardLegendsBadger(),
+                'hasCardLegendsElephant' => $player->hasCardLegendsElephant(),
                 'howManyCards' => count($this->deck->getCardsInLocation(self::CARD_LOCATION_PLAYER_HAND, $player->getId())),
             ];
         }
@@ -1419,6 +1684,31 @@ class Velonimo extends Table
         // maybe it is impossible to reach this point,
         // so we decide to say that there is no winner if this happen
         return null;
+    }
+
+    /**
+     * The current losers have the smallest number of points.
+     *
+     * @param VelonimoPlayer[] $players
+     *
+     * @return VelonimoPlayer[]
+     */
+    private function getCurrentLosers(array $players): array {
+        $lowestScore = 1000;
+        foreach ($players as $player) {
+            if ($player->getScore() < $lowestScore) {
+                $lowestScore = $player->getScore();
+            }
+        }
+
+        $playersWhoHaveLowestScore = [];
+        foreach ($players as $player) {
+            if ($player->getScore() === $lowestScore) {
+                $playersWhoHaveLowestScore[] = $player;
+            }
+        }
+
+        return $playersWhoHaveLowestScore;
     }
 
     private function getNumberOfPointsAtRankForRound(
@@ -1481,7 +1771,21 @@ class Velonimo extends Table
         $this->deck->moveAllCardsInLocation(self::CARD_LOCATION_PREVIOUS_PLAYED, self::CARD_LOCATION_DISCARD);
         $this->deck->moveAllCardsInLocation(self::CARD_LOCATION_PLAYED, self::CARD_LOCATION_DISCARD);
         self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_VALUE, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_JERSEY, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER, 0);
+        self::setGameStateValue(self::GAME_STATE_PREVIOUS_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_VALUE, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_JERSEY, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BROOM_WAGON, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_EAGLE, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_PANDA, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_SHARK, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_BADGER, 0);
+        self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT, 0);
         self::setGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_PLAYER_ID, 0);
         self::notifyAllPlayers('playedCardsDiscarded', '', []);
     }
@@ -1513,6 +1817,67 @@ class Velonimo extends Table
             $player->getLastNumberOfPointsEarned(),
             $player->getId()
         ));
+    }
+
+    private function dealCoachCardToPlayer(
+        VelonimoPlayer $player,
+        VelonimoCard $coachCard
+    ): void {
+        self::DbQuery(sprintf(
+            'UPDATE player SET %s=1 WHERE player_id=%s',
+            $this->fromSpecialCardIdToPlayerTableKey($coachCard->getId()),
+            $player->getId()
+        ));
+
+        self::notifyAllPlayers('legendsCoachCardDealt', clienttranslate('${player_name} receives coach ${coachName} ${cardsImage}'), [
+            'cards' => $formattedCards = $this->formatCardsForClient([$coachCard]),
+            'cardsImage' => $formattedCards,
+            'coachName' => $this->legends_coaches[$coachCard->getId()]['name'],
+            'receiverPlayerId' => $player->getId(),
+            'player_name' => $player->getName(),
+        ]);
+    }
+
+    private function fromSpecialCardIdToPlayerTableKey(int $cardId): string
+    {
+        if ($cardId === CARD_ID_JERSEY_PLUS_TEN) {
+            return 'has_card_jersey';
+        } elseif ($cardId === CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE) {
+            return 'has_card_legends_broom_wagon';
+        } elseif ($cardId === CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER) {
+            return 'has_card_legends_eagle';
+        } elseif ($cardId === CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR) {
+            return 'has_card_legends_panda';
+        } elseif ($cardId === CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN) {
+            return 'has_card_legends_shark';
+        } elseif ($cardId === CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR) {
+            return 'has_card_legends_badger';
+        } elseif ($cardId === CARD_ID_LEGENDS_ELEPHANT_STOP) {
+            return 'has_card_legends_elephant';
+        } else {
+            throw new BgaVisibleSystemException('Unsupported special card ID');
+        }
+    }
+
+    private function fromSpecialCardIdToIsNotPlayableGameStateKey(int $cardId): string
+    {
+        if ($cardId === CARD_ID_JERSEY_PLUS_TEN) {
+            return self::GAME_STATE_JERSEY_IS_NOT_PLAYABLE;
+        } elseif ($cardId === CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE) {
+            return self::GAME_STATE_LEGENDS_BROOM_WAGON_IS_NOT_PLAYABLE;
+        } elseif ($cardId === CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER) {
+            return self::GAME_STATE_LEGENDS_EAGLE_IS_NOT_PLAYABLE;
+        } elseif ($cardId === CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR) {
+            return self::GAME_STATE_LEGENDS_PANDA_IS_NOT_PLAYABLE;
+        } elseif ($cardId === CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN) {
+            return self::GAME_STATE_LEGENDS_SHARK_IS_NOT_PLAYABLE;
+        } elseif ($cardId === CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR) {
+            return self::GAME_STATE_LEGENDS_BADGER_IS_NOT_PLAYABLE;
+        } elseif ($cardId === CARD_ID_LEGENDS_ELEPHANT_STOP) {
+            return self::GAME_STATE_LEGENDS_ELEPHANT_IS_NOT_PLAYABLE;
+        } else {
+            throw new BgaVisibleSystemException('Unsupported special card ID');
+        }
     }
 
     private function isJerseyNotPlayable(): bool {
@@ -1548,9 +1913,7 @@ class Velonimo extends Table
     }
 
     private function isExtensionLegendsEnabled(): bool {
-        // @TODO: support extension legends
-        return false;
-//        return 1 === (int) self::getGameStateValue(self::GAME_OPTION_ENABLE_EXTENSION_LEGENDS);
+        return 1 === (int) self::getGameStateValue(self::GAME_OPTION_ENABLE_EXTENSION_LEGENDS);
     }
 
     /**
@@ -1568,10 +1931,16 @@ class Velonimo extends Table
     ): void {
         $cardsCannotBePlayedTogetherErrorMessage = self::_('These cards cannot be played together.');
 
-        // validate jersey and broom wagon are not played together
+        // validate jersey is not played with coaches
         if (
             $cardsPlayedWithJersey
-            && $cardsPlayedWithLegendsBroomWagon
+            && (
+                $cardsPlayedWithLegendsEagle
+                || $cardsPlayedWithLegendsPanda
+                || $cardsPlayedWithLegendsShark
+                || $cardsPlayedWithLegendsBadger
+                || $cardsPlayedWithLegendsElephant
+            )
         ) {
             throw new BgaUserException($cardsCannotBePlayedTogetherErrorMessage);
         }
@@ -1593,7 +1962,7 @@ class Velonimo extends Table
             throw new BgaUserException($cardsCannotBePlayedTogetherErrorMessage);
         }
 
-        // validate adventurer is played alone
+        // validate adventurer is played alone and without jersey or broom wagon
         $cardsContainAnAdventurer = in_array(COLOR_ADVENTURER, array_map(fn (VelonimoCard $c) => $c->getColor(), $playedCards), true);
         $numberOfCards = count($playedCards);
         if (
@@ -1602,10 +1971,6 @@ class Velonimo extends Table
                 $numberOfCards > 1
                 || $cardsPlayedWithJersey
                 || $cardsPlayedWithLegendsBroomWagon
-                || $cardsPlayedWithLegendsEagle
-                || $cardsPlayedWithLegendsPanda
-                || $cardsPlayedWithLegendsShark
-                || $cardsPlayedWithLegendsBadger
             )
         ) {
             throw new BgaUserException($cardsCannotBePlayedTogetherErrorMessage);
@@ -1659,6 +2024,13 @@ class Velonimo extends Table
                 throw new BgaUserException(self::_('You can only play several cards if they share a same color or a same value.'));
             }
         }
+    }
+
+    /**
+     * /!\ Extension Legends only
+     */
+    private function lastPlayedCardsContainLegendsElephant(): bool {
+        return (0 !== (int) self::getGameStateValue(self::GAME_STATE_LAST_PLAYED_CARDS_CONTAIN_LEGENDS_ELEPHANT));
     }
 
     /**

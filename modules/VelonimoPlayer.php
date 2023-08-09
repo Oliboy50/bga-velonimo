@@ -169,6 +169,26 @@ class VelonimoPlayer
     {
         return $this->getLastRoundRank() === 1;
     }
+    public function isLastRoundLoser(int $numberOfPlayers): bool
+    {
+        return $this->getLastRoundRank() === $numberOfPlayers;
+    }
+    public function getCoachCardId(): ?int
+    {
+        if ($this->hasCardLegendsEagle) {
+            return CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER;
+        } elseif ($this->hasCardLegendsPanda) {
+            return CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR;
+        } elseif ($this->hasCardLegendsShark) {
+            return CARD_ID_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN;
+        } elseif ($this->hasCardLegendsBadger) {
+            return CARD_ID_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR;
+        } elseif ($this->hasCardLegendsElephant) {
+            return CARD_ID_LEGENDS_ELEPHANT_STOP;
+        } else {
+            return null;
+        }
+    }
 
     /*
      *  SETTERS
@@ -188,6 +208,42 @@ class VelonimoPlayer
     public function setIsWearingJersey(bool $isWearingJersey): self
     {
         $this->isWearingJersey = $isWearingJersey;
+
+        return $this;
+    }
+    public function setHasCardLegendsBroomWagon(bool $hasCardLegendsBroomWagon): self
+    {
+        $this->hasCardLegendsBroomWagon = $hasCardLegendsBroomWagon;
+
+        return $this;
+    }
+    public function setHasCardLegendsEagle(bool $hasCardLegendsEagle): self
+    {
+        $this->hasCardLegendsEagle = $hasCardLegendsEagle;
+
+        return $this;
+    }
+    public function setHasCardLegendsPanda(bool $hasCardLegendsPanda): self
+    {
+        $this->hasCardLegendsPanda = $hasCardLegendsPanda;
+
+        return $this;
+    }
+    public function setHasCardLegendsShark(bool $hasCardLegendsShark): self
+    {
+        $this->hasCardLegendsShark = $hasCardLegendsShark;
+
+        return $this;
+    }
+    public function setHasCardLegendsBadger(bool $hasCardLegendsBadger): self
+    {
+        $this->hasCardLegendsBadger = $hasCardLegendsBadger;
+
+        return $this;
+    }
+    public function setHasCardLegendsElephant(bool $hasCardLegendsElephant): self
+    {
+        $this->hasCardLegendsElephant = $hasCardLegendsElephant;
 
         return $this;
     }
