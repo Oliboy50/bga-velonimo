@@ -333,7 +333,7 @@ function (dojo, declare) {
                 // setup player on board
                 dojo.place(
                     `<div id="player-table-${player.id}" class="${DOM_CLASS_PLAYER_TABLE} ${isPositionTop ? 'player-position-top' : 'player-position-bottom'}" style="width: ${PLAYER_TABLE_WIDTH}px; height: ${PLAYER_TABLE_HEIGHT}px; ${playerPosition.tableStyle}">
-    <div class="player-table-name" style="color: ${playerColorRGB};"><span>${(player.name.length > 10 ? (player.name.substring(0,10) + '...') : player.name)}</span></div>
+    <div class="player-table-name" style="color: ${playerColorRGB};"><span>${(player.name.length > 20 ? (player.name.substring(0,20) + '...') : player.name)}</span></div>
     <div id="player-table-${player.id}-hand" class="player-table-hand"><div id="player-table-${player.id}-hand-cards" class="player-table-hand-cards"></div></div>
     <div id="player-table-${player.id}-special-cards" class="player-special-cards"></div>
     <div id="player-table-${player.id}-finish-position" class="player-table-finish-position"></div>
