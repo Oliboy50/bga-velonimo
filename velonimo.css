@@ -361,13 +361,13 @@ Board
     background-position-x: 0;
 }
 .player-table.has-finished-2 .player-table-finish-position {
-    background-position-x: 150px;
+    background-position-x: -150px;
 }
 .player-table.has-finished-3 .player-table-finish-position {
-    background-position-x: 300px;
+    background-position-x: -300px;
 }
 .player-table.has-finished-4 .player-table-finish-position {
-    background-position-x: 450px;
+    background-position-x: -450px;
 }
 /**
 END Board
