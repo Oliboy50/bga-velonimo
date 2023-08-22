@@ -2970,7 +2970,7 @@ function (dojo, declare) {
             if (selectedCardsGroup) {
                 if (!$(DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON)) {
                     dojo.place(
-                        `<a href="javascript:void(0)" id="${DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON}" class="bgabutton bgabutton_red"><span>${_('Ungroup cards')}</span></a>`,
+                        `<a href="javascript:void(0)" id="${DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON}" class="bgabutton bgabutton_gray"><span>${_('Ungroup cards')}</span></a>`,
                         DOM_ID_PLAYER_HAND_TITLE_WRAPPER_LEFT
                     );
                     this.addTooltip(DOM_ID_PLAYER_HAND_UNGROUP_CARDS_BUTTON, '', _('Click this button to stop grouping selected cards.'));
@@ -2979,7 +2979,7 @@ function (dojo, declare) {
             } else if (selectedCards.length > 1 && this.getCardsValue(selectedCards) > 0) {
                 if (!$(DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON)) {
                     dojo.place(
-                        `<a href="javascript:void(0)" id="${DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON}" class="bgabutton bgabutton_blue"><span>${_('Group cards')}</span></a>`,
+                        `<a href="javascript:void(0)" id="${DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON}" class="bgabutton bgabutton_gray"><span>${_('Group cards')}</span></a>`,
                         DOM_ID_PLAYER_HAND_TITLE_WRAPPER_LEFT
                     );
                     this.addTooltip(DOM_ID_PLAYER_HAND_GROUP_CARDS_BUTTON, '', _('Click this button to group selected cards. Grouped cards are not affected by sorting.'));

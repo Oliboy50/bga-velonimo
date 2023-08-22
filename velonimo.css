@@ -149,6 +149,13 @@ Board
 .player-table.player-position-bottom .player-table-name {
     bottom: 10px;
 }
+/* Put the player name below the finished image even when players are at the top of the board */
+.player-table.player-position-top.has-finished-1 .player-table-name,
+.player-table.player-position-top.has-finished-2 .player-table-name,
+.player-table.player-position-top.has-finished-3 .player-table-name,
+.player-table.player-position-top.has-finished-4 .player-table-name {
+    top: 120px;
+}
 .player-table-hand {
     position: absolute;
     width: 90px;
@@ -291,15 +298,12 @@ Board
     bottom: 50px;
 }
 .player-special-cards div {
-    display: block;
+    display: none;
     width: 30px;
     height: 30px;
     background-image: url('img/cards.png'); /* background-position is dynamically computed */
     background-size: 630px 1134px; /* width = cardWidth * number of columns in sprite ; height = cardHeight * number of rows in sprite */
     border-radius: 50%;
-    opacity: 0;
-    transition-property: opacity;
-    transition-duration: 0.5s;
     z-index: 5;
 }
 .player-table.has-jersey .player-table-jersey,
@@ -309,7 +313,7 @@ Board
 .player-table.has-legends-coach-shark .player-table-legends-coach,
 .player-table.has-legends-coach-badger .player-table-legends-coach,
 .player-table.has-legends-coach-elephant .player-table-legends-coach {
-    opacity: 1;
+    display: block;
 }
 .player-table.has-jersey.has-used-jersey .player-table-jersey,
 .player-table.has-legends-broom-wagon.has-used-legends-broom-wagon .player-table-legends-broom-wagon,
@@ -340,10 +344,10 @@ Board
     pointer-events: none;
 }
 .player-table.player-position-top .player-table-finish-position {
-    bottom: -20px;
+    bottom: -25px;
 }
 .player-table.player-position-bottom .player-table-finish-position {
-    top: -20px;
+    top: -25px;
 }
 .player-table.has-finished-1 .player-table-finish-position,
 .player-table.has-finished-2 .player-table-finish-position,
