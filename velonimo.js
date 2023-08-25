@@ -3276,6 +3276,12 @@ function (dojo, declare) {
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
         ///////////////////////////////////////////////////
+        ntf_tableWindow: function (notif) {
+            if(typeof notif.args.title === 'object'){
+                notif.args.title = this.format_string_recursive(notif.args.title.str, notif.args.title.args);
+            }
+            this.inherited(arguments);
+        },
         setupNotifications: function () {
             const isReadOnly = this.isReadOnly();
             [

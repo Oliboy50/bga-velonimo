@@ -1263,11 +1263,13 @@ class Velonimo extends Table
         }
         $this->notifyAllPlayers('tableWindow', '', [
             'id' => 'finalScoring',
-            'title' => sprintf(
-                clienttranslate('Result of round %s/%s'),
-                $currentRound,
-                $howManyRounds
-            ),
+            'title' => [
+                'str' => clienttranslate('Result of round ${currentRound}/${howManyRounds}'),
+                'args' => [
+                    'currentRound' => $currentRound,
+                    'howManyRounds' => $howManyRounds,
+                ],
+            ],
             'table' => [
                 $headers,
                 $previousPoints,
