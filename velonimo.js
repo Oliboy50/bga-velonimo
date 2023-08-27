@@ -608,7 +608,7 @@ function (dojo, declare) {
         },
         getLogHtmlWidthForCard: function (card) {
             if (card.color === COLOR_ADVENTURER) {
-                return 32;
+                return 33;
             }
             if (card.color === COLOR_SPECIAL) {
                 return 30;
@@ -617,26 +617,23 @@ function (dojo, declare) {
         },
         getLogHtmlBackgroundOffsetXForCard: function (card) {
             if (card.color === COLOR_ADVENTURER) {
-                return 6;
-            }
-            if (card.value === VALUE_1) {
-                return 11;
+                return 3;
             }
             if (card.value === VALUE_2) {
-                return 63;
+                return 66;
+            }
+            if (card.value === VALUE_6) {
+                return 7;
             }
             if (card.value === VALUE_7) {
-                return 10;
+                return 7;
             }
             if (
                 card.color === COLOR_SPECIAL
-                && card.value === VALUE_JERSEY_PLUS_TEN
-            ) {
-                return 4;
-            }
-            if (
-                card.color === COLOR_SPECIAL
-                && card.value === VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE
+                && [
+                    VALUE_JERSEY_PLUS_TEN,
+                    VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE,
+                ].includes(card.value)
             ) {
                 return 1;
             }
@@ -652,17 +649,17 @@ function (dojo, declare) {
             ) {
                 return 30;
             }
-            return 11;
+            return 8;
         },
         getLogHtmlBackgroundOffsetYForCard: function (card) {
             if (card.color === COLOR_ADVENTURER) {
-                return 8;
+                return 5;
             }
             if (
                 card.color === COLOR_SPECIAL
                 && card.value === VALUE_JERSEY_PLUS_TEN
             ) {
-                return 5;
+                return 2;
             }
             if (
                 card.color === COLOR_SPECIAL
@@ -682,7 +679,7 @@ function (dojo, declare) {
             ) {
                 return 91;
             }
-            return 7;
+            return 4;
         },
         /**
          * @param {Object} card
@@ -1331,36 +1328,36 @@ function (dojo, declare) {
                 case COLOR_SPECIAL:
                     switch (value) {
                         case VALUE_JERSEY_PLUS_TEN:
-                            return 49;
+                            return 56;
                         case VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE:
-                            return 50;
+                            return 57;
                         case VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER:
-                            return 51;
+                            return 58;
                         case VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR:
-                            return 52;
+                            return 59;
                         case VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN:
-                            return 53;
+                            return 60;
                         case VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR:
-                            return 54;
+                            return 61;
                         case VALUE_LEGENDS_ELEPHANT_STOP:
-                            return 55;
+                            return 62;
                         default:
                             throw new Error('Unsupported');
                     }
                 case COLOR_ADVENTURER:
                     switch (value) {
                         case VALUE_25:
-                            return 57;
+                            return 50;
                         case VALUE_30:
-                            return 58;
+                            return 51;
                         case VALUE_35:
-                            return 59;
+                            return 52;
                         case VALUE_40:
-                            return 60;
+                            return 53;
                         case VALUE_45:
-                            return 61;
+                            return 54;
                         case VALUE_50:
-                            return 62;
+                            return 55;
                         default:
                             throw new Error('Unsupported');
                     }
@@ -1405,7 +1402,7 @@ function (dojo, declare) {
          */
         getCardWeightForColorAndValueToSortThemByValue: function (color, value) {
             if (color === COLOR_SPECIAL) {
-                return value + 1000;
+                return 10000 + this.getCardPositionInSpriteByColorAndValue(color, value);
             }
 
             return (value * 100) + color;
@@ -1639,57 +1636,57 @@ function (dojo, declare) {
                     color = COLOR_YELLOW;
                     value = VALUE_7;
                     break;
-                case 49:
-                    color = COLOR_SPECIAL;
-                    value = VALUE_JERSEY_PLUS_TEN;
-                    break;
                 case 50:
-                    color = COLOR_SPECIAL;
-                    value = VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE;
-                    break;
-                case 51:
-                    color = COLOR_SPECIAL;
-                    value = VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER;
-                    break;
-                case 52:
-                    color = COLOR_SPECIAL;
-                    value = VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR;
-                    break;
-                case 53:
-                    color = COLOR_SPECIAL;
-                    value = VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN;
-                    break;
-                case 54:
-                    color = COLOR_SPECIAL;
-                    value = VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR;
-                    break;
-                case 55:
-                    color = COLOR_SPECIAL;
-                    value = VALUE_LEGENDS_ELEPHANT_STOP;
-                    break;
-                case 57:
                     color = COLOR_ADVENTURER;
                     value = VALUE_25;
                     break;
-                case 58:
+                case 51:
                     color = COLOR_ADVENTURER;
                     value = VALUE_30;
                     break;
-                case 59:
+                case 52:
                     color = COLOR_ADVENTURER;
                     value = VALUE_35;
                     break;
-                case 60:
+                case 53:
                     color = COLOR_ADVENTURER;
                     value = VALUE_40;
                     break;
-                case 61:
+                case 54:
                     color = COLOR_ADVENTURER;
                     value = VALUE_45;
                     break;
-                case 62:
+                case 55:
                     color = COLOR_ADVENTURER;
                     value = VALUE_50;
+                    break;
+                case 56:
+                    color = COLOR_SPECIAL;
+                    value = VALUE_JERSEY_PLUS_TEN;
+                    break;
+                case 57:
+                    color = COLOR_SPECIAL;
+                    value = VALUE_LEGENDS_BROOM_WAGON_PLUS_FIVE;
+                    break;
+                case 58:
+                    color = COLOR_SPECIAL;
+                    value = VALUE_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER;
+                    break;
+                case 59:
+                    color = COLOR_SPECIAL;
+                    value = VALUE_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR;
+                    break;
+                case 60:
+                    color = COLOR_SPECIAL;
+                    value = VALUE_LEGENDS_SHARK_ONE_RED_MULTIPLY_TEN;
+                    break;
+                case 61:
+                    color = COLOR_SPECIAL;
+                    value = VALUE_LEGENDS_BADGER_ANY_NUMBER_OF_EACH_COLOR;
+                    break;
+                case 62:
+                    color = COLOR_SPECIAL;
+                    value = VALUE_LEGENDS_ELEPHANT_STOP;
                     break;
                 default:
                     throw new Error(`Unsupported card position in sprite: ${position}`);
@@ -3276,6 +3273,10 @@ function (dojo, declare) {
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
         ///////////////////////////////////////////////////
+        /**
+         * @Override ntf_tableWindow BGA framework function to supporting translating the title of the tableWindow
+         * @param {Object|string} notif
+         */
         ntf_tableWindow: function (notif) {
             if(typeof notif.args.title === 'object'){
                 notif.args.title = this.format_string_recursive(notif.args.title.str, notif.args.title.args);

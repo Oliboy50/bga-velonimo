@@ -6,15 +6,15 @@
 
 ### Create sprite of cards
 
-- Create sprite from 180px wide PNG card images:
+- Create cards.png sprite from 180x251 card images:
   ```shell
-  magick montage $(ls blue-*.png) $(ls brown-*.png) $(ls gray-*.png) $(ls green-*.png) $(ls pink-*.png) $(ls red-*.png) $(ls yellow-*.png) $(ls special-*.png) back-ext_legendes.png $(ls adventurer-*.png) -geometry +0+0 -tile 7x9 -mode concatenate -background none cards.png
+  magick montage $(ls blue-*.png) $(ls brown-*.png) $(ls gray-*.png) $(ls green-*.png) $(ls pink-*.png) $(ls red-*.png) $(ls yellow-*.png) back-ext_legendes.png $(ls adventurer-*.png) $(ls special-*.png) -geometry +0+0 -tile 7x9 -mode concatenate -background none cards.png
   ```
 - Create finish.png sprite from 150x150 finish images:
   ```shell
   magick montage $(ls finish_*.png) -geometry +0+0 -tile 4x1 -mode concatenate -background none finish.png
   ```
-- Reduce generated sprite size by ~90% (using https://tinypng.com or https://compresspng.com if the file is too large)
+- Reduce generated sprites size by ~90% (using https://tinypng.com or https://compresspng.com if the file is too large)
 
 ## License
 
