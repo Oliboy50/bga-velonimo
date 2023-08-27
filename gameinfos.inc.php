@@ -24,7 +24,7 @@ $gameinfos = [
     'year' => 2020,
 
     // Game publisher (use empty string if there is no publisher)
-    'publisher' => 'Stratosphères',
+    'publisher' => 'Studio Stratosphères',
 
     // Url of game publisher website
     'publisher_website' => 'https://www.studiostratospheres.com/',

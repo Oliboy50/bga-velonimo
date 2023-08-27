@@ -1313,7 +1313,7 @@ class Velonimo extends Table
             return;
         }
 
-        throw new BgaVisibleSystemException('Zombie mode not supported at this game state: '.$stateName);
+        throw new BgaVisibleSystemException('Zombie mode not supported at this game state: '.$stateName); // NOI18N
     }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1380,7 +1380,7 @@ class Velonimo extends Table
             'LAST',
             'PREVIOUS',
         ], true)) {
-            throw new BgaVisibleSystemException('Invalid argument for ' . __FUNCTION__);
+            throw new BgaVisibleSystemException('Invalid argument for ' . __FUNCTION__); // NOI18N
         }
 
         $cardIds = array_values(array_filter(
@@ -1441,7 +1441,7 @@ class Velonimo extends Table
             return VALUE_LEGENDS_ELEPHANT_STOP;
         }
 
-        throw new BgaVisibleSystemException('Unsupported special card.');
+        throw new BgaVisibleSystemException('Unsupported special card.'); // NOI18N
     }
 
     /**
@@ -1541,7 +1541,7 @@ class Velonimo extends Table
             }
         }
 
-        throw new BgaVisibleSystemException('Player not found.');
+        throw new BgaVisibleSystemException('Player not found.'); // NOI18N
     }
 
     /**
@@ -1857,7 +1857,7 @@ class Velonimo extends Table
         } elseif ($cardId === CARD_ID_LEGENDS_ELEPHANT_STOP) {
             return 'has_card_legends_elephant';
         } else {
-            throw new BgaVisibleSystemException('Unsupported special card ID');
+            throw new BgaVisibleSystemException('Unsupported special card ID'); // NOI18N
         }
     }
 
@@ -1878,7 +1878,7 @@ class Velonimo extends Table
         } elseif ($cardId === CARD_ID_LEGENDS_ELEPHANT_STOP) {
             return self::GAME_STATE_LEGENDS_ELEPHANT_IS_NOT_PLAYABLE;
         } else {
-            throw new BgaVisibleSystemException('Unsupported special card ID');
+            throw new BgaVisibleSystemException('Unsupported special card ID'); // NOI18N
         }
     }
 

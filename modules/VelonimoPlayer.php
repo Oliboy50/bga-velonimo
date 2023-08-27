@@ -92,7 +92,7 @@ class VelonimoPlayer
                 (!$roundAndRanking)
                 || (count($roundAndRanking) !== 2)
             ) {
-                throw new BgaVisibleSystemException('Invalid rounds ranking');
+                throw new BgaVisibleSystemException('Invalid rounds ranking'); // NOI18N
             }
             $deserialized[(int) $roundAndRanking[0]] = (int) $roundAndRanking[1];
         }
@@ -250,7 +250,7 @@ class VelonimoPlayer
     public function addRoundRanking(int $round, int $rank): self
     {
         if (isset($this->roundsRanking[$round])) {
-            throw new BgaVisibleSystemException('History cannot be rewritten');
+            throw new BgaVisibleSystemException('History cannot be rewritten'); // NOI18N
         }
 
         $this->roundsRanking[$round] = $rank;
