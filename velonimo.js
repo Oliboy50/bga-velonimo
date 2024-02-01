@@ -1988,7 +1988,7 @@ function (dojo, declare) {
          */
         getSpecialPlayerCardIds: function () {
             return [
-                [CARD_ID_JERSEY_PLUS_TEN, () => this.currentPlayerHasJersey && !this.jerseyIsNotPlayable],
+                [CARD_ID_JERSEY_PLUS_TEN, () => this.currentPlayerHasJersey && !this.jerseyIsNotPlayable && !this.is2PlayersMode()],
                 [CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE, () => this.currentPlayerHasLegendsBroomWagon && !this.legendsBroomWagonIsNotPlayable],
                 [CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER, () => this.currentPlayerHasLegendsEagle && !this.legendsEagleIsNotPlayable && !this.currentPlayerHasJersey],
                 [CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR, () => this.currentPlayerHasLegendsPanda && !this.legendsPandaIsNotPlayable && !this.currentPlayerHasJersey],

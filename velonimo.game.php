@@ -26,6 +26,7 @@ require_once('modules/VelonimoPlayer.php');
 class Velonimo extends Table
 {
     private const NUMBER_OF_CARDS_TO_DEAL_TO_EACH_PLAYER = 11;
+    private const SCORE_TO_REACH_IN_2_PLAYERS_MODE = 8;
 
     private const GAME_STATE_CURRENT_ROUND = 'currentRound';
     private const GAME_STATE_JERSEY_IS_NOT_PLAYABLE = 'jerseyIsNotPlayable';
@@ -401,6 +402,9 @@ class Velonimo extends Table
                 $this->throwPlayedCardNotPlayable();
             }
             if (!$currentPlayerIsWearingJersey) {
+                $this->throwPlayedCardNotInPlayerHand();
+            }
+            if ($this->is2PlayersMode($players)) {
                 $this->throwPlayedCardNotInPlayerHand();
             }
         }
@@ -1224,7 +1228,11 @@ class Velonimo extends Table
         }
 
         $howManyRounds = $this->getHowManyRounds();
-        $isGameOver = $currentRound >= $howManyRounds;
+        $isGameOver = ($currentRound >= $howManyRounds)
+            || (
+                $this->is2PlayersMode()
+                && array_reduce($players, fn (bool $acc, VelonimoPlayer $player) => $acc || ($player->getScore() >= self::SCORE_TO_REACH_IN_2_PLAYERS_MODE), false)
+            );
 
         // use "Scoring dialogs" to recap scoring for end-users before moving forward
         // @see https://en.doc.boardgamearena.com/Game_interface_logic:_yourgamename.js#Scoring_dialogs
