@@ -946,10 +946,7 @@ function (dojo, declare) {
             }
             dojo.toggleClass(DOM_ID_ACTION_BUTTON_GIVE_CARDS, DOM_CLASS_DISABLED_ACTION_BUTTON, (selectedCards.length === 0) || (selectedCards.length !== this.howManyCardsToGiveBack));
         },
-        /**
-         * @param {number=} previousJerseyWearerId
-         */
-        moveJerseyToCurrentWinner: function (previousJerseyWearerId) {
+        moveJerseyToCurrentWinner: function () {
             const card = this.addSpecialCardsToCards([CARD_ID_JERSEY_PLUS_TEN], [])[0];
             const tooltipTexts = this.getTooltipTextsForCard(card);
             const position = this.getCardPositionInSpriteByColorAndValue(card.color, card.value);
@@ -965,6 +962,7 @@ function (dojo, declare) {
             };
             const removeJersey = (playerId) => {
                 dojo.removeClass(`player-table-${playerId}`, DOM_CLASS_PLAYER_HAS_JERSEY);
+                this.fadeOutAndDestroy(`player-table-${playerId}-jersey`);
                 this.fadeOutAndDestroy(`player-panel-${playerId}-jersey`);
             };
 
@@ -984,10 +982,7 @@ function (dojo, declare) {
                 }
             });
         },
-        /**
-         * @param {number=} previousLegendsBroomWagonHolderId
-         */
-        moveLegendsBroomWagonToLastLoser: function (previousLegendsBroomWagonHolderId) {
+        moveLegendsBroomWagonToLastLoser: function () {
             if (!this.isExtensionLegendsEnabled) {
                 return;
             }
@@ -1007,6 +1002,7 @@ function (dojo, declare) {
             };
             const removeLegendsBroomWagon = (playerId) => {
                 dojo.removeClass(`player-table-${playerId}`, DOM_CLASS_PLAYER_HAS_LEGENDS_BROOM_WAGON);
+                this.fadeOutAndDestroy(`player-table-${playerId}-legends-broom-wagon`);
                 this.fadeOutAndDestroy(`player-panel-${playerId}-legends-broom-wagon`);
             };
 
@@ -1111,34 +1107,6 @@ function (dojo, declare) {
             if (player.hasCardLegendsElephant) {
                 return CARD_ID_LEGENDS_ELEPHANT_STOP;
             }
-            return undefined;
-        },
-        /**
-         * @returns {number|undefined}
-         */
-        getCurrentJerseyOwnerIdIfExists: function () {
-            const players = Object.entries(this.players);
-            for (let i = 0; i < players.length; i++) {
-                const player = players[i][1];
-                if (player.isWearingJersey) {
-                    return player.id;
-                }
-            }
-
-            return undefined;
-        },
-        /**
-         * @returns {number|undefined}
-         */
-        getCurrentLegendsBroomWagonOwnerIdIfExists: function () {
-            const players = Object.entries(this.players);
-            for (let i = 0; i < players.length; i++) {
-                const player = players[i][1];
-                if (player.hasCardLegendsBroomWagon) {
-                    return player.id;
-                }
-            }
-
             return undefined;
         },
         /**
@@ -3435,16 +3403,14 @@ function (dojo, declare) {
                 this.removeCardFromPlayerHand(CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE);
             }
 
-            const previousJerseyWearerId = this.getCurrentJerseyOwnerIdIfExists();
-            const previousLegendsBroomWagonOwnerId = this.getCurrentLegendsBroomWagonOwnerIdIfExists();
             this.players = data.args.players;
             this.resetDisplayedNumberOfCardsByPlayerId();
             this.setupPlayersHiddenCards();
             data.args.specialCardIdsToRestore.forEach((cardId) => {
                 this.restoreSpecialCardForCurrentRound(cardId);
             });
-            this.moveLegendsBroomWagonToLastLoser(previousLegendsBroomWagonOwnerId);
-            this.moveJerseyToCurrentWinner(previousJerseyWearerId);
+            this.moveJerseyToCurrentWinner();
+            this.moveLegendsBroomWagonToLastLoser();
 
             this.setupPlayersScore();
         },
