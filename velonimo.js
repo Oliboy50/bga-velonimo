@@ -152,7 +152,6 @@ const DOM_CLASS_VELONIMO_CARD = 'velonimo-card';
 const DOM_CLASS_CARD_FRONT_SIDE = 'front-side';
 const DOM_CLASS_CARD_BACK_SIDE = 'back-side';
 const DOM_CLASS_MOVING_CARD = 'moving-card';
-const DOM_CLASS_MOVING_SPECIAL_CARD = 'moving-special-card';
 
 // Player hand sorting modes
 const PLAYER_HAND_SORT_BY_COLOR = 'color';
@@ -396,13 +395,15 @@ function (dojo, declare) {
                 this.moveLegendsBroomWagonToLastLoser();
             }
 
-            // setup jersey
-            if (gamedatas.jerseyIsNotPlayable) {
-                this.useSpecialCardForCurrentRound(CARD_ID_JERSEY_PLUS_TEN);
-            } else {
-                this.restoreSpecialCardForCurrentRound(CARD_ID_JERSEY_PLUS_TEN);
+            // setup jersey (if not 2P mode)
+            if (!this.is2PlayersMode()) {
+                if (this.jerseyIsNotPlayable) {
+                    this.useSpecialCardForCurrentRound(CARD_ID_JERSEY_PLUS_TEN);
+                } else {
+                    this.restoreSpecialCardForCurrentRound(CARD_ID_JERSEY_PLUS_TEN);
+                }
+                this.moveJerseyToCurrentWinner();
             }
-            this.moveJerseyToCurrentWinner();
 
             // show 2P mode items
             if (this.is2PlayersMode()) {
@@ -1956,7 +1957,7 @@ function (dojo, declare) {
          */
         getSpecialPlayerCardIds: function () {
             return [
-                [CARD_ID_JERSEY_PLUS_TEN, () => this.currentPlayerHasJersey && !this.jerseyIsNotPlayable && !this.is2PlayersMode()],
+                [CARD_ID_JERSEY_PLUS_TEN, () => this.currentPlayerHasJersey && !this.jerseyIsNotPlayable],
                 [CARD_ID_LEGENDS_BROOM_WAGON_PLUS_FIVE, () => this.currentPlayerHasLegendsBroomWagon && !this.legendsBroomWagonIsNotPlayable],
                 [CARD_ID_LEGENDS_EAGLE_ADD_ONE_OTHER_NUMBER, () => this.currentPlayerHasLegendsEagle && !this.legendsEagleIsNotPlayable && !this.currentPlayerHasJersey],
                 [CARD_ID_LEGENDS_PANDA_ADD_ONE_OTHER_COLOR, () => this.currentPlayerHasLegendsPanda && !this.legendsPandaIsNotPlayable && !this.currentPlayerHasJersey],
@@ -3409,7 +3410,9 @@ function (dojo, declare) {
             data.args.specialCardIdsToRestore.forEach((cardId) => {
                 this.restoreSpecialCardForCurrentRound(cardId);
             });
-            this.moveJerseyToCurrentWinner();
+            if (!this.is2PlayersMode()) {
+                this.moveJerseyToCurrentWinner();
+            }
             this.moveLegendsBroomWagonToLastLoser();
 
             this.setupPlayersScore();

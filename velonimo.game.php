@@ -284,7 +284,7 @@ class Velonimo extends Table
 
         // Rounds
         $result['currentRound'] = (int) self::getGameStateValue(self::GAME_STATE_CURRENT_ROUND);
-        $result['jerseyIsNotPlayable'] = $this->isJerseyNotPlayable();
+        $result['jerseyIsNotPlayable'] = $this->isJerseyNotPlayable($players);
         $result['howManyRounds'] = $this->getHowManyRounds();
 
         // Players
@@ -398,13 +398,10 @@ class Velonimo extends Table
         $currentPlayer = $this->getPlayerById($currentPlayerId, $players);
         $currentPlayerIsWearingJersey = $currentPlayer->isWearingJersey();
         if ($cardsPlayedWithJersey) {
-            if ($this->isJerseyNotPlayable()) {
+            if ($this->isJerseyNotPlayable($players)) {
                 $this->throwPlayedCardNotPlayable();
             }
             if (!$currentPlayerIsWearingJersey) {
-                $this->throwPlayedCardNotInPlayerHand();
-            }
-            if ($this->is2PlayersMode($players)) {
                 $this->throwPlayedCardNotInPlayerHand();
             }
         }
@@ -1890,8 +1887,11 @@ class Velonimo extends Table
         }
     }
 
-    private function isJerseyNotPlayable(): bool {
-        return 1 === (int) self::getGameStateValue(self::GAME_STATE_JERSEY_IS_NOT_PLAYABLE);
+    /**
+     * @param VelonimoPlayer[] $players
+     */
+    private function isJerseyNotPlayable(array $players = null): bool {
+        return $this->is2PlayersMode($players) || 1 === (int) self::getGameStateValue(self::GAME_STATE_JERSEY_IS_NOT_PLAYABLE);
     }
 
     private function isLegendsBroomWagonNotPlayable(): bool {
